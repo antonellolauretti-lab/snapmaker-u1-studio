@@ -1,0 +1,17 @@
+# Ignora file e cartelle backend per Vercel
+generator_u1/
+PROGETTI DEFINITIVI/
+PROGETTI DA VERIFICARE/
+BUMPER_TCG/
+Verifica_*
+scratch/
+requirements.txt
+Dockerfile
+.dockerignore
+render.yaml
+railway.json
+run_web.py
+*.py
+*.3mf
+*.log
+*.bat

@@ -1,5 +1,3 @@
 {
-  "buildCommand": "echo Static build complete",
-  "outputDirectory": "frontend",
   "cleanUrls": true
 }
