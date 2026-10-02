@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DeskSignModelParams",
+  "description": "Parametri di configurazione per il generatore di targhette e segnaposto da tavolo Snapmaker U1",
+  "type": "object",
+  "properties": {
+    "generator": {
+      "type": "string",
+      "const": "desk_sign",
+      "description": "Identificativo del template di generazione"
+    },
+    "base_mode": {
+      "type": "string",
+      "enum": ["wedge", "flat"],
+      "default": "wedge",
+      "description": "Forma della base: Wedge (cuneo inclinato autoportante) o Flat (piastrina orizzontale)"
+    },
+    "wedge_angle": {
+      "type": "number",
+      "minimum": 25.0,
+      "maximum": 75.0,
+      "default": 45.0,
+      "description": "Angolo di inclinazione della faccia di lettura in gradi rispetto al piatto PEI"
+    },
+    "base_thickness": {
+      "type": "number",
+      "minimum": 1.5,
+      "maximum": 12.0,
+      "default": 2.4,
+      "description": "Spessore in Z della base piatta o altezza del labbro frontale in mm"
+    },
+    "corner_radius": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 15.0,
+      "default": 3.0,
+      "description": "Raggio di curvatura degli angoli e della cornice in mm"
+    },
+    "padding_x": {
+      "type": "number",
+      "minimum": 2.0,
+      "maximum": 30.0,
+      "default": 6.0,
+      "description": "Margine orizzontale laterale in mm"
+    },
+    "padding_y": {
+      "type": "number",
+      "minimum": 2.0,
+      "maximum": 25.0,
+      "default": 5.0,
+      "description": "Margine verticale superiore/inferiore in mm"
+    },
+    "line_spacing": {
+      "type": "number",
+      "minimum": 1.0,
+      "maximum": 20.0,
+      "default": 3.5,
+      "description": "Spazio verticale tra la Riga 1 e la Riga 2 in mm"
+    },
+    "text_align": {
+      "type": "string",
+      "enum": ["center", "left", "right"],
+      "default": "center",
+      "description": "Allineamento orizzontale del testo sulla faccia"
+    },
+    "text_line1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "default": "CHARIZARD",
+      "description": "Testo principale (Riga 1)"
+    },
+    "font_family_line1": {
+      "type": "string",
+      "default": "Arial",
+      "description": "Famiglia di font per Riga 1"
+    },
+    "font_path_line1": {
+      "type": "string",
+      "description": "Percorso facoltativo del font caricato per Riga 1"
+    },
+    "font_size_line1": {
+      "type": "number",
+      "minimum": 6.0,
+      "maximum": 40.0,
+      "default": 14.0,
+      "description": "Altezza carattere Riga 1 in mm"
+    },
+    "letter_spacing_line1": {
+      "type": "number",
+      "minimum": -2.0,
+      "maximum": 10.0,
+      "default": 0.0,
+      "description": "Tracking / spaziatura caratteri Riga 1 in mm"
+    },
+    "thickness_line1": {
+      "type": "number",
+      "minimum": 0.4,
+      "maximum": 5.0,
+      "default": 1.2,
+      "description": "Altezza in rilievo di Riga 1 in mm"
+    },
+    "extruder_line1": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 1,
+      "description": "Indice estrusore U1 per Riga 1 (0=T0, 1=T1, 2=T2, 3=T3)"
+    },
+    "line2_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Attiva o disattiva la seconda riga di testo (sottotitolo)"
+    },
+    "text_line2": {
+      "type": "string",
+      "maxLength": 50,
+      "default": "BASE SET 1999",
+      "description": "Testo secondario / sottotitolo (Riga 2)"
+    },
+    "font_family_line2": {
+      "type": "string",
+      "default": "Arial",
+      "description": "Famiglia di font per Riga 2"
+    },
+    "font_path_line2": {
+      "type": "string",
+      "description": "Percorso facoltativo del font caricato per Riga 2"
+    },
+    "font_size_line2": {
+      "type": "number",
+      "minimum": 5.0,
+      "maximum": 30.0,
+      "default": 8.0,
+      "description": "Altezza carattere Riga 2 in mm"
+    },
+    "letter_spacing_line2": {
+      "type": "number",
+      "minimum": -2.0,
+      "maximum": 10.0,
+      "default": 0.0,
+      "description": "Tracking / spaziatura caratteri Riga 2 in mm"
+    },
+    "thickness_line2": {
+      "type": "number",
+      "minimum": 0.4,
+      "maximum": 5.0,
+      "default": 1.2,
+      "description": "Altezza in rilievo di Riga 2 in mm"
+    },
+    "extruder_line2": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 2,
+      "description": "Indice estrusore U1 per Riga 2 (0=T0, 1=T1, 2=T2, 3=T3)"
+    },
+    "border_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Attiva o disattiva la cornice decorativa perimetrale in rilievo"
+    },
+    "border_width": {
+      "type": "number",
+      "minimum": 0.8,
+      "maximum": 8.0,
+      "default": 2.0,
+      "description": "Larghezza del profilo cornice in mm"
+    },
+    "border_thickness": {
+      "type": "number",
+      "minimum": 0.4,
+      "maximum": 5.0,
+      "default": 1.0,
+      "description": "Altezza in rilievo della cornice in mm"
+    },
+    "extruder_border": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 3,
+      "description": "Indice estrusore U1 per la cornice (0=T0, 1=T1, 2=T2, 3=T3)"
+    },
+    "extruder_base": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 0,
+      "description": "Indice estrusore U1 per la base (0=T0, 1=T1, 2=T2, 3=T3)"
+    },
+    "filament_colors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 4,
+      "maxItems": 4,
+      "default": ["#161616", "#ffffff", "#e31b23", "#ffd400"],
+      "description": "Colori esadecimali dei 4 filamenti Snapmaker U1"
+    }
+  },
+  "required": ["text_line1", "extruder_base", "extruder_line1"]
+}

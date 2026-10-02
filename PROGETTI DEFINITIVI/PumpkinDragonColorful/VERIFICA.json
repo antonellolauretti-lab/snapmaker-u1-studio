@@ -1,0 +1,59 @@
+{
+  "original": "PumpkinDragonColorful.3mf",
+  "original_sha256": "ab35cec58540399168d34f6689b4b0d3f380101f9c6e487a0e2d5d50324037d6",
+  "plates": [
+    {
+      "file": "PumpkinDragonColorful_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 507,
+        "grams": [
+          99.9,
+          15.05,
+          23.58,
+          14.94
+        ],
+        "time": "18h 44m 16s"
+      },
+      "extrusion_bounds": [
+        2.053,
+        23.49,
+        258.305,
+        257.053
+      ],
+      "extrusion_moves": 3652294,
+      "tools": {
+        "2": 532194,
+        "0": 2500617,
+        "1": 269926,
+        "3": 349557
+      },
+      "features": {
+        "Brim": 1547,
+        "Support": 121879,
+        "Inner wall": 1382652,
+        "Outer wall": 820149,
+        "Bottom surface": 3204,
+        "Gap infill": 1360,
+        "Prime tower": 139070,
+        "Overhang wall": 3133,
+        "Internal solid infill": 472577,
+        "Bridge": 2531,
+        "Sparse infill": 699114,
+        "Top surface": 922,
+        "Internal Bridge": 3897,
+        "Support interface": 259
+      },
+      "colors": [
+        "#FB5200",
+        "#FFFFFF",
+        "#000000",
+        "#6900D2"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "28e8932c81b50d438274dc40055abf68f7ebc582f074c4c72f812c6e001d8773"
+    }
+  ]
+}

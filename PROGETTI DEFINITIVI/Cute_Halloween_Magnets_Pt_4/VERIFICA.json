@@ -1,0 +1,112 @@
+{
+  "date": "2026-09-07",
+  "magnet": "6x2 mm",
+  "files": [
+    {
+      "final": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Cute_Halloween_Magnets_Pt_4\\Cute_Halloween_Magnets_Pt_4_U1_P1.3mf",
+      "staged": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Cute_Halloween_Magnets_Pt_4\\Cute_Halloween_Magnets_Pt_4_U1_P1.3mf.nuovo",
+      "sha256": "b231dd5d3eb065df2c04516d36a240886b705948840d8ae62ad10df3f164ed53",
+      "verification": {
+        "file": "Cute_Halloween_Magnets_Pt_4_U1_P1.3mf",
+        "sha256": "b231dd5d3eb065df2c04516d36a240886b705948840d8ae62ad10df3f164ed53",
+        "stats": {
+          "layers": 43,
+          "grams": [
+            5.81,
+            0.4,
+            0.05,
+            0.99
+          ],
+          "time": "35m 36s"
+        },
+        "bounds": [
+          106.717,
+          107.47,
+          267.003,
+          241.042
+        ],
+        "tools": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "pause_before_layer_z": [],
+        "pockets": [],
+        "slicer": "OrcaSlicer 2.4.2, U1 inspection macros",
+        "status": "verified"
+      }
+    },
+    {
+      "final": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Cute_Halloween_Magnets_Pt_4\\Cute_Halloween_Magnets_Pt_4_U1_P2.3mf",
+      "staged": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Cute_Halloween_Magnets_Pt_4\\Cute_Halloween_Magnets_Pt_4_U1_P2.3mf.nuovo",
+      "sha256": "5a7aa37e505bb7e57adee34291e8ea19217bb48b2628566a63c7c35c0236bedb",
+      "verification": {
+        "file": "Cute_Halloween_Magnets_Pt_4_U1_P2.3mf",
+        "sha256": "5a7aa37e505bb7e57adee34291e8ea19217bb48b2628566a63c7c35c0236bedb",
+        "stats": {
+          "layers": 44,
+          "grams": [
+            5.34,
+            0.13,
+            1.09,
+            0.34
+          ],
+          "time": "33m 58s"
+        },
+        "bounds": [
+          110.21,
+          108.082,
+          267.003,
+          241.042
+        ],
+        "tools": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "pause_before_layer_z": [],
+        "pockets": [],
+        "slicer": "OrcaSlicer 2.4.2, U1 inspection macros",
+        "status": "verified"
+      }
+    },
+    {
+      "final": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Cute_Halloween_Magnets_Pt_4\\Cute_Halloween_Magnets_Pt_4_U1_P3.3mf",
+      "staged": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Cute_Halloween_Magnets_Pt_4\\Cute_Halloween_Magnets_Pt_4_U1_P3.3mf.nuovo",
+      "sha256": "2bb5992f965c9ea5b68e5f86fa98b62601ffd10c8dab5758b9f2bcff651678d2",
+      "verification": {
+        "file": "Cute_Halloween_Magnets_Pt_4_U1_P3.3mf",
+        "sha256": "2bb5992f965c9ea5b68e5f86fa98b62601ffd10c8dab5758b9f2bcff651678d2",
+        "stats": {
+          "layers": 44,
+          "grams": [
+            5.58,
+            0.04,
+            0.26,
+            1.03
+          ],
+          "time": "35m 30s"
+        },
+        "bounds": [
+          107.21,
+          109.958,
+          267.003,
+          241.042
+        ],
+        "tools": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "pause_before_layer_z": [],
+        "pockets": [],
+        "slicer": "OrcaSlicer 2.4.2, U1 inspection macros",
+        "status": "verified"
+      }
+    }
+  ],
+  "scope": "Verifica: geometria delle sedi, integrità 3MF, colori e nuovo slicing U1 tramite OrcaSlicer 2.4.2 su copie temporanee con macro compatibili. I file definitivi conservano le macro native Snapmaker Orca: aprirli come progetti e rifare lo slicing prima della stampa. Stime indicative; prova fisica di inserimento non eseguita."
+}

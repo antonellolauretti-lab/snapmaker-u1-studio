@@ -1,0 +1,262 @@
+{
+  "original": "toploader+sleeve+pokemon.3mf",
+  "original_sha256": "08f2140bad030835ce429911648bb2de1047b13556369c04c303d17e8dabf8f3",
+  "plates": [
+    {
+      "file": "toploader_sleeve_pokemon_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 19,
+        "grams": [
+          33.3,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "2h 23m 22s"
+      },
+      "extrusion_bounds": [
+        78.407,
+        41.729,
+        191.59,
+        228.273
+      ],
+      "extrusion_moves": 91954,
+      "tools": {
+        "0": 91954
+      },
+      "features": {
+        "Inner wall": 4012,
+        "Outer wall": 2019,
+        "Bottom surface": 1985,
+        "Gap infill": 35,
+        "Internal solid infill": 22537,
+        "Sparse infill": 45969,
+        "Internal Bridge": 4852,
+        "Top surface": 2045,
+        "Ironing": 8500
+      },
+      "colors": [
+        "#D1D3D5"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "bfcaf9cbb8cf41b39a61e5b5438fffc9ac37343dea613d0e906bc5dac7626e0c"
+    },
+    {
+      "file": "toploader_sleeve_pokemon_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 256,
+        "grams": [
+          155.54,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "8h 20m 10s"
+      },
+      "extrusion_bounds": [
+        32.549,
+        40.279,
+        235.047,
+        238.971
+      ],
+      "extrusion_moves": 747745,
+      "tools": {
+        "0": 747745
+      },
+      "features": {
+        "Brim": 1289,
+        "Support": 81948,
+        "Inner wall": 36405,
+        "Outer wall": 15137,
+        "Bottom surface": 1906,
+        "Gap infill": 53,
+        "Internal solid infill": 46185,
+        "Sparse infill": 551989,
+        "Top surface": 3245,
+        "Ironing": 2804,
+        "Support interface": 2146,
+        "Bridge": 857,
+        "Internal Bridge": 3611,
+        "Overhang wall": 170
+      },
+      "colors": [
+        "#DE4343"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "3fbd58c9bb34c75ae0265236afd62f40060d33999f45aa79f09347a7ac2e3039"
+    },
+    {
+      "file": "toploader_sleeve_pokemon_U1_P3.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 18,
+        "grams": [
+          7.81,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "32m 12s"
+      },
+      "extrusion_bounds": [
+        110.407,
+        105.31,
+        159.59,
+        164.69
+      ],
+      "extrusion_moves": 17246,
+      "tools": {
+        "0": 17246
+      },
+      "features": {
+        "Inner wall": 365,
+        "Outer wall": 138,
+        "Bottom surface": 316,
+        "Gap infill": 5,
+        "Internal solid infill": 3808,
+        "Sparse infill": 10621,
+        "Top surface": 265,
+        "Ironing": 1362,
+        "Internal Bridge": 366
+      },
+      "colors": [
+        "#A3D8E1"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "9546b87fd71514bdd00f225010f43e47e03c474022c570b6a41998ec63d3af24"
+    },
+    {
+      "file": "toploader_sleeve_pokemon_U1_P4.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 769,
+        "grams": [
+          387.29,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1d 0h 31m 30s"
+      },
+      "extrusion_bounds": [
+        14.843,
+        28.182,
+        246.783,
+        250.177
+      ],
+      "extrusion_moves": 2161777,
+      "tools": {
+        "0": 2161777
+      },
+      "features": {
+        "Brim": 5515,
+        "Inner wall": 242105,
+        "Outer wall": 96733,
+        "Bottom surface": 2858,
+        "Gap infill": 146,
+        "Internal solid infill": 39501,
+        "Sparse infill": 1761013,
+        "Top surface": 3729,
+        "Ironing": 4773,
+        "Internal Bridge": 5404
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "741c1e49b3ef7b41607e337d324a8cd8652786c06ca3381ab2f51770825e6b9a"
+    },
+    {
+      "file": "toploader_sleeve_pokemon_U1_P5.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 25,
+        "grams": [
+          69.21,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "2h 53m 2s"
+      },
+      "extrusion_bounds": [
+        40.21,
+        67.71,
+        229.79,
+        202.29
+      ],
+      "extrusion_moves": 210138,
+      "tools": {
+        "0": 210138
+      },
+      "features": {
+        "Inner wall": 4827,
+        "Outer wall": 2288,
+        "Bottom surface": 1039,
+        "Gap infill": 14,
+        "Internal solid infill": 10158,
+        "Sparse infill": 190511,
+        "Internal Bridge": 723,
+        "Top surface": 578
+      },
+      "colors": [
+        "#C2E189"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "ca5fc6de3b3a0680e254b4a15a39e4cb613a27605f2982c874ab2078079befd0"
+    },
+    {
+      "file": "toploader_sleeve_pokemon_U1_P6.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 25,
+        "grams": [
+          1.68,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "6m 52s"
+      },
+      "extrusion_bounds": [
+        103.96,
+        131.21,
+        166.04,
+        138.79
+      ],
+      "extrusion_moves": 6913,
+      "tools": {
+        "0": 6913
+      },
+      "features": {
+        "Inner wall": 1319,
+        "Outer wall": 500,
+        "Bottom surface": 181,
+        "Gap infill": 4,
+        "Internal solid infill": 1964,
+        "Sparse infill": 2641,
+        "Internal Bridge": 182,
+        "Top surface": 122
+      },
+      "colors": [
+        "#E8DBB7"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "e494828bfc1628dc9b7d6eb35f4e64b876ef232eed529f27ff952dbf7581ca0b"
+    }
+  ]
+}

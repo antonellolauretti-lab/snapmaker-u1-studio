@@ -1,0 +1,13 @@
+BUMPER TCG ENERGIE - QUALITA 0.12
+
+Un piatto: 1 FUOCO rosso, 2 LAMPO giallo, 3 ACQUA blu, 4 ERBA verde.
+Caricare le quattro bobine in questo ordine. Simboli e decorazioni a rilievo nello stesso colore del corpo.
+Bordo nominale 6 mm, corpo 91,9 x 147,2 x 7,5 mm. Altezza massima con rilievi 8,34 mm.
+Incastro originale conservato; confronto volumetrico interno nullo e 151 sezioni controllate.
+Nessun magnete o sede per magneti, nessuna pausa di inserimento richiesta.
+Qualita: layer 0,12 mm, primo layer 0,25 mm; pareti esterne 60 mm/s, superficie superiore 40 mm/s; guscio sopra 1 mm e sotto 0,6 mm.
+PLA SnapSpeed @U1, PEI testurizzato, quattro ugelli 0,4 mm. Flusso massimo mantenuto a 12 mm3/s.
+Verifica slicing completata con OrcaSlicer 2.4.2 portable su copia di controllo: quattro colori corretti, rilievi presenti, torre senza collisioni, nessun supporto.
+La copia di controllo usa macro macchina del validatore: il relativo G-code non viene fornito per stampare.
+Aprire il 3MF definitivo come progetto in Snapmaker Orca e affettare con il profilo nativo prima di inviarlo alla stampante.
+Controllare fisicamente il primo set prima della produzione ripetuta.

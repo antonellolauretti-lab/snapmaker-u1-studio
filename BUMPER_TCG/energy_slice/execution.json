@@ -1,0 +1,12 @@
+{
+  "exit_code": 0,
+  "seconds": 11.268993616104126,
+  "files": [
+    "console.log",
+    "controllo.3mf",
+    "controllo_sliced.3mf",
+    "execution.json",
+    "material_updated.3mf",
+    "plate_1.gcode"
+  ]
+}

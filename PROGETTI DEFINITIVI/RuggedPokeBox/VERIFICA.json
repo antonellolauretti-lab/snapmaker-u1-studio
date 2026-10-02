@@ -1,0 +1,141 @@
+{
+  "original": "RuggedPokeBox.3mf",
+  "original_sha256": "2f94e5941448e6b2607b34bb4b4ccbffe9dd1cfa3f1beccb99084fc360417ac9",
+  "plates": [
+    {
+      "file": "RuggedPokeBox_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 269,
+        "grams": [
+          33.85,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "2h 14m 19s"
+      },
+      "extrusion_bounds": [
+        86.73,
+        84.96,
+        183.36,
+        185.04
+      ],
+      "extrusion_moves": 305770,
+      "tools": {
+        "0": 305770
+      },
+      "features": {
+        "Inner wall": 155118,
+        "Outer wall": 84265,
+        "Bottom surface": 1146,
+        "Gap infill": 171,
+        "Internal solid infill": 29689,
+        "Sparse infill": 33648,
+        "Internal Bridge": 971,
+        "Top surface": 762
+      },
+      "colors": [
+        "#000000"
+      ],
+      "layer": "0.16",
+      "support_type": "normal(auto)",
+      "geometry_preserved": true,
+      "sha256": "62b786012117154904057ca27ab169de550628f8a6835ac146d9e516d7307bcb"
+    },
+    {
+      "file": "RuggedPokeBox_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 142,
+        "grams": [
+          0.51,
+          0.36,
+          41.71,
+          1.6
+        ],
+        "time": "2h 41m 14s"
+      },
+      "extrusion_bounds": [
+        85.45,
+        80.45,
+        267.02,
+        258.213
+      ],
+      "extrusion_moves": 193403,
+      "tools": {
+        "3": 14336,
+        "2": 165557,
+        "1": 3789,
+        "0": 9721
+      },
+      "features": {
+        "Outer wall": 39451,
+        "Inner wall": 74534,
+        "Bottom surface": 2450,
+        "Gap infill": 2015,
+        "Prime tower": 3910,
+        "Internal solid infill": 34217,
+        "Sparse infill": 33999,
+        "Internal Bridge": 803,
+        "Top surface": 1782,
+        "Overhang wall": 76,
+        "Bridge": 166
+      },
+      "colors": [
+        "#000000",
+        "#FFFFFF",
+        "#C12E1F",
+        "#FFF144"
+      ],
+      "layer": "0.16",
+      "support_type": "normal(auto)",
+      "geometry_preserved": true,
+      "sha256": "92bab753712661f3908185b0fc1af131044f71f755e27bc44f670fc36b52dc2c"
+    },
+    {
+      "file": "RuggedPokeBox_U1_P3.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 223,
+        "grams": [
+          58.69,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "3h 33m 30s"
+      },
+      "extrusion_bounds": [
+        85.45,
+        78.364,
+        184.55,
+        191.636
+      ],
+      "extrusion_moves": 230152,
+      "tools": {
+        "0": 230152
+      },
+      "features": {
+        "Brim": 3459,
+        "Inner wall": 108995,
+        "Outer wall": 47057,
+        "Gap infill": 279,
+        "Bottom surface": 1156,
+        "Internal solid infill": 41910,
+        "Sparse infill": 25069,
+        "Internal Bridge": 922,
+        "Top surface": 1177,
+        "Overhang wall": 48,
+        "Bridge": 80
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.16",
+      "support_type": "normal(auto)",
+      "geometry_preserved": true,
+      "sha256": "86dfc624bd283c4023da94dd247db2aaadf04dccccaff21bfde837a5cb275179"
+    }
+  ]
+}

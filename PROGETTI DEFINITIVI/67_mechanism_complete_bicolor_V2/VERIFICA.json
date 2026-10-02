@@ -1,0 +1,86 @@
+{
+  "progetto": "67 Tiny Hands Fidget (Push to Wave) - Bicolor",
+  "stampante": "Snapmaker U1 (4 ugelli da 0,4 mm)",
+  "materiale": "PLA SnapSpeed",
+  "piatto": "Textured PEI Plate",
+  "temperatura_ugello": 220,
+  "temperatura_piatto": 65,
+  "configurazione_bobine_fisiche_utente": {
+    "slot_1": "Non utilizzato",
+    "slot_2": "Bianco (#FFFFFF)",
+    "slot_3": "Rosso (#FF0000)",
+    "slot_4": "Non utilizzato"
+  },
+  "magneti": {
+    "presenti": false,
+    "note": "Nessuna sede per magneti presente nel modello; meccanismo e chiusura basati su scorrimenti, snodi e perni di posizionamento stampati in 3D."
+  },
+  "ottimizzazione_spreco": {
+    "strategia": "Separazione in 2 piatti 100% monocolore distinti per colore (Slot 2 Bianco e Slot 3 Rosso)",
+    "cambi_filamento_per_layer": 0,
+    "torre_di_spurgo": "Disabilitata (0 g di scarto)",
+    "spreco_filamento_totale_g": 0.0,
+    "grammi_totali_modello_g": 19.79,
+    "tempo_totale_stimato": "1h 26m 41s"
+  },
+  "adesione_piatto_e_stabilita": {
+    "problema_risolto": "Le due manine hanno un perno cilindrico di base di soli 3,5 mm di diametro ma sono alte oltre 20,6 mm e si allargano a cono rovesciato. Senza brim sul piatto PEI testurizzato si staccavano a meta stampa causando grovigli di filo (spaghetti) che rovinavano anche la molla e il connettore.",
+    "soluzione_adottata": "Separazione dei componenti in oggetti indipendenti per applicare un brim selettivo per-oggetto: Brim esterno largo 8 mm (gap 0,1 mm) sulle due manine e 5 mm sulla bielletta (connettore). Nessun brim sulla molla a serpentina (brim_type='no_brim') per evitare che il filamento saldi insieme le spire flessibili della molla."
+  },
+  "piatti": [
+    {
+      "plate": 1,
+      "file": "67_mechanism_U1_P1_BIANCO.3mf",
+      "sha256": "244766aee6349aebbb4e7915718b020fe8ae64d4d5f26230b1072faf86d25f42",
+      "status": "verificato",
+      "color": "Bianco",
+      "color_hex": "#FFFFFF",
+      "components": [
+        "Housing (scocca con perno)",
+        "Cover (coperchio con asole)"
+      ],
+      "extruder_slot_u1": 2,
+      "tool_id_gcode": 1,
+      "layer_height_mm": 0.16,
+      "initial_layer_height_mm": 0.2,
+      "layers": 75,
+      "estimated_time": "51m 59s",
+      "filament_grams": 13.86,
+      "tool_changes_per_layer": 0,
+      "prime_tower_enabled": false,
+      "prime_tower_grams": 0.0,
+      "brim": "Disabilitato / non necessario (ampia superficie d'appoggio della scocca)"
+    },
+    {
+      "plate": 2,
+      "file": "67_mechanism_U1_P2_ROSSO.3mf",
+      "sha256": "87ff83596ac74b4146069a05d2dda04a4ffeb4a06e222f67fd35495c3e853fc8",
+      "status": "verificato",
+      "color": "Rosso",
+      "color_hex": "#FF0000",
+      "components": [
+        "Spring (molla a serpentina con tasto) - NO BRIM per proteggere le spire",
+        "Lever (leva di snodo) - NO BRIM",
+        "Connector (bielletta) - BRIM 5 mm",
+        "Left Hand (mano sinistra) - BRIM 8 mm",
+        "Right Hand (mano destra) - BRIM 8 mm"
+      ],
+      "extruder_slot_u1": 3,
+      "tool_id_gcode": 2,
+      "layer_height_mm": 0.16,
+      "initial_layer_height_mm": 0.2,
+      "layers": 128,
+      "estimated_time": "34m 42s",
+      "filament_grams": 5.93,
+      "tool_changes_per_layer": 0,
+      "prime_tower_enabled": false,
+      "prime_tower_grams": 0.0,
+      "brim": "Selettivo: 8 mm sulle manine, 5 mm sul connettore, 0 mm sulla molla e leva"
+    }
+  ],
+  "progetto_unificato": {
+    "file": "67_mechanism_U1_2PIATTI_COMPLETO.3mf",
+    "sha256": "2381376731a2d1d08fd0229270bc47a8be3dd8b58f80811d1bdad7859d57e889",
+    "note": "Contiene entrambi i piatti configurati per Snapmaker Orca: Piatto 1 associato a Slot 2 (Bianco), Piatto 2 associato a Slot 3 (Rosso) con brim selettivo anti-distacco per le manine."
+  }
+}

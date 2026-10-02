@@ -1,0 +1,58 @@
+{
+  "original": "Halloween+Gnom.3mf",
+  "original_sha256": "2b44a054edc23ced5be900471c99bf25dc0ecc67f5f9134fbcc049a7d58470de",
+  "plates": [
+    {
+      "file": "Halloween_Gnom_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 833,
+        "grams": [
+          49.96,
+          19.18,
+          8.84,
+          4.26
+        ],
+        "time": "8h 51m 51s"
+      },
+      "extrusion_bounds": [
+        104.326,
+        100.016,
+        267.953,
+        257.056
+      ],
+      "extrusion_moves": 1701539,
+      "tools": {
+        "0": 999034,
+        "1": 458594,
+        "2": 153372,
+        "3": 90539
+      },
+      "features": {
+        "Support": 402836,
+        "Inner wall": 362062,
+        "Outer wall": 193124,
+        "Bottom surface": 395,
+        "Gap infill": 85,
+        "Prime tower": 205717,
+        "Internal solid infill": 109764,
+        "Sparse infill": 417449,
+        "Top surface": 48,
+        "Overhang wall": 943,
+        "Support interface": 8558,
+        "Internal Bridge": 196,
+        "Bridge": 362
+      },
+      "colors": [
+        "#000000",
+        "#FFFFFF",
+        "#FF9016",
+        "#F7E6DE"
+      ],
+      "layer": "0.12",
+      "support_type": "normal(auto)",
+      "geometry_preserved": true,
+      "sha256": "18ef363949b2d34ae1b166524c4ca2fdef0fca353a9fc4f2822926203104c006"
+    }
+  ]
+}

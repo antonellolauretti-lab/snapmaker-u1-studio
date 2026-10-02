@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git/
+.gitignore
+scratch/
+Verifica_*
+PROGETTI DA VERIFICARE/
+*.gcode
+*.log
+*.3mf
+.DS_Store

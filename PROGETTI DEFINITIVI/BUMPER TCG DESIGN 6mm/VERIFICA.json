@@ -1,0 +1,73 @@
+{
+  "original_sha256": "aac2153f156b592da7fce9e1c4e0ac74837fd55f3649590c3d07849abce564fb",
+  "outer_dimensions_mm": [
+    91.9,
+    147.2,
+    7.5
+  ],
+  "border_mm": 6,
+  "outer_corner_radius_mm": 6,
+  "original_opening_mm": [
+    79.9,
+    135.2
+  ],
+  "parts": [
+    {
+      "design": "A DIAMOND",
+      "internal_difference_mm3": 0.0,
+      "hole_difference_mm2_151_sections": 2.394856915555188e-08,
+      "closed_meshes": true,
+      "assembled_components": 1,
+      "volume_mm3": 19551.872532614343,
+      "accent_volume_mm3": 7.615953770860258
+    },
+    {
+      "design": "B SPEED",
+      "internal_difference_mm3": 0.0,
+      "hole_difference_mm2_151_sections": 2.394856915555188e-08,
+      "closed_meshes": true,
+      "assembled_components": 1,
+      "volume_mm3": 20184.833359649496,
+      "accent_volume_mm3": 25.536000002861005
+    },
+    {
+      "design": "C CIRCUIT",
+      "internal_difference_mm3": 0.0,
+      "hole_difference_mm2_151_sections": 2.394856915555188e-08,
+      "closed_meshes": true,
+      "assembled_components": 1,
+      "volume_mm3": 20197.793359660223,
+      "accent_volume_mm3": 212.9017005400196
+    },
+    {
+      "design": "D STEALTH",
+      "internal_difference_mm3": 0.0,
+      "hole_difference_mm2_151_sections": 2.394856915555188e-08,
+      "closed_meshes": true,
+      "assembled_components": 1,
+      "volume_mm3": 20150.712109623462,
+      "accent_volume_mm3": 50.33569373605874
+    }
+  ],
+  "slots": {
+    "A DIAMOND": [
+      1,
+      4
+    ],
+    "B SPEED": [
+      2,
+      3
+    ],
+    "C CIRCUIT": [
+      3,
+      4
+    ],
+    "D STEALTH": [
+      4,
+      1
+    ]
+  },
+  "bed_clearance_between_adjacent_bounds_mm": 4,
+  "saved_meshes_verified": true,
+  "sliced": false
+}

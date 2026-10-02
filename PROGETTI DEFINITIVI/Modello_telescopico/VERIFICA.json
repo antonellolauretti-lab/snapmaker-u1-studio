@@ -1,0 +1,51 @@
+{
+  "original": "伸缩滑溜啦a梦.3mf",
+  "original_sha256": "ca78c3b0fe19b6a9e7fa04e15e718c90b273730edf5ea332d8ed1d69cfad353e",
+  "plates": [
+    {
+      "file": "_a__U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 402,
+        "grams": [
+          121.49,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "12h 6m 13s"
+      },
+      "extrusion_bounds": [
+        96.328,
+        98.541,
+        173.665,
+        168.336
+      ],
+      "extrusion_moves": 1897761,
+      "tools": {
+        "0": 1897761
+      },
+      "features": {
+        "Support": 173913,
+        "Inner wall": 746891,
+        "Outer wall": 481912,
+        "Bottom surface": 796,
+        "Gap infill": 504,
+        "Overhang wall": 664,
+        "Internal solid infill": 292545,
+        "Support interface": 1279,
+        "Sparse infill": 198209,
+        "Top surface": 308,
+        "Bridge": 437,
+        "Internal Bridge": 303
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "3b2a8d889069828a50d4af64af913bf3fc79aa76808322b33c4ebf27088f56ea"
+    }
+  ]
+}

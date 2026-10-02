@@ -1,0 +1,12 @@
+BUMPER DESIGN - QUALITA 0.12
+
+Aprire 4 BUMPER TCG DESIGN 6mm - QUALITA 0.12.3mf come progetto in Snapmaker Orca.
+Altezza strato: 0,12 mm; primo strato: 0,25 mm.
+Parete esterna: 60 mm/s; superficie superiore: 40 mm/s.
+Spessore guscio superiore: 1 mm; inferiore: 0,6 mm.
+Conteggi minimi gusci conservati: superiore 5, inferiore 3; lo spessore minimo richiede ulteriori strati quando necessario.
+Stiratura disattivata, riempimento 15%, compensazioni XY contorno e fori a zero.
+Geometrie, incastro, bordo 6 mm, colori e disposizione identici al progetto di partenza.
+Tutte le altre impostazioni conservate.
+Verificato il contenuto del 3MF dopo il salvataggio; slicing non eseguito.
+Affettare e controllare l'anteprima prima della stampa.

@@ -1,0 +1,14 @@
+BUMPER PSA ARROTONDATI - prima versione
+
+Bordo esterno uniforme: 5 mm sui lati; raggio angoli: 6 mm.
+Ingombro: 145,2 x 89,9 x 7,5 mm.
+Apertura originale: circa 135,2 x 79,9 mm, con i raccordi originali conservati.
+Zona interna invariata: differenza volumetrica 0 mm3 e 151 sezioni senza differenze.
+Base ricavata da un bumper giallo completo, inclusi gli inserti neri del progetto originale.
+Quattro versioni monocolore: slot 1 giallo, 2 rosso, 3 bianco, 4 nero.
+Il progetto con quattro pezzi mantiene una disposizione a girandola sul piatto U1.
+Profili macchina e filamenti, layer 0,2 mm e altre impostazioni conservati dal file originale.
+Mesh chiuse, orientate correttamente e verificate dopo la riapertura dei file salvati.
+Questi sono progetti 3MF da aprire e affettare in Snapmaker Orca, non G-code gia verificato.
+La prova fisica resta da fare: il bordo piu spesso puo modificare la flessibilita pur mantenendo le misure interne.
+Il file originale 4 BUMPER TCG.3mf non e stato modificato.

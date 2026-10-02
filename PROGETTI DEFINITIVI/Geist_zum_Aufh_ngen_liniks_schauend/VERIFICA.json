@@ -1,0 +1,99 @@
+{
+  "original": "Geist+zum+Aufhängen+liniks+schauend.3mf",
+  "original_sha256": "9d3dca4c9913035ef183860aa989689d2ef956d372e76d0b37ad46825e368845",
+  "plates": [
+    {
+      "file": "Geist_zum_Aufh_ngen_liniks_schauend_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 424,
+        "grams": [
+          24.03,
+          3.9,
+          0.0,
+          0.0
+        ],
+        "time": "2h 52m 34s"
+      },
+      "extrusion_bounds": [
+        108.893,
+        97.573,
+        267.122,
+        241.065
+      ],
+      "extrusion_moves": 545735,
+      "tools": {
+        "0": 503622,
+        "1": 42113
+      },
+      "features": {
+        "Prime tower": 43744,
+        "Support": 29974,
+        "Inner wall": 137713,
+        "Outer wall": 81114,
+        "Bottom surface": 332,
+        "Gap infill": 188,
+        "Internal solid infill": 34006,
+        "Sparse infill": 217397,
+        "Support interface": 711,
+        "Bridge": 134,
+        "Internal Bridge": 217,
+        "Top surface": 157,
+        "Overhang wall": 48
+      },
+      "colors": [
+        "#FFFFFF",
+        "#000000"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "ff36778ee13e9790b06f0461ea911cdc0c805068ce4f4c83a8b06c83f094e80e"
+    },
+    {
+      "file": "Geist_zum_Aufh_ngen_liniks_schauend_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 323,
+        "grams": [
+          16.31,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1h 37m 54s"
+      },
+      "extrusion_bounds": [
+        79.86,
+        89.084,
+        191.364,
+        182.889
+      ],
+      "extrusion_moves": 408291,
+      "tools": {
+        "0": 408291
+      },
+      "features": {
+        "Support": 25832,
+        "Inner wall": 77958,
+        "Outer wall": 106575,
+        "Bottom surface": 394,
+        "Gap infill": 114,
+        "Overhang wall": 367,
+        "Internal solid infill": 35760,
+        "Sparse infill": 160099,
+        "Support interface": 916,
+        "Bridge": 121,
+        "Internal Bridge": 109,
+        "Top surface": 46
+      },
+      "colors": [
+        "#000000"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "470eee001078b349862a026788589cd2d33529bd34066d3096f2dd4164858a48"
+    }
+  ]
+}

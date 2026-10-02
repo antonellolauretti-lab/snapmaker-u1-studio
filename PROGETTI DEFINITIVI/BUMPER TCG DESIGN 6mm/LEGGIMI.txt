@@ -1,0 +1,17 @@
+BUMPER TCG - QUATTRO DESIGN, BORDO 6 mm
+
+A DIAMOND: giallo con facce geometriche e rombo nero.
+B SPEED: rosso con sei inserti bianchi e incisioni superiori.
+C CIRCUIT: bianco con piste e terminali neri.
+D STEALTH: nero con archi gialli e scanalature laterali.
+
+Ingombro singolo: 91,9 x 147,2 x 7,5 mm. Bordo nominale 6 mm; raggio esterno 6 mm.
+Incastro interno ricavato dal bumper originale completo e mantenuto invariato.
+Ogni design: differenza volumetrica interna zero e confronto di 151 sezioni senza differenze.
+Decorazioni incassate nella faccia superiore: nessun inserto da incollare.
+Filamenti: 1 giallo, 2 rosso, 3 bianco, 4 nero, come nel progetto originale.
+Quattro oggetti con due parti ciascuno: mantenere gli inserti associati al relativo corpo.
+Impostazioni originali U1 conservate; stampa per layer.
+Aprire come progetto in Snapmaker Orca e affettare: non e un G-code.
+Prima della produzione ripetuta verificare fisicamente la flessibilita del bordo da 6 mm.
+ANTEPRIMA_4_DESIGN.png mostra le geometrie effettive, adattate al bordo reale.

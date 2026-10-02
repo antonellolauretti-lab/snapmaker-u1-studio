@@ -1,0 +1,59 @@
+{
+  "original": "HallowenKısa.3mf",
+  "original_sha256": "81a8c13c8d74d1b1c8d10f9ec8e8e7a3eccce54f85eb710595c775e463315e2f",
+  "plates": [
+    {
+      "file": "HallowenK_sa_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 302,
+        "grams": [
+          37.58,
+          6.76,
+          11.29,
+          1.03
+        ],
+        "time": "7h 24m 27s"
+      },
+      "extrusion_bounds": [
+        58.676,
+        101.91,
+        267.939,
+        257.048
+      ],
+      "extrusion_moves": 1433272,
+      "tools": {
+        "0": 953740,
+        "2": 283731,
+        "1": 175149,
+        "3": 20652
+      },
+      "features": {
+        "Brim": 6039,
+        "Support": 141627,
+        "Inner wall": 501058,
+        "Outer wall": 327298,
+        "Bottom surface": 1332,
+        "Gap infill": 830,
+        "Prime tower": 91217,
+        "Support interface": 4053,
+        "Internal solid infill": 140110,
+        "Overhang wall": 1004,
+        "Sparse infill": 217279,
+        "Top surface": 620,
+        "Bridge": 71,
+        "Internal Bridge": 734
+      },
+      "colors": [
+        "#FF9016",
+        "#FFFFFF",
+        "#000000",
+        "#482960"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "525f0efd8c6985dc28d6bde5372866dc55e2ad96459ec9f0438813a15937decc"
+    }
+  ]
+}

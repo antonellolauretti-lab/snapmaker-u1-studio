@@ -1,0 +1,29 @@
+# Python & Ambienti virtuali
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+.venv/
+env/
+ENV/
+
+# Output di slicing e file temporanei
+scratch/
+*.gcode
+*.log
+00000.log
+test_slice*/
+
+# Cartelle di verifica pesanti
+Verifica_*
+PROGETTI DA VERIFICARE/
+
+# Cache uploads utente locali
+generator_u1/web/uploads/fonts/*
+!generator_u1/web/uploads/fonts/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

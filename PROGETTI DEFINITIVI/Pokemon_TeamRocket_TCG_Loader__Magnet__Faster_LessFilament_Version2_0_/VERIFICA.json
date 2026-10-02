@@ -1,0 +1,124 @@
+{
+  "date": "2026-09-07",
+  "magnet": "6x2 mm",
+  "files": [
+    {
+      "final": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0_\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0__U1_P1.3mf",
+      "staged": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0_\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0__U1_P1.3mf.nuovo",
+      "sha256": "484516c0d8a25995c5a49ef97f32566f092d2511f548a6bb5a3d6a9f7a846a61",
+      "verification": {
+        "file": "Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0__U1_P1.3mf",
+        "sha256": "484516c0d8a25995c5a49ef97f32566f092d2511f548a6bb5a3d6a9f7a846a61",
+        "stats": {
+          "layers": 625,
+          "grams": [
+            310.84,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "time": "19h 8m 50s"
+        },
+        "bounds": [
+          28.372,
+          54.838,
+          241.628,
+          223.521
+        ],
+        "tools": [
+          0
+        ],
+        "pause_before_layer_z": [
+          99.56
+        ],
+        "pockets": [
+          {
+            "center": [
+              49.62127072300001,
+              159.12242845
+            ],
+            "bottom": 97.30000000000035,
+            "top": 99.49999999999966,
+            "blocked": 0,
+            "cap_heights": [
+              99.72,
+              99.88,
+              100.04
+            ]
+          },
+          {
+            "center": [
+              220.378729223,
+              159.12242845
+            ],
+            "bottom": 97.30000000000035,
+            "top": 99.49999999999966,
+            "blocked": 0,
+            "cap_heights": [
+              99.72,
+              99.88,
+              100.04
+            ]
+          }
+        ],
+        "slicer": "OrcaSlicer 2.4.2, U1 inspection macros",
+        "status": "verified"
+      }
+    },
+    {
+      "final": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0_\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0__U1_P2_COMBINATO.3mf",
+      "staged": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0_\\Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0__U1_P2_COMBINATO.3mf.nuovo",
+      "sha256": "704884c36b9c020fca8e94f654d2e9dc826787fc916ff5044c85bf46e81e533f",
+      "verification": {
+        "file": "Pokemon_TeamRocket_TCG_Loader__Magnet__Faster_LessFilament_Version2_0__U1_P2_COMBINATO.3mf",
+        "sha256": "704884c36b9c020fca8e94f654d2e9dc826787fc916ff5044c85bf46e81e533f",
+        "stats": {
+          "layers": 194,
+          "grams": [
+            55.63,
+            145.59,
+            0.0,
+            0.0
+          ],
+          "time": "12h 56m 19s"
+        },
+        "bounds": [
+          34.731,
+          34.96,
+          267.238,
+          246.428
+        ],
+        "tools": [
+          0,
+          1
+        ],
+        "pause_before_layer_z": [],
+        "pockets": [
+          {
+            "center": [
+              49.62001538,
+              93.0
+            ],
+            "bottom": 25.90004380000034,
+            "top": 28.10004379999966,
+            "blocked": 0,
+            "cap_heights": []
+          },
+          {
+            "center": [
+              220.38001537999997,
+              93.0
+            ],
+            "bottom": 25.90004380000034,
+            "top": 28.10004379999966,
+            "blocked": 0,
+            "cap_heights": []
+          }
+        ],
+        "slicer": "OrcaSlicer 2.4.2, U1 inspection macros",
+        "status": "verified"
+      }
+    }
+  ],
+  "scope": "Verifica: geometria delle sedi, integrità 3MF, colori e nuovo slicing U1 tramite OrcaSlicer 2.4.2 su copie temporanee con macro compatibili. I file definitivi conservano le macro native Snapmaker Orca: aprirli come progetti e rifare lo slicing prima della stampa. Stime indicative; prova fisica di inserimento non eseguita."
+}

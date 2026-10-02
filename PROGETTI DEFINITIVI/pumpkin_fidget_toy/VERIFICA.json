@@ -1,0 +1,50 @@
+{
+  "original": "pumpkin+fidget+toy.3mf",
+  "original_sha256": "7f57b736187f4845d641a4738cfa010f3cc523d6ae0b7882246199c7e6658fa0",
+  "plates": [
+    {
+      "file": "pumpkin_fidget_toy_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 300,
+        "grams": [
+          69.87,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "6h 50m 28s"
+      },
+      "extrusion_bounds": [
+        105.333,
+        105.335,
+        164.668,
+        164.664
+      ],
+      "extrusion_moves": 1094909,
+      "tools": {
+        "0": 1094909
+      },
+      "features": {
+        "Brim": 2230,
+        "Inner wall": 479828,
+        "Outer wall": 305448,
+        "Bottom surface": 189,
+        "Gap infill": 294,
+        "Internal solid infill": 201740,
+        "Top surface": 272,
+        "Sparse infill": 103857,
+        "Overhang wall": 291,
+        "Bridge": 499,
+        "Internal Bridge": 261
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "9f981ac3b19dbe8a0318f39e06244567eda7ec55f42b4074cc587baf689271d8"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "progetto": "Squirtle in Love (San Valentino) - Multicolore Quadricromia U1",
+  "stampante": "Snapmaker U1 (4 ugelli indipendenti da 0,4 mm)",
+  "materiali": "SnapSpeed PLA e Silk Dual-Color PLA",
+  "piatto": "Textured PEI Plate",
+  "temperatura_ugello": {
+    "slot_1_pearl_white": 220,
+    "slot_2_red": 220,
+    "slot_3_silk_sunset_ember": 230,
+    "slot_4_silk_ice_lake": 230
+  },
+  "temperatura_piatto": 65,
+  "configurazione_bobine_fisiche_utente": {
+    "slot_1": "SnapSpeed PLA Pearl White (#E2DEDB) - Pancia / Ventre",
+    "slot_2": "SnapSpeed PLA Red (#E72F1D) - Occhi a cuore",
+    "slot_3": "Silk Dual-Color PLA Sunset Ember (#D9A63A / #CC434F) - Guscio posteriore",
+    "slot_4": "Silk Dual-Color PLA Ice Lake (#44ADE5 / #C4C7D9) - Corpo / Pelle"
+  },
+  "magneti": {
+    "presenti": false,
+    "note": "Nessuna sede per magneti presente nel modello. Trattasi di statuetta decorativa a corpo unico."
+  },
+  "slicing": {
+    "altezza_strato_mm": 0.12,
+    "altezza_primo_strato_mm": 0.20,
+    "livello_qualita": "High Quality per modelli decorativi (AGENTS.md)",
+    "supporti": "Tree (auto) solo sul piatto di stampa, ottimizzati sotto il mento",
+    "torre_di_spurgo": "Abilitata (larghezza 30 mm, brim 5 mm, necessaria per stabilizzare l'estrusione sui cambi utensile U1)",
+    "riempimento": "15% Gyroid",
+    "velocita": {
+      "pareti_esterne": 40,
+      "pareti_interne": 80,
+      "superfici_superiori": 30
+    },
+    "tempo_totale_stimato": "6h 43m 53s",
+    "filamento_totale_usato_g": 95.60,
+    "costo_stimato_totale_eur": 1.52,
+    "cambi_utensile_totali": 680,
+    "dettaglio_estrusori": {
+      "T0_Pancia_Pearl_White": {
+        "filamento_g": 21.36,
+        "attivazioni": 254
+      },
+      "T1_Cuori_Red": {
+        "filamento_g": 3.46,
+        "attivazioni": 48
+      },
+      "T2_Guscio_Silk_Sunset_Ember": {
+        "filamento_g": 25.89,
+        "attivazioni": 165
+      },
+      "T3_Corpo_Silk_Ice_Lake": {
+        "filamento_g": 44.89,
+        "attivazioni": 216
+      }
+    }
+  },
+  "file_progetto": {
+    "file": "Squirtle_in_Love_U1.3mf",
+    "sha256": "B894BE4D293773F0A2447E5C79E7540977F7C1DAAAA4E3F40CCDE3B1AE107DAA",
+    "status": "verificato"
+  }
+}

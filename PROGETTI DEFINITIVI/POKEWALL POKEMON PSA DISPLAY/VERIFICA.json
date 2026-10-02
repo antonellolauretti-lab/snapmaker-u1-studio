@@ -1,0 +1,49 @@
+{
+  "project_name": "Pokewall - Pokémon PSA Card Display",
+  "original_file": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DA VERIFICARE\\STAND POKEMON\\Pokewall+-+Pokémon+PSA+Card+Display.3mf",
+  "files_available": {
+    "recommended_3mf": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\POKEWALL POKEMON PSA DISPLAY\\Pokewall_PSA_Display_U1_3Piatti_ZeroCambi.3mf",
+    "two_plates_3mf": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\POKEWALL POKEMON PSA DISPLAY\\Pokewall_PSA_Display_U1_2Piatti.3mf",
+    "single_plate_3mf": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\POKEWALL POKEMON PSA DISPLAY\\Pokewall_PSA_Display_U1.3mf"
+  },
+  "printer": "Snapmaker U1",
+  "bed_size_mm": [270, 270],
+  "components_count": 3,
+  "components": [
+    {
+      "name": "Telaio Posteriore - Nero (Sede PSA 82.5mm)",
+      "extruder": 1,
+      "color": "Nero (#080A0D)",
+      "dims_mm": [112.4, 167.4, 14.6]
+    },
+    {
+      "name": "Guscio Inferiore Pokeball - Bianco",
+      "extruder": 2,
+      "color": "Bianco (#D9DFE5)",
+      "dims_mm": [112.4, 78.2, 13.8]
+    },
+    {
+      "name": "Guscio Superiore Pokeball - Rosso",
+      "extruder": 3,
+      "color": "Rosso (#E72F1D)",
+      "dims_mm": [112.4, 78.2, 13.8]
+    }
+  ],
+  "slot_slab_depth_mm": 6.5,
+  "slot_slab_width_mm": 82.5,
+  "slot_slab_height_mm": 137.2,
+  "psa_clearance_mm": {
+    "width_clearance": 1.2,
+    "height_clearance": 1.2,
+    "thickness_clearance": 0.5,
+    "compatible_bare_psa": true,
+    "compatible_bumper_psa": false
+  },
+  "estimated_weight_g": 114.0,
+  "estimated_time_total": "~1h 40m (con versione 3 piatti)",
+  "supports_required": true,
+  "support_locations": "Solo sottosquadri fori di scatto gusci frontali",
+  "waste_purge_g": 0,
+  "assembled_dims_mm": [112.4, 167.4, 14.6],
+  "physical_print_performed": false
+}

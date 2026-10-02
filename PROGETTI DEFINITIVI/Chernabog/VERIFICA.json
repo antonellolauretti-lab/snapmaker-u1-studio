@@ -1,0 +1,62 @@
+{
+  "progetto": "Chernabog (Fantasia) - Versione 15 cm",
+  "file_3mf": "Chernabog_U1_15CM_BLU_GIALLO_SLOT3_4.3mf",
+  "dimensione_bytes": 23380320,
+  "sha256": "538032f208e47288800ca5f6917013a63a3e00beb7eacd15ec3ac04d51fbb48a",
+  "stampante": "Snapmaker U1 (4 ugelli 0.4 mm)",
+  "profilo_filamento": "Snapmaker PLA SnapSpeed @U1",
+  "piatto": "PEI testurizzato (260 x 260 mm, temp 65°C)",
+  "ugello_temp_c": 220,
+  "scala_applicata": {
+    "percentuale": "82.38%",
+    "fattore": 0.82376945
+  },
+  "ingombro_modello_mm": {
+    "x": 82.73,
+    "y": 64.88,
+    "z": 150.0
+  },
+  "conteggio_mesh": {
+    "vertici": 730588,
+    "triangoli_totali": 1461188,
+    "triangoli_occhi_gialli": 1038
+  },
+  "sedi_magneti": {
+    "presenti": false,
+    "conteggio": 0,
+    "note": "Nessuna sede magnete presente nel modello"
+  },
+  "colori_e_bobine": {
+    "slot_1": {
+      "colore": "Non utilizzato",
+      "ruolo": "Libero",
+      "consumo_g": 0.0
+    },
+    "slot_2": {
+      "colore": "Non utilizzato",
+      "ruolo": "Libero",
+      "consumo_g": 0.0
+    },
+    "slot_3": {
+      "colore": "Giallo (#FFD700)",
+      "filamento": "PLA SnapSpeed",
+      "ruolo": "Pupille / occhi a mandorla",
+      "consumo_g": 0.03
+    },
+    "slot_4": {
+      "colore": "Blu (#0055FF)",
+      "filamento": "SnapSpeed PLA Filament (RFID) - 1KG - Blue (003776) SKU: 34064",
+      "ruolo": "Corpo intero, ali, corna, base rocciosa e supporti ad albero",
+      "consumo_g": 74.11
+    }
+  },
+  "statistiche_stampa": {
+    "tempo_stimato": "6h 15m 40s",
+    "filamento_totale_g": 74.14,
+    "cambi_utensile_totali": 8,
+    "quota_occhi_z_mm": "da 93.96 a 95.24 mm (8 layer bicolore su 938 totali)",
+    "supporti": "Tree slim (ad albero) ancorati solo al piatto di stampa (support_on_build_plate_only=1)",
+    "torre_spurgo": "DISABILITATA di default (0 g sprecati, macro hardware SM_PRINT_PREEXTRUDE_FILAMENT su dock U1)"
+  },
+  "stato_verifica": "SUPERATA_CON_SUCCESSO"
+}

@@ -1,0 +1,176 @@
+{
+  "original": "3pumpkin+4plate+NO+AMS.3mf",
+  "original_sha256": "7967581e7cbc9a786b7d1e0a76d9fdd7a01442e37e1d6cf7e005e1fbdcaef9b7",
+  "plates": [
+    {
+      "file": "3pumpkin_4plate_NO_AMS_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 790,
+        "grams": [
+          203.72,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "18h 37m 10s"
+      },
+      "extrusion_bounds": [
+        42.44,
+        40.9,
+        227.559,
+        229.099
+      ],
+      "extrusion_moves": 5043799,
+      "tools": {
+        "0": 5043799
+      },
+      "features": {
+        "Support": 12342,
+        "Support interface": 11972,
+        "Inner wall": 1092082,
+        "Outer wall": 554279,
+        "Bottom surface": 1197,
+        "Gap infill": 1121,
+        "Overhang wall": 762,
+        "Internal solid infill": 418271,
+        "Sparse infill": 2947709,
+        "Internal Bridge": 2610,
+        "Top surface": 1345,
+        "Bridge": 109
+      },
+      "colors": [
+        "#FF9016"
+      ],
+      "layer": "0.12",
+      "support_type": "normal(auto)",
+      "geometry_preserved": true,
+      "sha256": "5b089f7de314824dd5643f1f7ee9613eabc9297b36bced5c1608af0f40f3dc24"
+    },
+    {
+      "file": "3pumpkin_4plate_NO_AMS_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 235,
+        "grams": [
+          0.0,
+          8.43,
+          0.0,
+          0.0
+        ],
+        "time": "58m 29s"
+      },
+      "extrusion_bounds": [
+        114.745,
+        112.741,
+        159.363,
+        159.133
+      ],
+      "extrusion_moves": 248976,
+      "tools": {
+        "1": 248976
+      },
+      "features": {
+        "Inner wall": 114699,
+        "Outer wall": 64839,
+        "Bottom surface": 489,
+        "Gap infill": 122,
+        "Internal solid infill": 27867,
+        "Sparse infill": 40551,
+        "Overhang wall": 105,
+        "Bridge": 117,
+        "Internal Bridge": 129,
+        "Top surface": 58
+      },
+      "colors": [
+        "#FF9016",
+        "#00AE42"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "372bdc65a83c8df6ef96b93f4639c401585e21f186b19353dcfa9891aaab6c19"
+    },
+    {
+      "file": "3pumpkin_4plate_NO_AMS_U1_P3.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 196,
+        "grams": [
+          0.0,
+          25.6,
+          0.0,
+          0.0
+        ],
+        "time": "2h 15m 35s"
+      },
+      "extrusion_bounds": [
+        108.71,
+        95.21,
+        161.285,
+        174.789
+      ],
+      "extrusion_moves": 570339,
+      "tools": {
+        "1": 570339
+      },
+      "features": {
+        "Inner wall": 194470,
+        "Outer wall": 98721,
+        "Bottom surface": 453,
+        "Gap infill": 24,
+        "Internal solid infill": 58131,
+        "Sparse infill": 218259,
+        "Internal Bridge": 191,
+        "Top surface": 90
+      },
+      "colors": [
+        "#FF9016",
+        "#FFFFFF"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "c1b5d707ba18981df2ae79c38a3e56ec0e932a9e46d004827a77b1ea799ccec1"
+    },
+    {
+      "file": "3pumpkin_4plate_NO_AMS_U1_P4.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 38,
+        "grams": [
+          0.0,
+          0.6,
+          0.0,
+          0.0
+        ],
+        "time": "6m 5s"
+      },
+      "extrusion_bounds": [
+        127.803,
+        126.329,
+        142.194,
+        143.666
+      ],
+      "extrusion_moves": 24071,
+      "tools": {
+        "1": 24071
+      },
+      "features": {
+        "Inner wall": 9578,
+        "Outer wall": 6777,
+        "Bottom surface": 117,
+        "Internal solid infill": 7581,
+        "Top surface": 18
+      },
+      "colors": [
+        "#FF9016",
+        "#000000"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "acab7328aabf0d3662ec5f50aec0af863d95efd499b242b13ecd56539308d216"
+    }
+  ]
+}

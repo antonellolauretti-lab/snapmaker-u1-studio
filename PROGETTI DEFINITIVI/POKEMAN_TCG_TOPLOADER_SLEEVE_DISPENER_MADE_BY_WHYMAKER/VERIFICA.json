@@ -1,0 +1,182 @@
+{
+  "original": "POKEMAN_TCG_TOPLOADER_SLEEVE_DISPENER_MADE_BY_WHYMAKER.3mf",
+  "original_sha256": "e45f117cb3253f5696204857ca291799e1bb4fbd127b9b7a7e7f892c6a9c45a1",
+  "plates": [
+    {
+      "file": "POKEMAN_TCG_TOPLOADER_SLEEVE_DISPENER_MADE_BY_WHYMAKER_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 625,
+        "grams": [
+          306.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "18h 48m 22s"
+      },
+      "extrusion_bounds": [
+        28.372,
+        70.601,
+        241.628,
+        199.399
+      ],
+      "extrusion_moves": 2170511,
+      "tools": {
+        "0": 2170511
+      },
+      "features": {
+        "Brim": 2804,
+        "Inner wall": 107618,
+        "Outer wall": 44990,
+        "Bottom surface": 979,
+        "Gap infill": 43,
+        "Internal solid infill": 20387,
+        "Sparse infill": 1988367,
+        "Internal Bridge": 3380,
+        "Top surface": 1943
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "3c08376cd2302e1e18ab054c6a0193623af571fe27f40fd1713f49b508522391"
+    },
+    {
+      "file": "POKEMAN_TCG_TOPLOADER_SLEEVE_DISPENER_MADE_BY_WHYMAKER_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 131,
+        "grams": [
+          26.51,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1h 33m 43s"
+      },
+      "extrusion_bounds": [
+        96.957,
+        95.343,
+        173.154,
+        174.659
+      ],
+      "extrusion_moves": 238434,
+      "tools": {
+        "0": 238434
+      },
+      "features": {
+        "Support": 3740,
+        "Inner wall": 11061,
+        "Outer wall": 5901,
+        "Bottom surface": 605,
+        "Gap infill": 51,
+        "Internal solid infill": 14683,
+        "Sparse infill": 200786,
+        "Support interface": 311,
+        "Bridge": 165,
+        "Internal Bridge": 474,
+        "Top surface": 657
+      },
+      "colors": [
+        "#F72323"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "627e40cc139fdc079613904ad0991f0030c0fd4d569d75ba9d3ae4149675b211"
+    },
+    {
+      "file": "POKEMAN_TCG_TOPLOADER_SLEEVE_DISPENER_MADE_BY_WHYMAKER_U1_P3.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 1234,
+        "grams": [
+          182.31,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "12h 56m 8s"
+      },
+      "extrusion_bounds": [
+        57.432,
+        61.419,
+        207.061,
+        207.061
+      ],
+      "extrusion_moves": 2161725,
+      "tools": {
+        "0": 2161725
+      },
+      "features": {
+        "Brim": 2182,
+        "Support": 205171,
+        "Inner wall": 105437,
+        "Outer wall": 41489,
+        "Bottom surface": 105,
+        "Internal solid infill": 66432,
+        "Sparse infill": 1737698,
+        "Support interface": 2558,
+        "Overhang wall": 63,
+        "Bridge": 238,
+        "Internal Bridge": 262,
+        "Top surface": 76,
+        "Gap infill": 14
+      },
+      "colors": [
+        "#F72323"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "2d85127095c475d382095d1f8ab3ccde30e529f6fc824643b334cbe66326eaa8"
+    },
+    {
+      "file": "POKEMAN_TCG_TOPLOADER_SLEEVE_DISPENER_MADE_BY_WHYMAKER_U1_P4.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 137,
+        "grams": [
+          0.25,
+          6.65,
+          0.0,
+          0.0
+        ],
+        "time": "28m 50s"
+      },
+      "extrusion_bounds": [
+        123.088,
+        123.088,
+        267.14,
+        239.517
+      ],
+      "extrusion_moves": 124231,
+      "tools": {
+        "1": 120735,
+        "0": 3496
+      },
+      "features": {
+        "Prime tower": 37453,
+        "Inner wall": 33438,
+        "Outer wall": 17430,
+        "Bottom surface": 130,
+        "Gap infill": 60,
+        "Internal solid infill": 2913,
+        "Sparse infill": 32298,
+        "Internal Bridge": 297,
+        "Top surface": 212
+      },
+      "colors": [
+        "#FFFFFF",
+        "#F72323"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "b1b2cf51b46f17e55a227626931ee7129a449e3949720dc2f58c87113b4f70b8"
+    }
+  ]
+}

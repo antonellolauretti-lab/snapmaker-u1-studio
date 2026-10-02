@@ -1,0 +1,389 @@
+{
+  "original": "STITCH+X+PIKACHU+NO+AMS.3mf",
+  "original_sha256": "61b42a4870d2e5aee3da4b7698f6b93de03e3df6afa5d90c0a1a4ab54842c6e8",
+  "plates": [
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 1459,
+        "grams": [
+          231.15,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "21h 44m 15s"
+      },
+      "extrusion_bounds": [
+        75.11,
+        70.182,
+        194.887,
+        199.014
+      ],
+      "extrusion_moves": 5324257,
+      "tools": {
+        "0": 5324257
+      },
+      "features": {
+        "Support": 1137168,
+        "Support interface": 85251,
+        "Outer wall": 405772,
+        "Inner wall": 779980,
+        "Overhang wall": 2625,
+        "Bridge": 971,
+        "Internal solid infill": 409657,
+        "Sparse infill": 2501331,
+        "Internal Bridge": 668,
+        "Top surface": 517,
+        "Gap infill": 317
+      },
+      "colors": [
+        "#FFF144"
+      ],
+      "layer": "0.12",
+      "support_type": "normal(auto)",
+      "geometry_preserved": true,
+      "sha256": "aaf8334e12eb521c4416d92568275a541135c37d884a3a41b07233bdb586c742"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 190,
+        "grams": [
+          11.11,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1h 27m 5s"
+      },
+      "extrusion_bounds": [
+        35.706,
+        81.528,
+        234.964,
+        190.009
+      ],
+      "extrusion_moves": 363179,
+      "tools": {
+        "0": 363179
+      },
+      "features": {
+        "Brim": 1432,
+        "Support": 94792,
+        "Inner wall": 109909,
+        "Outer wall": 65463,
+        "Bottom surface": 291,
+        "Gap infill": 60,
+        "Internal solid infill": 48836,
+        "Sparse infill": 42052,
+        "Top surface": 137,
+        "Overhang wall": 2,
+        "Internal Bridge": 205
+      },
+      "colors": [
+        "#000000"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "7bec34b161398a8cd372e22ffc1056dcc0a55cb5904eac82608e3e915bcbb364"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P3.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 51,
+        "grams": [
+          1.33,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "8m 26s"
+      },
+      "extrusion_bounds": [
+        96.892,
+        121.233,
+        173.088,
+        142.969
+      ],
+      "extrusion_moves": 29242,
+      "tools": {
+        "0": 29242
+      },
+      "features": {
+        "Support": 4653,
+        "Inner wall": 9943,
+        "Outer wall": 5334,
+        "Bottom surface": 127,
+        "Gap infill": 85,
+        "Internal solid infill": 4123,
+        "Sparse infill": 4496,
+        "Internal Bridge": 239,
+        "Top surface": 154,
+        "Overhang wall": 88
+      },
+      "colors": [
+        "#FF0000"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "c5e1821e5974aadb3e511d8b30f7ad8f9808a5b07da05af9b2d0c9c161c0255e"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P4.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 56,
+        "grams": [
+          0.64,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "8m 8s"
+      },
+      "extrusion_bounds": [
+        106.756,
+        112.83,
+        161.934,
+        159.565
+      ],
+      "extrusion_moves": 28261,
+      "tools": {
+        "0": 28261
+      },
+      "features": {
+        "Support": 17999,
+        "Inner wall": 4751,
+        "Outer wall": 3215,
+        "Bottom surface": 20,
+        "Gap infill": 4,
+        "Internal solid infill": 2245,
+        "Top surface": 27
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "fe5ec55eed24fadb7aabda910ab89314d65645d7e4d0cff080e41b012ca026b3"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P5.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 371,
+        "grams": [
+          63.82,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "6h 26m 23s"
+      },
+      "extrusion_bounds": [
+        47.677,
+        66.052,
+        222.315,
+        203.946
+      ],
+      "extrusion_moves": 1502356,
+      "tools": {
+        "0": 1502356
+      },
+      "features": {
+        "Support": 248129,
+        "Inner wall": 384431,
+        "Outer wall": 204279,
+        "Bottom surface": 621,
+        "Gap infill": 406,
+        "Internal solid infill": 233767,
+        "Overhang wall": 32,
+        "Bridge": 22,
+        "Sparse infill": 428395,
+        "Internal Bridge": 1271,
+        "Top surface": 764,
+        "Support interface": 239
+      },
+      "colors": [
+        "#668FC1"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "824c470756638cea9af603169f30679cc32cfdd93deeb7e61362dd61e82d5d55"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P6.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 111,
+        "grams": [
+          4.48,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "24m 9s"
+      },
+      "extrusion_bounds": [
+        99.407,
+        105.566,
+        170.592,
+        164.442
+      ],
+      "extrusion_moves": 97307,
+      "tools": {
+        "0": 97307
+      },
+      "features": {
+        "Inner wall": 33260,
+        "Outer wall": 17400,
+        "Bottom surface": 220,
+        "Gap infill": 76,
+        "Internal solid infill": 20685,
+        "Sparse infill": 25087,
+        "Internal Bridge": 389,
+        "Top surface": 190
+      },
+      "colors": [
+        "#06349D"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "c263077c8e1e4b0c02c2d40d9ec33d458790693998bb3bf6d25868f075f5ec5b"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P7.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 82,
+        "grams": [
+          5.79,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "32m 52s"
+      },
+      "extrusion_bounds": [
+        89.99,
+        104.794,
+        179.98,
+        168.519
+      ],
+      "extrusion_moves": 94420,
+      "tools": {
+        "0": 94420
+      },
+      "features": {
+        "Support": 6607,
+        "Inner wall": 29108,
+        "Outer wall": 20609,
+        "Bottom surface": 248,
+        "Gap infill": 179,
+        "Overhang wall": 372,
+        "Internal solid infill": 20697,
+        "Bridge": 361,
+        "Sparse infill": 15362,
+        "Internal Bridge": 603,
+        "Top surface": 274
+      },
+      "colors": [
+        "#F55A74"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "2894d4d98ac0a1208c63b0d58ad736263fe3dafbeae3e396d1010ecb5afb1b7c"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P8.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 95,
+        "grams": [
+          3.91,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "21m 56s"
+      },
+      "extrusion_bounds": [
+        112.163,
+        115.874,
+        157.861,
+        154.122
+      ],
+      "extrusion_moves": 69414,
+      "tools": {
+        "0": 69414
+      },
+      "features": {
+        "Inner wall": 26935,
+        "Outer wall": 14531,
+        "Bottom surface": 215,
+        "Gap infill": 52,
+        "Internal solid infill": 7710,
+        "Sparse infill": 19676,
+        "Internal Bridge": 164,
+        "Top surface": 131
+      },
+      "colors": [
+        "#9D432C"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "731d56844636fc80e5db12d2dc81f51350e724c747bfb9aa94e65ab2aac89a25"
+    },
+    {
+      "file": "STITCH_X_PIKACHU_NO_AMS_U1_P9.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 364,
+        "grams": [
+          20.09,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1h 49m 17s"
+      },
+      "extrusion_bounds": [
+        89.608,
+        92.096,
+        180.397,
+        177.914
+      ],
+      "extrusion_moves": 394007,
+      "tools": {
+        "0": 394007
+      },
+      "features": {
+        "Inner wall": 120307,
+        "Outer wall": 63460,
+        "Bottom surface": 321,
+        "Gap infill": 240,
+        "Internal solid infill": 73040,
+        "Sparse infill": 135851,
+        "Internal Bridge": 471,
+        "Top surface": 317
+      },
+      "colors": [
+        "#50C8EF"
+      ],
+      "layer": "0.12",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "a16cb9a34ff329a1a120aed7c42b710bec1ebbc7a21c3c093e2de6c27b47b0fa"
+    }
+  ]
+}

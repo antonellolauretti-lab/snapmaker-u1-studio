@@ -1,0 +1,100 @@
+{
+  "original": "Keychain+Flexi+Pika-Vamp+Cute+Halloween+Articulated+Toy.3mf",
+  "original_sha256": "6a22f7277f1b3c2a602257f980664c9bb6632436423e3074dd8d6dfc306ac824",
+  "plates": [
+    {
+      "file": "Keychain_Flexi_Pika-Vamp_Cute_Halloween_Articulated_Toy_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 198,
+        "grams": [
+          23.49,
+          2.54,
+          0.9,
+          1.01
+        ],
+        "time": "2h 22m 49s"
+      },
+      "extrusion_bounds": [
+        109.133,
+        82.011,
+        267.817,
+        253.274
+      ],
+      "extrusion_moves": 420471,
+      "tools": {
+        "1": 28385,
+        "0": 377882,
+        "2": 7409,
+        "3": 6795
+      },
+      "features": {
+        "Support": 18006,
+        "Inner wall": 116564,
+        "Outer wall": 64493,
+        "Bottom surface": 432,
+        "Gap infill": 178,
+        "Prime tower": 55107,
+        "Internal solid infill": 52257,
+        "Overhang wall": 140,
+        "Bridge": 129,
+        "Sparse infill": 112099,
+        "Top surface": 141,
+        "Internal Bridge": 479,
+        "Support interface": 446
+      },
+      "colors": [
+        "#FEC600",
+        "#161616",
+        "#FFFFFF",
+        "#C12E1F"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "2d50b92b06869e59160ad208e86a315a9f685a856a32f35f3cefffa6e3e04744"
+    },
+    {
+      "file": "Keychain_Flexi_Pika-Vamp_Cute_Halloween_Articulated_Toy_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 299,
+        "grams": [
+          14.23,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1h 2m 17s"
+      },
+      "extrusion_bounds": [
+        110.318,
+        107.782,
+        161.911,
+        159.825
+      ],
+      "extrusion_moves": 254914,
+      "tools": {
+        "0": 254914
+      },
+      "features": {
+        "Brim": 1656,
+        "Support": 35000,
+        "Outer wall": 58194,
+        "Overhang wall": 276,
+        "Inner wall": 114986,
+        "Internal solid infill": 26435,
+        "Sparse infill": 17873,
+        "Support interface": 454,
+        "Bridge": 40
+      },
+      "colors": [
+        "#161616"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "4efb304b0d93f44719a4dc330978d1998c0bdfd0aaf8f139ffe160738474b9cd"
+    }
+  ]
+}

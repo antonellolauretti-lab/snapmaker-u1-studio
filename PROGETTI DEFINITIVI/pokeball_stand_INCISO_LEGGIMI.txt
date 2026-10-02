@@ -1,0 +1,9 @@
+Poké Ball - incisione sulla parete interna dello stand
+
+Scritta sul lato opposto all'apertura, seguendo la curvatura.
+Lunghezza lungo arco: 24 mm; altezza con accento: 4,07 mm; profondita nominale: 0,6 mm.
+Spessore residuo minimo campionato: 5.90 mm.
+Geometria chiusa e unica, ingombri conservati. Nessuna sede per magneti presente.
+Impostazioni macchina, profilo qualita, colore e disposizione identici al file originale.
+Slicing di controllo completato con OrcaSlicer 2.4.2 portable; il G-code di controllo non viene fornito per la stampa.
+Aprire il nuovo 3MF come progetto e affettare in Snapmaker Orca.

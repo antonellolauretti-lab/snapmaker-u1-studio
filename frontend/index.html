@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snapmaker U1 - Studio Parametrico 3D</title>
+  <meta name="api-base-url" content="">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-badge">U1 STUDIO</div>
+      <div>
+        <h1>Generatore Parametrico Snapmaker U1</h1>
+        <div class="brand-subtitle">Portachiavi & Targhette Multicolore 4 Ugelli</div>
+      </div>
+    </div>
+    <div class="header-badges">
+      <button type="button" id="btnApiSettings" class="feature-pill btn-api-pill" title="Configura l'endpoint del backend (Render / Local)">
+        <span class="api-status-dot" id="apiStatusDot"></span>
+        <span id="apiStatusLabel">API: Connessione...</span>
+      </button>
+      <span class="feature-pill">⚡ 4 Tool Independent Dock</span>
+      <span class="feature-pill">🛡️ Zero Prime Tower</span>
+      <span class="feature-pill">🔲 Piatto PEI Testurizzato</span>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <main class="app-main">
+    
+    <!-- Sidebar / Drawer Configurator -->
+    <aside class="sidebar">
+      <div class="sidebar-content" id="sidebarContent">
+
+        <!-- Selettore Prodotto a Tab -->
+        <div class="product-tabs">
+          <button type="button" class="product-tab active" data-product="keychain" id="tabKeychain">
+            🏷️ Portachiavi
+          </button>
+          <button type="button" class="product-tab" data-product="desk_sign" id="tabDeskSign">
+            🏛️ Targhetta da Tavolo
+          </button>
+        </div>
+        
+        <!-- ========================================== -->
+        <!-- SEZIONI ESCLUSIVE PORTACHIAVI (KEYCHAIN)   -->
+        <!-- ========================================== -->
+
+        <!-- Sezione 1 (Portachiavi): Testo & Font -->
+        <div class="param-section only-keychain">
+          <div class="section-title">
+            <span>1. Testo & Tipografia</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="textInput">Scritta Personalizzata</label>
+            <input type="text" id="textInput" value="ANTONELLO" maxlength="26" placeholder="Inserisci nome o testo...">
+          </div>
+          
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label class="form-label" for="fontSelect" style="margin: 0;">Carattere Tipografico</label>
+              <button type="button" id="btnUploadFont" class="btn-text-action">📂 Carica .ttf / .otf</button>
+              <input type="file" id="fontFileInput" accept=".ttf,.otf" style="display: none;">
+            </div>
+            <select id="fontSelect">
+              <option value="Arial">Caricamento font in corso...</option>
+            </select>
+            <div id="fontUploadStatus" style="font-size: 11px; color: #2ed573; display: none; margin-top: 2px;"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span>Altezza Caratteri</span>
+              <span class="val-badge" id="fontSizeVal">14 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="fontSizeInput" min="8" max="28" step="0.5" value="14">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Spaziatura Lettere (Tracking)</span>
+              <span class="val-badge" id="letterSpacingVal">0 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="letterSpacingInput" min="-1" max="6" step="0.2" value="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione 2 (Portachiavi): Icona / Simbolo Sagomato -->
+        <div class="param-section only-keychain">
+          <div class="section-title">
+            <span>2. Icona & Simbolo 3D</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Scegli Simbolo</label>
+            <div class="icon-selector-grid">
+              <label class="icon-card">
+                <input type="radio" name="iconName" value="none" checked>
+                <div class="icon-card-body">❌ Nessuna</div>
+              </label>
+              <label class="icon-card">
+                <input type="radio" name="iconName" value="heart">
+                <div class="icon-card-body">❤️ Cuore</div>
+              </label>
+              <label class="icon-card">
+                <input type="radio" name="iconName" value="star">
+                <div class="icon-card-body">⭐ Stella</div>
+              </label>
+              <label class="icon-card">
+                <input type="radio" name="iconName" value="paw">
+                <div class="icon-card-body">🐾 Zampa</div>
+              </label>
+              <label class="icon-card">
+                <input type="radio" name="iconName" value="lightning">
+                <div class="icon-card-body">⚡ Fulmine</div>
+              </label>
+              <label class="icon-card">
+                <input type="radio" name="iconName" value="crown">
+                <div class="icon-card-body">👑 Corona</div>
+              </label>
+            </div>
+          </div>
+
+          <div id="iconOptionsWrap" style="display: none; flex-direction: column; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">Posizione Icona</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="iconPos" value="left" checked>
+                  <span>Sinistra</span>
+                </label>
+                <label>
+                  <input type="radio" name="iconPos" value="right">
+                  <span>Destra</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="extruderIconSelect">Estrusore Icona (Supporto 3° Colore U1)</label>
+              <select id="extruderIconSelect" class="tool-select">
+                <option value="-1" selected>Uguale al Testo</option>
+                <option value="0">Slot T0</option>
+                <option value="1">Slot T1</option>
+                <option value="2">Slot T2</option>
+                <option value="3">Slot T3</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione 3 (Portachiavi): Geometria Base -->
+        <div class="param-section only-keychain">
+          <div class="section-title">
+            <span>3. Geometria Base</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profilo Contorno</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="baseStyle" value="rectangle" checked>
+                <span>Rettangolo</span>
+              </label>
+              <label>
+                <input type="radio" name="baseStyle" value="contour">
+                <span>Sagomato</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Spessore Base (Z)</span>
+              <span class="val-badge" id="baseThicknessVal">2.4 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="baseThicknessInput" min="1.4" max="5.0" step="0.2" value="2.4">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Raggio Raccordi Angoli</span>
+              <span class="val-badge" id="cornerRadiusVal">4 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="cornerRadiusInput" min="1" max="10" step="0.5" value="4">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Margine Orizzontale (X)</span>
+              <span class="val-badge" id="paddingXVal">5 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="paddingXInput" min="2" max="14" step="0.5" value="5">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Margine Verticale (Y)</span>
+              <span class="val-badge" id="paddingYVal">4.5 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="paddingYInput" min="2" max="12" step="0.5" value="4.5">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione 4 (Portachiavi): Lavorazione Testo -->
+        <div class="param-section only-keychain">
+          <div class="section-title">
+            <span>4. Lavorazione Testo</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stile Estrusione</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="textMode" value="embossed" checked>
+                <span>Rilievo</span>
+              </label>
+              <label>
+                <input type="radio" name="textMode" value="debossed">
+                <span>Inciso</span>
+              </label>
+              <label>
+                <input type="radio" name="textMode" value="flush">
+                <span>A filo PEI</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Altezza Lavorazione Testo</span>
+              <span class="val-badge" id="textThicknessVal">1.2 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="textThicknessInput" min="0.6" max="2.4" step="0.2" value="1.2">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione 5 (Portachiavi): Foro Anello -->
+        <div class="param-section only-keychain">
+          <div class="section-title">
+            <span>5. Foro Anello Portachiavi</span>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
+              <input type="checkbox" id="holeToggle" checked> Attivo
+            </label>
+          </div>
+          <div id="holeOptionsWrap" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Posizione</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="holePos" value="left" checked>
+                  <span>Sinistra</span>
+                </label>
+                <label>
+                  <input type="radio" name="holePos" value="right">
+                  <span>Destra</span>
+                </label>
+                <label>
+                  <input type="radio" name="holePos" value="top">
+                  <span>Alto</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <span>Diametro Foro Passante</span>
+                <span class="val-badge" id="holeDiameterVal">5 mm</span>
+              </label>
+              <div class="range-wrap">
+                <input type="range" id="holeDiameterInput" min="3.5" max="8.0" step="0.5" value="5">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SEZIONI ESCLUSIVE TARGHETTA DA TAVOLO      -->
+        <!-- ========================================== -->
+
+        <!-- Sezione Base Targhetta -->
+        <div class="param-section only-desksign">
+          <div class="section-title">
+            <span>1. Struttura Base Targhetta</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profilo Strutturale</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="dsBaseMode" value="wedge" checked>
+                <span>Wedge (Cuneo 3D)</span>
+              </label>
+              <label>
+                <input type="radio" name="dsBaseMode" value="flat">
+                <span>Flat (Piatta)</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="dsWedgeAngleGroup">
+            <label class="form-label">
+              <span>Angolo di Lettura (Inclinazione)</span>
+              <span class="val-badge" id="dsWedgeAngleVal">45°</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="dsWedgeAngleInput" min="25" max="75" step="5" value="45">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Spessore Base / Labbro Frontale</span>
+              <span class="val-badge" id="dsBaseThicknessVal">2.4 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="dsBaseThicknessInput" min="1.5" max="6.0" step="0.3" value="2.4">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Margine Orizzontale (X)</span>
+              <span class="val-badge" id="dsPaddingXVal">6 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="dsPaddingXInput" min="3" max="18" step="0.5" value="6">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>Margine Verticale (Y)</span>
+              <span class="val-badge" id="dsPaddingYVal">5 mm</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="dsPaddingYInput" min="3" max="14" step="0.5" value="5">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione Riga 1: Titolo Principale -->
+        <div class="param-section only-desksign">
+          <div class="section-title">
+            <span>2. Riga 1 (Titolo Principale)</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dsText1Input">Testo Principale</label>
+            <input type="text" id="dsText1Input" value="CHARIZARD" maxlength="32" placeholder="Es. Nome o Titolo...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dsFont1Select">Font Riga 1</label>
+            <select id="dsFont1Select">
+              <option value="Arial">Caricamento...</option>
+            </select>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label">
+                <span>Altezza Carattere</span>
+                <span class="val-badge" id="dsFontSize1Val">14 mm</span>
+              </label>
+              <div class="range-wrap">
+                <input type="range" id="dsFontSize1Input" min="8" max="28" step="0.5" value="14">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <span>Rilievo (Z)</span>
+                <span class="val-badge" id="dsThickness1Val">1.2 mm</span>
+              </label>
+              <div class="range-wrap">
+                <input type="range" id="dsThickness1Input" min="0.6" max="2.5" step="0.2" value="1.2">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dsExtruderLine1Select">Estrusore Riga 1</label>
+            <select id="dsExtruderLine1Select" class="tool-select">
+              <option value="0">Slot T0</option>
+              <option value="1" selected>Slot T1</option>
+              <option value="2">Slot T2</option>
+              <option value="3">Slot T3</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sezione Riga 2: Sottotitolo / Dettagli -->
+        <div class="param-section only-desksign">
+          <div class="section-title">
+            <span>3. Riga 2 (Sottotitolo)</span>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
+              <input type="checkbox" id="dsLine2Toggle" checked> Attivo
+            </label>
+          </div>
+          <div id="dsLine2Wrap" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="dsText2Input">Testo Secondario</label>
+              <input type="text" id="dsText2Input" value="BASE SET 1999" maxlength="36" placeholder="Es. Ruolo o Sottotitolo...">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dsFont2Select">Font Riga 2</label>
+              <select id="dsFont2Select">
+                <option value="Arial">Caricamento...</option>
+              </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label class="form-label">
+                  <span>Altezza Carattere</span>
+                  <span class="val-badge" id="dsFontSize2Val">7.5 mm</span>
+                </label>
+                <div class="range-wrap">
+                  <input type="range" id="dsFontSize2Input" min="5" max="18" step="0.5" value="7.5">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <span>Spazio tra Righe</span>
+                  <span class="val-badge" id="dsLineSpacingVal">3.5 mm</span>
+                </label>
+                <div class="range-wrap">
+                  <input type="range" id="dsLineSpacingInput" min="1.5" max="10" step="0.5" value="3.5">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dsExtruderLine2Select">Estrusore Riga 2</label>
+              <select id="dsExtruderLine2Select" class="tool-select">
+                <option value="0">Slot T0</option>
+                <option value="1">Slot T1</option>
+                <option value="2" selected>Slot T2</option>
+                <option value="3">Slot T3</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione Cornice & Allineamento -->
+        <div class="param-section only-desksign">
+          <div class="section-title">
+            <span>4. Cornice Decorativa & Stile</span>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
+              <input type="checkbox" id="dsBorderToggle" checked> Attivo
+            </label>
+          </div>
+          <div id="dsBorderWrap" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Allineamento Testo</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="dsTextAlign" value="left">
+                  <span>Sinistra</span>
+                </label>
+                <label>
+                  <input type="radio" name="dsTextAlign" value="center" checked>
+                  <span>Centro</span>
+                </label>
+                <label>
+                  <input type="radio" name="dsTextAlign" value="right">
+                  <span>Destra</span>
+                </label>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label class="form-label">
+                  <span>Larghezza Bordo</span>
+                  <span class="val-badge" id="dsBorderWidthVal">2 mm</span>
+                </label>
+                <div class="range-wrap">
+                  <input type="range" id="dsBorderWidthInput" min="1.0" max="4.5" step="0.5" value="2.0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <span>Rilievo Cornice (Z)</span>
+                  <span class="val-badge" id="dsBorderThicknessVal">1 mm</span>
+                </label>
+                <div class="range-wrap">
+                  <input type="range" id="dsBorderThicknessInput" min="0.4" max="2.0" step="0.2" value="1.0">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <span>Raggio Raccordi Cornice</span>
+                <span class="val-badge" id="dsCornerRadiusVal">3 mm</span>
+              </label>
+              <div class="range-wrap">
+                <input type="range" id="dsCornerRadiusInput" min="0" max="8" step="0.5" value="3">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dsExtruderBorderSelect">Estrusore Cornice Decorativa</label>
+              <select id="dsExtruderBorderSelect" class="tool-select">
+                <option value="0">Slot T0</option>
+                <option value="1">Slot T1</option>
+                <option value="2">Slot T2</option>
+                <option value="3" selected>Slot T3</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SEZIONE COMUNE: ESTRUSORI & PALETTE U1     -->
+        <!-- ========================================== -->
+        <div class="param-section">
+          <div class="section-title">
+            <span>Estrusori & Palette U1</span>
+          </div>
+
+          <!-- Preset Rapidi Palette -->
+          <div class="form-group">
+            <label class="form-label">Preset Rapidi Filamenti</label>
+            <div class="presets-row">
+              <button type="button" class="preset-btn" data-preset="snapmaker" title="Snapmaker Original">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #161616 25%, #ffffff 25% 50%, #e31b23 50% 75%, #ffd400 75%);"></span>
+                Official U1
+              </button>
+              <button type="button" class="preset-btn" data-preset="sunset" title="Sunset Ember & Gold">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #1c120c 25%, #ff7b00 25% 50%, #ffd700 50% 75%, #e63946 75%);"></span>
+                Sunset Gold
+              </button>
+              <button type="button" class="preset-btn" data-preset="cyberpunk" title="Neon Cyberpunk">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #0e111a 25%, #00f5d4 25% 50%, #f72585 50% 75%, #7b2cbf 75%);"></span>
+                Cyberpunk
+              </button>
+              <button type="button" class="preset-btn" data-preset="forest" title="Forest & Sage">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #18231c 25%, #84a98c 25% 50%, #52796f 50% 75%, #cad2c5 75%);"></span>
+                Forest Sage
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+            <div class="form-group">
+              <label class="form-label" for="extruderBaseSelect">Estrusore Base</label>
+              <select id="extruderBaseSelect" class="tool-select">
+                <option value="0" selected>Slot T0</option>
+                <option value="1">Slot T1</option>
+                <option value="2">Slot T2</option>
+                <option value="3">Slot T3</option>
+              </select>
+            </div>
+            <div class="form-group only-keychain" id="extruderTextWrap">
+              <label class="form-label" for="extruderTextSelect">Estrusore Testo</label>
+              <select id="extruderTextSelect" class="tool-select">
+                <option value="0">Slot T0</option>
+                <option value="1" selected>Slot T1</option>
+                <option value="2">Slot T2</option>
+                <option value="3">Slot T3</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="form-label" style="margin-top: 6px;">Colori Assegnati ai 4 Slot U1</label>
+          <div class="palette-grid">
+            <div class="tool-slot">
+              <span class="tool-badge">T0</span>
+              <div class="color-input-wrap">
+                <input type="color" id="colorT0" value="#161616">
+              </div>
+            </div>
+            <div class="tool-slot">
+              <span class="tool-badge">T1</span>
+              <div class="color-input-wrap">
+                <input type="color" id="colorT1" value="#ffffff">
+              </div>
+            </div>
+            <div class="tool-slot">
+              <span class="tool-badge">T2</span>
+              <div class="color-input-wrap">
+                <input type="color" id="colorT2" value="#e31b23">
+              </div>
+            </div>
+            <div class="tool-slot">
+              <span class="tool-badge">T3</span>
+              <div class="color-input-wrap">
+                <input type="color" id="colorT3" value="#ffd400">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="sidebar-footer">
+        <div class="dimensions-badge">
+          <span>Ingombro Totale:</span>
+          <span style="font-family: monospace; font-weight: 600; color: #fff;">
+            <span id="dimWidth">-- mm</span> × <span id="dimHeight">-- mm</span> × <span id="dimDepth">-- mm</span>
+          </span>
+        </div>
+        <button id="btnGenerate" class="btn-generate">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          SCARICA 3MF PER SNAPMAKER U1
+        </button>
+      </div>
+    </aside>
+
+    <!-- 3D Canvas Viewport -->
+    <div class="viewer-container" id="canvas-container">
+      
+      <!-- Floating Camera Toolbar -->
+      <div class="viewer-toolbar">
+        <button class="tool-btn" id="btnResetView" title="Vista Assonometrica">Assonometrica</button>
+        <button class="tool-btn" id="btnTopView" title="Vista Superiore">Dall'Alto</button>
+        <button class="tool-btn" id="btnFrontView" title="Vista Frontale">Frontale</button>
+        <button class="tool-btn" id="btnWireframe" title="Toggle Wireframe">Wireframe</button>
+      </div>
+
+      <!-- Floating Status Indicator -->
+      <div class="status-pill" id="statusPill">
+        <div class="status-dot"></div>
+        <span id="statusText">Pronto per la stampa</span>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Scripts (Locali) -->
+  <script src="/static/js/libs/three.min.js"></script>
+  <script src="/static/js/libs/OrbitControls.js"></script>
+  <script src="/static/js/viewer.js"></script>
+  <script src="/static/js/ui.js"></script>
+</body>
+</html>

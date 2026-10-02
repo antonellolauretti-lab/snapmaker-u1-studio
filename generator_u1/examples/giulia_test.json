@@ -1,0 +1,21 @@
+{
+  "generator": "keychain",
+  "text": "GIULIA",
+  "font_family": "Impact",
+  "font_size": 15.0,
+  "letter_spacing": 0.5,
+  "base_style": "rectangle",
+  "base_thickness": 2.4,
+  "text_thickness": 1.2,
+  "text_mode": "embossed",
+  "corner_radius": 5.0,
+  "padding_x": 6.0,
+  "padding_y": 5.0,
+  "hole_enabled": true,
+  "hole_position": "left",
+  "hole_diameter": 5.0,
+  "extruder_base": 2,
+  "extruder_text": 3,
+  "filament_colors": ["#000000", "#FFFFFF", "#E31B23", "#FFD700"],
+  "filament_names": ["PLA Nero", "PLA Bianco", "PLA Rosso", "PLA Giallo"]
+}

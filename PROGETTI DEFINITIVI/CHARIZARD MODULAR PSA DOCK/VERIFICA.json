@@ -1,0 +1,62 @@
+{
+  "project_name": "Charizard Modular PSA Dock (Fire & Gold Collector Edition)",
+  "original_file": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DA VERIFICARE\\STAND POKEMON\\3MF+Charizard+Farbe.3mf",
+  "files_available": {
+    "recommended_3mf": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\CHARIZARD MODULAR PSA DOCK\\Charizard_Dock_U1_Ottimizzato_3Piatti.3mf",
+    "unified_3mf": "C:\\Users\\AirGT\\Desktop\\STAMPE 3D IA\\PROGETTI DEFINITIVI\\CHARIZARD MODULAR PSA DOCK\\Charizard_Modular_PSA_Dock_U1.3mf"
+  },
+  "printer": "Snapmaker U1",
+  "bed_size_mm": [270, 270],
+  "components_count": 6,
+  "color_scheme": "Fire & Gold Collector Edition (Silk Sunset Ember Oro/Rosso + Base Nera)",
+  "plates_recommended": [
+    {
+      "plate_id": 1,
+      "name": "Piatto 1 - Ali, Cornice e Perni (Silk Sunset Ember)",
+      "tool_changes": 0,
+      "prime_tower": false,
+      "estimated_time": "~50m",
+      "material": "Silk Dual-Color PLA Sunset Ember (Slot 3)",
+      "outer_wall_speed_mms": 120,
+      "components": [
+        "CORNICE CHARIZARD (Silk Sunset Ember - Slot 3)",
+        "ALA SINISTRA CHARIZARD (Silk Sunset Ember - Slot 3)",
+        "ALA DESTRA CHARIZARD (Silk Sunset Ember - Slot 3)",
+        "PERNI DI BLOCCA (Silk Sunset Ember - Slot 3)"
+      ]
+    },
+    {
+      "plate_id": 2,
+      "name": "Piatto 2 - Base Charizard (Nero con Logo Pokemon)",
+      "tool_changes": "Solo su prime lettere logo (1-2mm)",
+      "prime_tower": true,
+      "estimated_time": "~45m",
+      "components": [
+        "BASE CHARIZARD (Nero Slot 1 + Bianco Slot 2 + Giallo Slot 4)"
+      ]
+    },
+    {
+      "plate_id": 3,
+      "name": "Piatto 3 - Targhetta e Copertura Pokeball",
+      "tool_changes": "Solo su layer Pokeball",
+      "prime_tower": true,
+      "estimated_time": "~35m",
+      "components": [
+        "TARGHETTA E COPERTURA (Nero Slot 1 + Bianco Slot 2 + Sunset Ember Slot 3)"
+      ]
+    }
+  ],
+  "slot_slab_depth_mm": 8.2,
+  "slot_slab_width_mm": 94.0,
+  "bumper_compatibility": {
+    "bumper_dims_mm": [145.2, 89.9, 7.5],
+    "thickness_clearance_mm": 0.7,
+    "width_clearance_mm": 4.1,
+    "compatible": true
+  },
+  "total_estimated_weight_g": 119.0,
+  "total_estimated_time": "~2h 10m",
+  "supports_required": false,
+  "assembled_dims_mm": [195.0, 54.0, 155.0],
+  "physical_print_performed": false
+}

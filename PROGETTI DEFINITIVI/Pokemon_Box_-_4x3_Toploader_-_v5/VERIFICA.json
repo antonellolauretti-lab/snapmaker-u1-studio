@@ -1,0 +1,126 @@
+{
+  "original": "Pokemon+Box+-+4x3+Toploader+-+v5.3mf",
+  "original_sha256": "8894cac4b54068f22f69eba3641f5f299beb48404c0324ae4a88c63c77d561ec",
+  "plates": [
+    {
+      "file": "Pokemon_Box_-_4x3_Toploader_-_v5_U1_P1.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 312,
+        "grams": [
+          68.3,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "3h 55m 42s"
+      },
+      "extrusion_bounds": [
+        92.71,
+        92.71,
+        177.29,
+        177.29
+      ],
+      "extrusion_moves": 197805,
+      "tools": {
+        "0": 197805
+      },
+      "features": {
+        "Inner wall": 41854,
+        "Outer wall": 19052,
+        "Bottom surface": 508,
+        "Gap infill": 36,
+        "Internal solid infill": 6110,
+        "Sparse infill": 128826,
+        "Internal Bridge": 599,
+        "Top surface": 820
+      },
+      "colors": [
+        "#DE4343"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "1c35464f179d6112cecb297263b6156849bef66194723e309e5c2635f7698b91"
+    },
+    {
+      "file": "Pokemon_Box_-_4x3_Toploader_-_v5_U1_P2.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 312,
+        "grams": [
+          66.75,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "3h 51m 16s"
+      },
+      "extrusion_bounds": [
+        79.819,
+        92.71,
+        190.182,
+        177.29
+      ],
+      "extrusion_moves": 202672,
+      "tools": {
+        "0": 202672
+      },
+      "features": {
+        "Inner wall": 42933,
+        "Outer wall": 21739,
+        "Bottom surface": 626,
+        "Gap infill": 75,
+        "Internal solid infill": 7710,
+        "Sparse infill": 127707,
+        "Internal Bridge": 901,
+        "Top surface": 981
+      },
+      "colors": [
+        "#FFFFFF"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "e8acd66dccb7b03d5f27b56700b0576120425456e3a4a09e703132383dfa1063"
+    },
+    {
+      "file": "Pokemon_Box_-_4x3_Toploader_-_v5_U1_P3.3mf",
+      "status": "verificato",
+      "stats": {
+        "layers": 234,
+        "grams": [
+          21.53,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time": "1h 19m 22s"
+      },
+      "extrusion_bounds": [
+        90.958,
+        90.958,
+        179.042,
+        179.042
+      ],
+      "extrusion_moves": 33851,
+      "tools": {
+        "0": 33851
+      },
+      "features": {
+        "Brim": 547,
+        "Outer wall": 11165,
+        "Inner wall": 22124,
+        "Top surface": 11,
+        "Gap infill": 4
+      },
+      "colors": [
+        "#000000"
+      ],
+      "layer": "0.16",
+      "support_type": "tree(auto)",
+      "geometry_preserved": true,
+      "sha256": "23246bfe0453f556724d79aefaeedb43f60a571244dc7115e45076b7dd9e8c8c"
+    }
+  ]
+}
