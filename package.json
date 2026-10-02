@@ -1,9 +1,0 @@
-{
-  "name": "snapmaker-u1-studio",
-  "version": "4.0.0",
-  "private": true,
-  "description": "Snapmaker U1 Parametric Studio 3D Frontend",
-  "scripts": {
-    "build": "echo Static build ready"
-  }
-}
