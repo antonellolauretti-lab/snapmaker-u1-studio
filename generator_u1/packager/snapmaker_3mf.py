@@ -74,11 +74,12 @@ class Snapmaker3MFPackager:
         for idx, (part, p_uuid) in enumerate(zip(parts, part_uuids), start=1):
             objects_xml_list.append(self._mesh_to_3mf_object_xml(part.mesh, obj_id=idx, obj_uuid=p_uuid))
         
+        objects_xml_str = "\n".join(objects_xml_list)
         objects_model_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">
  <metadata name="BambuStudio:3mfVersion">1</metadata>
  <resources>
-{"\n".join(objects_xml_list)}
+{objects_xml_str}
  </resources>
 </model>"""
 
@@ -89,6 +90,7 @@ class Snapmaker3MFPackager:
                 f'    <component p:path="/3D/Objects/model_parts.model" objectid="{idx}" p:UUID="{p_uuid}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>'
             )
 
+        components_xml_str = "\n".join(components_xml)
         d3model_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">
  <metadata name="Application">Snapmaker_Orca-2.4.0</metadata>
@@ -97,7 +99,7 @@ class Snapmaker3MFPackager:
  <resources>
   <object id="{container_obj_id}" p:UUID="{container_uuid}" type="model">
    <components>
-{"\n".join(components_xml)}
+{components_xml_str}
    </components>
   </object>
  </resources>
@@ -120,12 +122,13 @@ class Snapmaker3MFPackager:
       <mesh_stat edges_fixed="0" degenerate_facets="0" facets_removed="0" facets_reversed="0" backwards_edges="0"/>
     </part>""")
 
+        parts_settings_xml_str = "\n".join(parts_settings_xml)
         model_settings_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <config>
   <object id="{container_obj_id}">
     <metadata key="name" value="{self.project_name}"/>
     <metadata key="extruder" value="{parts[0].extruder + 1}"/>
-{"\n".join(parts_settings_xml)}
+{parts_settings_xml_str}
   </object>
   <plate>
     <metadata key="plater_id" value="1"/>

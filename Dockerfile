@@ -3,7 +3,7 @@
 # Ottimizzato per Render.com, Railway.app e Docker locale
 # ==============================================================================
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Impostazioni di ambiente per Python e porta dinamica Cloud
 ENV PYTHONDONTWRITEBYTECODE=1 \
