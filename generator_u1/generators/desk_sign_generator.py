@@ -30,9 +30,25 @@ def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
     final_polys = []
     for outer in outers:
         my_holes = [h.exterior.coords for h in holes if outer.contains(h)]
-        final_polys.append(sg.Polygon(outer.exterior.coords, my_holes))
+        try:
+            poly = sg.Polygon(outer.exterior.coords, my_holes)
+            if not poly.is_valid:
+                poly = poly.buffer(0)
+            final_polys.append(poly)
+        except Exception:
+            poly = sg.Polygon(outer.exterior.coords)
+            if not poly.is_valid:
+                poly = poly.buffer(0)
+            final_polys.append(poly)
 
-    merged = unary_union(final_polys)
+    try:
+        merged = unary_union(final_polys)
+    except Exception:
+        sanitized = [p.buffer(0) for p in final_polys if not p.is_empty]
+        merged = unary_union(sanitized)
+
+    if not merged.is_valid:
+        merged = merged.buffer(0)
     return merged
 
 def _generate_text_2d(

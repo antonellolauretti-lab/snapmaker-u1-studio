@@ -49,26 +49,200 @@ def healthcheck():
 WEB_DIR = Path(__file__).resolve().parent
 STATIC_DIR = WEB_DIR / "static"
 TEMPLATES_DIR = WEB_DIR / "templates"
+FONTS_DIR = WEB_DIR.parent / "fonts"
+FONTS_DIR.mkdir(parents=True, exist_ok=True)
 FONTS_UPLOAD_DIR = WEB_DIR / "uploads" / "fonts"
 FONTS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/fonts", StaticFiles(directory=str(FONTS_DIR)), name="fonts")
+app.mount("/uploads/fonts", StaticFiles(directory=str(FONTS_UPLOAD_DIR)), name="uploads_fonts")
 
 CURATED_FONTS = [
-    {"id": "Arial", "name": "Arial (Sans-Serif Pulito)", "category": "sans-serif"},
-    {"id": "Arial Black", "name": "Arial Black (Spesso / Ultra-Bold)", "category": "sans-serif"},
-    {"id": "Impact", "name": "Impact (Massiccio / Display)", "category": "display"},
-    {"id": "Segoe UI", "name": "Segoe UI (Moderno Geometrico)", "category": "sans-serif"},
-    {"id": "Segoe Script", "name": "Segoe Script (Corsivo Continuo Saldato)", "category": "script"},
-    {"id": "Georgia", "name": "Georgia (Serif Classico)", "category": "serif"},
-    {"id": "Consolas", "name": "Consolas (Monospazio Tecnico)", "category": "monospace"},
+    {
+        "id": "Anton",
+        "name": "Anton",
+        "desc": "Massiccio Display Bold",
+        "category": "display",
+        "family": "'Anton', sans-serif",
+        "file": "Anton.ttf",
+    },
+    {
+        "id": "Bebas Neue",
+        "name": "Bebas Neue",
+        "desc": "Alto e Condensato",
+        "category": "display",
+        "family": "'Bebas Neue', sans-serif",
+        "file": "Bebas_Neue.ttf",
+    },
+    {
+        "id": "Pacifico",
+        "name": "Pacifico",
+        "desc": "Corsivo Connesso Elegante",
+        "category": "script",
+        "family": "'Pacifico', cursive",
+        "file": "Pacifico.ttf",
+    },
+    {
+        "id": "Lobster",
+        "name": "Lobster",
+        "desc": "Vintage Bold Script",
+        "category": "script",
+        "family": "'Lobster', cursive",
+        "file": "Lobster.ttf",
+    },
+    {
+        "id": "Bungee",
+        "name": "Bungee",
+        "desc": "Spesso e Dimensional",
+        "category": "display",
+        "family": "'Bungee', cursive",
+        "file": "Bungee.ttf",
+    },
+    {
+        "id": "Righteous",
+        "name": "Righteous",
+        "desc": "Retro Futuristico Techno",
+        "category": "display",
+        "family": "'Righteous', cursive",
+        "file": "Righteous.ttf",
+    },
+    {
+        "id": "Bangers",
+        "name": "Bangers",
+        "desc": "Fumetto Comic Bold",
+        "category": "display",
+        "family": "'Bangers', cursive",
+        "file": "Bangers.ttf",
+    },
+    {
+        "id": "Permanent Marker",
+        "name": "Permanent Marker",
+        "desc": "Tratto Pennarello Autentico",
+        "category": "script",
+        "family": "'Permanent Marker', cursive",
+        "file": "Permanent_Marker.ttf",
+    },
+    {
+        "id": "Orbitron",
+        "name": "Orbitron",
+        "desc": "Futuristico Sci-Fi Mecha",
+        "category": "display",
+        "family": "'Orbitron', sans-serif",
+        "file": "Orbitron.ttf",
+    },
+    {
+        "id": "Montserrat",
+        "name": "Montserrat",
+        "desc": "Geometrico Moderno Bold",
+        "category": "sans-serif",
+        "family": "'Montserrat', sans-serif",
+        "file": "Montserrat.ttf",
+    },
+    {
+        "id": "Poppins",
+        "name": "Poppins",
+        "desc": "Geometrico Morbido e Pulito",
+        "category": "sans-serif",
+        "family": "'Poppins', sans-serif",
+        "file": "Poppins.ttf",
+    },
+    {
+        "id": "Roboto",
+        "name": "Roboto",
+        "desc": "Standard Tecnico Bilanciato",
+        "category": "sans-serif",
+        "family": "'Roboto', sans-serif",
+        "file": "Roboto.ttf",
+    },
+    {
+        "id": "Oswald",
+        "name": "Oswald",
+        "desc": "Display Dinamico",
+        "category": "display",
+        "family": "'Oswald', sans-serif",
+        "file": "Oswald.ttf",
+    },
+    {
+        "id": "Playfair Display",
+        "name": "Playfair Display",
+        "desc": "Serif Elegante Tradizionale",
+        "category": "serif",
+        "family": "'Playfair Display', serif",
+        "file": "Playfair_Display.ttf",
+    },
+    {
+        "id": "Cinzel",
+        "name": "Cinzel",
+        "desc": "Classico Romano Scolpito",
+        "category": "serif",
+        "family": "'Cinzel', serif",
+        "file": "Cinzel.ttf",
+    },
+    {
+        "id": "Ubuntu",
+        "name": "Ubuntu",
+        "desc": "Humanist Moderno",
+        "category": "sans-serif",
+        "family": "'Ubuntu', sans-serif",
+        "file": "Ubuntu.ttf",
+    },
+    {
+        "id": "Arial",
+        "name": "Arial",
+        "desc": "Sans-Serif Standard",
+        "category": "sans-serif",
+        "family": "Arial, sans-serif",
+    },
+    {
+        "id": "Arial Black",
+        "name": "Arial Black",
+        "desc": "Ultra-Spesso Massiccio",
+        "category": "sans-serif",
+        "family": "'Arial Black', sans-serif",
+    },
+    {
+        "id": "Impact",
+        "name": "Impact",
+        "desc": "Massiccio Classico",
+        "category": "display",
+        "family": "Impact, sans-serif",
+    },
+    {
+        "id": "Segoe UI",
+        "name": "Segoe UI",
+        "desc": "Geometrico Interfaccia",
+        "category": "sans-serif",
+        "family": "'Segoe UI', sans-serif",
+    },
+    {
+        "id": "Segoe Script",
+        "name": "Segoe Script",
+        "desc": "Corsivo Continuo Saldato",
+        "category": "script",
+        "family": "'Segoe Script', cursive",
+    },
+    {
+        "id": "Georgia",
+        "name": "Georgia",
+        "desc": "Serif Classico",
+        "category": "serif",
+        "family": "Georgia, serif",
+    },
+    {
+        "id": "Consolas",
+        "name": "Consolas",
+        "desc": "Monospazio Tecnico",
+        "category": "monospace",
+        "family": "Consolas, monospace",
+    },
 ]
 
 # Cache in memoria dei font caricati dall'utente
 UPLOADED_FONTS: List[Dict[str, Any]] = []
 
 def _resolve_font_path(params: Dict[str, Any], font_key: str = "font_family", path_key: str = "font_path"):
-    """Risolve il percorso fisico del font se caricato dall'utente."""
+    """Risolve il percorso fisico del font se bundled, caricato o specificato."""
     font_id = (params.get(font_key) or "").strip()
     font_path = params.get(path_key)
     if font_path and os.path.isfile(font_path):
@@ -77,12 +251,25 @@ def _resolve_font_path(params: Dict[str, Any], font_key: str = "font_family", pa
     if not font_id:
         return None
 
-    # Cerca tra i font caricati
+    # 1. Controlla nei font curati bundled
+    for cf in CURATED_FONTS:
+        if cf["id"] == font_id and "file" in cf:
+            candidate = FONTS_DIR / cf["file"]
+            if candidate.is_file():
+                return str(candidate)
+
+    # 2. Controlla per nome file sanitizzato
+    safe_name = font_id.replace(" ", "_") + ".ttf"
+    candidate = FONTS_DIR / safe_name
+    if candidate.is_file():
+        return str(candidate)
+
+    # 3. Cerca tra i font caricati dall'utente
     for uf in UPLOADED_FONTS:
-        if uf["id"] == font_id or uf["path"] == font_id:
+        if uf["id"] == font_id or uf.get("path") == font_id:
             return uf["path"]
 
-    # Controlla se è un file nella cartella uploads
+    # 4. Controlla se è un file nella cartella uploads
     candidate = FONTS_UPLOAD_DIR / font_id
     if candidate.is_file():
         return str(candidate)
@@ -99,14 +286,26 @@ def get_index():
 
 @app.get("/api/fonts")
 def list_fonts():
-    """Restituisce l'elenco combinato dei font curati di sistema e di quelli caricati."""
-    all_fonts = list(CURATED_FONTS)
+    """Restituisce l'elenco combinato dei font curati con metadati e percorsi completi."""
+    all_fonts = []
+    for f in CURATED_FONTS:
+        entry = dict(f)
+        if "file" in f:
+            p = FONTS_DIR / f["file"]
+            if p.is_file():
+                entry["path"] = str(p)
+                entry["url"] = f"/fonts/{f['file']}"
+        all_fonts.append(entry)
+
     for uf in UPLOADED_FONTS:
         all_fonts.append({
             "id": uf["id"],
             "name": uf["name"],
+            "desc": "Font Personale Caricato",
             "category": "custom",
-            "path": uf["path"]
+            "family": f"'{uf['id']}', sans-serif",
+            "path": uf["path"],
+            "url": f"/uploads/fonts/{Path(uf['path']).name}"
         })
     return all_fonts
 

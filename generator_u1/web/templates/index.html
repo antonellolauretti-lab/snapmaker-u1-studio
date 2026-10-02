@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Snapmaker U1 - Studio Parametrico 3D</title>
   <meta name="api-base-url" content="https://snapmaker-u1-backend.onrender.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Cinzel:wght@700&family=Lobster&family=Montserrat:wght@700;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -427,6 +430,15 @@
               </div>
             </div>
             <div class="form-group">
+              <label class="form-label">
+                <span>Spessore Rilievo Riga 2</span>
+                <span class="val-badge" id="dsThickness2Val">1.0 mm</span>
+              </label>
+              <div class="range-wrap">
+                <input type="range" id="dsThickness2Input" min="0.6" max="2.5" step="0.2" value="1.0">
+              </div>
+            </div>
+            <div class="form-group">
               <label class="form-label" for="dsExtruderLine2Select">Estrusore Riga 2</label>
               <select id="dsExtruderLine2Select" class="tool-select">
                 <option value="0">Slot T0</option>
@@ -627,6 +639,9 @@
     </div>
 
   </main>
+
+  <!-- Container per Notifiche Toast & Cold-Start Alerts -->
+  <div id="studioToastContainer" class="studio-toast-container"></div>
 
   <!-- Scripts (Locali) -->
   <script src="/static/js/libs/three.min.js"></script>
