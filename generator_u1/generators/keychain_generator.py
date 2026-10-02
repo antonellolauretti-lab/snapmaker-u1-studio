@@ -63,27 +63,47 @@ def _normalize_to_unit(geom: Any) -> Any:
     g = affinity.scale(g, xfact=1.0 / scale, yfact=1.0 / scale, origin=(0, 0))
     return g
 
+try:
+    from generator_u1.assets.icons_data import ICONS_LIBRARY
+    ICONS_DICT = {icon["id"].lower(): icon["d"] for icon in ICONS_LIBRARY if icon.get("d")}
+except Exception:
+    ICONS_DICT = {}
+
 def _get_vector_icon(name: str) -> Optional[Any]:
-    """Libreria di sagome e simboli vettoriali 2D normalizzati."""
+    """Libreria di sagome e simboli vettoriali 2D normalizzati da SVG path."""
     if not name or name.lower() == "none":
         return None
 
-    name = name.lower()
-    if name == "heart":
+    name_lower = name.lower()
+    svg_d = ICONS_DICT.get(name_lower)
+
+    if svg_d:
+        try:
+            from svgpath2mpl import parse_path
+            p = parse_path(svg_d)
+            raw_polys = [sg.Polygon(pts) for pts in p.to_polygons() if len(pts) >= 3]
+            if raw_polys:
+                poly = unary_union([pl.buffer(0) for pl in raw_polys])
+                # Inverti asse Y (SVG ha origine top-left, 3D cartesiano bottom-left)
+                poly = affinity.scale(poly, yfact=-1.0, origin=(0, 0))
+                return _normalize_to_unit(poly)
+        except Exception as e:
+            print(f"Errore parsing icona SVG {name}: {e}")
+
+    # Fallback su forme geometriche parametriche
+    if name_lower == "heart":
         t = np.linspace(0, 2 * np.pi, 64)
         x = 16 * np.sin(t) ** 3
         y = 13 * np.cos(t) - 5 * np.cos(2 * t) - 2 * np.cos(3 * t) - np.cos(4 * t)
         poly = sg.Polygon(list(zip(x, y)))
         return _normalize_to_unit(poly)
-
-    elif name == "star":
+    elif name_lower == "star":
         angles = np.linspace(0, 2 * np.pi, 11)[:-1]
         r_list = [1.0, 0.45] * 5
         star_pts = [(r * np.cos(a + np.pi / 2), r * np.sin(a + np.pi / 2)) for a, r in zip(angles, r_list)]
         poly = sg.Polygon(star_pts)
         return _normalize_to_unit(poly)
-
-    elif name == "lightning":
+    elif name_lower == "lightning":
         bolt_pts = [
             (0.45, 1.0),
             (0.05, 0.45),
@@ -95,8 +115,7 @@ def _get_vector_icon(name: str) -> Optional[Any]:
         ]
         poly = sg.Polygon(bolt_pts)
         return _normalize_to_unit(poly)
-
-    elif name == "paw":
+    elif name_lower == "paw":
         palm = sg.Point(0, 0).buffer(0.5)
         t1 = sg.Point(-0.4, 0.65).buffer(0.16)
         t2 = sg.Point(-0.15, 0.85).buffer(0.16)
@@ -104,8 +123,7 @@ def _get_vector_icon(name: str) -> Optional[Any]:
         t4 = sg.Point(0.4, 0.65).buffer(0.16)
         poly = unary_union([palm, t1, t2, t3, t4])
         return _normalize_to_unit(poly)
-
-    elif name == "crown":
+    elif name_lower == "crown":
         crown_pts = [
             (0.0, 0.0),
             (1.0, 0.0),

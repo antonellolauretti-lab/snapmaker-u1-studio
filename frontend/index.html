@@ -21,6 +21,16 @@
         <div class="brand-subtitle">Portachiavi & Targhette Multicolore 4 Ugelli</div>
       </div>
     </div>
+
+    <div class="header-product-switcher">
+      <button type="button" class="header-tab active" id="headerTabKeychain">
+        🏷️ Portachiavi
+      </button>
+      <button type="button" class="header-tab" id="headerTabDeskSign">
+        🏛️ Targhetta da Tavolo
+      </button>
+    </div>
+
     <div class="header-badges">
       <button type="button" id="btnApiSettings" class="feature-pill btn-api-pill" title="Configura l'endpoint del backend (Render / Local)">
         <span class="api-status-dot" id="apiStatusDot"></span>
@@ -101,33 +111,10 @@
             <span>2. Icona & Simbolo 3D</span>
           </div>
           <div class="form-group">
-            <label class="form-label">Scegli Simbolo</label>
-            <div class="icon-selector-grid">
-              <label class="icon-card">
-                <input type="radio" name="iconName" value="none" checked>
-                <div class="icon-card-body">❌ Nessuna</div>
-              </label>
-              <label class="icon-card">
-                <input type="radio" name="iconName" value="heart">
-                <div class="icon-card-body">❤️ Cuore</div>
-              </label>
-              <label class="icon-card">
-                <input type="radio" name="iconName" value="star">
-                <div class="icon-card-body">⭐ Stella</div>
-              </label>
-              <label class="icon-card">
-                <input type="radio" name="iconName" value="paw">
-                <div class="icon-card-body">🐾 Zampa</div>
-              </label>
-              <label class="icon-card">
-                <input type="radio" name="iconName" value="lightning">
-                <div class="icon-card-body">⚡ Fulmine</div>
-              </label>
-              <label class="icon-card">
-                <input type="radio" name="iconName" value="crown">
-                <div class="icon-card-body">👑 Corona</div>
-              </label>
-            </div>
+            <label class="form-label" for="iconSelect">Scegli Simbolo Vettoriale / 3D</label>
+            <select id="iconSelect">
+              <option value="none" selected>❌ Nessuna Icona</option>
+            </select>
           </div>
 
           <div id="iconOptionsWrap" style="display: none; flex-direction: column; gap: 10px;">

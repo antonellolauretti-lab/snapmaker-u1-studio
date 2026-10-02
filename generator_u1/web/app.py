@@ -309,6 +309,16 @@ def list_fonts():
         })
     return all_fonts
 
+try:
+    from generator_u1.assets.icons_data import ICONS_LIBRARY
+except Exception:
+    ICONS_LIBRARY = []
+
+@app.get("/api/icons")
+def list_icons():
+    """Restituisce l'elenco completo delle icone vettoriali per la UI."""
+    return ICONS_LIBRARY
+
 @app.post("/api/fonts/upload")
 async def upload_font(file: UploadFile = File(...)):
     """
