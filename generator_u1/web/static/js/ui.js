@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnApiSettings = document.getElementById("btnApiSettings");
   const apiStatusDot = document.getElementById("apiStatusDot");
   const apiStatusLabel = document.getElementById("apiStatusLabel");
-  const DEFAULT_PRODUCTION_API = "https://snapmaker-u1-studio.onrender.com";
+  const DEFAULT_PRODUCTION_API = "https://snapmaker-u1-backend.onrender.com";
 
   function determineApiBaseUrl() {
     const metaTag = document.querySelector('meta[name="api-base-url"]');
