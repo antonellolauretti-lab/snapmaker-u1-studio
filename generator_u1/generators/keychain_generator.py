@@ -2,13 +2,52 @@ import os
 from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
 import shapely.geometry as sg
-from shapely.ops import unary_union
+from shapely.ops import unary_union, nearest_points
 from shapely import affinity
 import trimesh
 from matplotlib.textpath import TextPath
 from matplotlib.font_manager import FontProperties
 
 from generator_u1.packager.snapmaker_3mf import PartItem
+
+def _ensure_single_connected_polygon(geom: Any, bridge_width: float = 4.0) -> sg.Polygon:
+    """
+    Garantisce che la geometria della base sia un singolo poligono compatto e continuo (Polygon).
+    Se l'unione booleana genera un MultiPolygon (isole staccate come l'asola o lettere separate),
+    collega automaticamente le isole al corpo principale tramite un ponte solido di raccordo.
+    """
+    if geom is None or geom.is_empty:
+        raise ValueError("Geometria base vuota.")
+
+    if geom.geom_type == "Polygon":
+        return geom
+
+    # Se è un MultiPolygon o GeometryCollection:
+    polys = [p for p in geom.geoms if p.geom_type == "Polygon" and not p.is_empty and p.area > 1e-2]
+    if not polys:
+        raise ValueError("Nessun poligono valido nella base.")
+    if len(polys) == 1:
+        return polys[0]
+
+    # Ordina per area decrescente: il poligono principale con l'area maggiore è il corpo centrale
+    polys.sort(key=lambda p: p.area, reverse=True)
+    unified = polys[0]
+
+    for p in polys[1:]:
+        p_main, p_other = nearest_points(unified, p)
+        dist = p_main.distance(p_other)
+        if dist > 0:
+            line = sg.LineString([p_main, p_other])
+            connector = line.buffer(bridge_width / 2.0, cap_style=1, join_style=1)
+            unified = unary_union([unified, p, connector])
+        else:
+            unified = unary_union([unified, p])
+
+    unified = unified.buffer(0)
+    if unified.geom_type == "MultiPolygon":
+        unified = max(unified.geoms, key=lambda p: p.area)
+
+    return unified
 
 def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
     """
@@ -239,25 +278,32 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     fg_minx, fg_miny, fg_maxx, fg_maxy = foreground_union.bounds
     fg_mid_y = (fg_miny + fg_maxy) / 2.0
 
-    # 4. Creazione del Contorno della Base
+    # 4. Creazione del Contorno della Base e dell'Asola Anello
     hole_radius = hole_diameter / 2.0
-    hole_wall = max(3.0, hole_radius * 1.2)
+    hole_wall = max(3.0, hole_radius * 1.0)
+    outer_radius = hole_radius + hole_wall
 
     if base_style == "contour":
         base_contour = foreground_union.buffer(padding_y, resolution=16)
         if hole_enabled:
             if hole_position == "left":
-                hx = fg_minx - (hole_radius + hole_wall)
+                hx = fg_minx - hole_radius - (hole_wall * 0.2)
                 hy = fg_mid_y
+                hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
+                bridge = sg.box(hx, hy - outer_radius * 0.75, fg_minx + padding_x, hy + outer_radius * 0.75)
+                base_contour = unary_union([base_contour, hole_ear, bridge])
             elif hole_position == "right":
-                hx = fg_maxx + (hole_radius + hole_wall)
+                hx = fg_maxx + hole_radius + (hole_wall * 0.2)
                 hy = fg_mid_y
+                hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
+                bridge = sg.box(fg_maxx - padding_x, hy - outer_radius * 0.75, hx, hy + outer_radius * 0.75)
+                base_contour = unary_union([base_contour, hole_ear, bridge])
             else:  # top
                 hx = (fg_minx + fg_maxx) / 2.0
-                hy = fg_maxy + (hole_radius + hole_wall)
-
-            hole_ear = sg.Point(hx, hy).buffer(hole_radius + hole_wall, resolution=16)
-            base_contour = unary_union([base_contour, hole_ear])
+                hy = fg_maxy + hole_radius + (hole_wall * 0.2)
+                hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
+                bridge = sg.box(hx - outer_radius * 0.75, fg_mid_y, hx + outer_radius * 0.75, hy)
+                base_contour = unary_union([base_contour, hole_ear, bridge])
     else:
         x_left_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "left") else padding_x
         x_right_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "right") else padding_x
@@ -283,10 +329,14 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 hx = (fg_minx + fg_maxx) / 2.0
                 hy = y1 - (hole_radius + hole_wall)
 
+    # Assicura tassativamente che la base sia un poligono unico e compatto prima del foro
+    base_contour = _ensure_single_connected_polygon(base_contour, bridge_width=outer_radius * 1.2)
+
     # 5. Applicazione del Foro
     if hole_enabled:
         hole_geom = sg.Point(hx, hy).buffer(hole_radius, resolution=32)
         base_2d = base_contour.difference(hole_geom)
+        base_2d = _ensure_single_connected_polygon(base_2d, bridge_width=outer_radius * 1.2)
     else:
         base_2d = base_contour
 

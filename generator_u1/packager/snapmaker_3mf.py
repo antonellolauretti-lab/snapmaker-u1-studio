@@ -28,6 +28,7 @@ class Snapmaker3MFPackager:
         filament_vendors: Optional[List[str]] = None,
         enable_prime_tower: bool = False,
         enable_support: bool = False,
+        enable_brim: bool = False,
         bed_center_x: float = 135.0,
         bed_center_y: float = 135.0,
     ):
@@ -40,6 +41,7 @@ class Snapmaker3MFPackager:
         self.filament_vendors = filament_vendors or ["Snapmaker", "Snapmaker", "Snapmaker", "Snapmaker"]
         self.enable_prime_tower = enable_prime_tower
         self.enable_support = enable_support
+        self.enable_brim = enable_brim
         self.bed_center_x = bed_center_x
         self.bed_center_y = bed_center_y
 
@@ -119,6 +121,8 @@ class Snapmaker3MFPackager:
       <metadata key="source_object_id" value="0"/>
       <metadata key="source_volume_id" value="0"/>
       <metadata key="extruder" value="{extruder_val}"/>
+      <metadata key="brim_type" value="no_brim"/>
+      <metadata key="brim_width" value="0"/>
       <mesh_stat edges_fixed="0" degenerate_facets="0" facets_removed="0" facets_reversed="0" backwards_edges="0"/>
     </part>""")
 
@@ -128,6 +132,8 @@ class Snapmaker3MFPackager:
   <object id="{container_obj_id}">
     <metadata key="name" value="{self.project_name}"/>
     <metadata key="extruder" value="{parts[0].extruder + 1}"/>
+    <metadata key="brim_type" value="no_brim"/>
+    <metadata key="brim_width" value="0"/>
 {parts_settings_xml_str}
   </object>
   <plate>
@@ -147,34 +153,51 @@ class Snapmaker3MFPackager:
   </assemble>
 </config>"""
 
-        # 4. Impostazioni di stampa in Metadata/project_settings.config
+        # 4. Impostazioni di stampa in Metadata/project_settings.config e process_settings_1.config
+        profiles_dir = os.path.join(os.path.dirname(__file__), "profiles")
+        default_proj_path = os.path.join(profiles_dir, "snapmaker_u1_default_project.json")
+        default_proc_path = os.path.join(profiles_dir, "snapmaker_u1_default_process.json")
+        default_gcode_path = os.path.join(profiles_dir, "snapmaker_u1_machine_gcodes.json")
+
         project_cfg = {}
+        if os.path.exists(default_proj_path):
+            try:
+                with open(default_proj_path, "r", encoding="utf-8") as f:
+                    project_cfg = json.load(f)
+            except Exception:
+                pass
+
+        process_cfg = {}
+        if os.path.exists(default_proc_path):
+            try:
+                with open(default_proc_path, "r", encoding="utf-8") as f:
+                    process_cfg = json.load(f)
+            except Exception:
+                pass
+
         if reference_config_path and os.path.exists(reference_config_path):
             try:
                 if reference_config_path.lower().endswith(".3mf"):
                     with zipfile.ZipFile(reference_config_path, "r") as rz:
                         if "Metadata/project_settings.config" in rz.namelist():
-                            project_cfg = json.loads(rz.read("Metadata/project_settings.config").decode("utf-8"))
+                            project_cfg.update(json.loads(rz.read("Metadata/project_settings.config").decode("utf-8")))
+                        if "Metadata/process_settings_1.config" in rz.namelist():
+                            process_cfg.update(json.loads(rz.read("Metadata/process_settings_1.config").decode("utf-8")))
                 else:
                     with open(reference_config_path, "r", encoding="utf-8") as f:
-                        project_cfg = json.load(f)
+                        project_cfg.update(json.load(f))
             except Exception as e:
-                print(f"Warning: Caricamento reference config fallito ({e}), uso default.")
+                print(f"Warning: Caricamento reference config fallito ({e}), uso default U1.")
 
-        # Sanitizza machine_start_gcode per compatibilità tra versioni Orca/Snapmaker
-        if "machine_start_gcode" in project_cfg:
-            gcode = project_cfg["machine_start_gcode"]
-            if "chamber_cooling_mode" in gcode:
-                # Ripristina start gcode standard U1 senza macro non riconosciute dai parser CLI
-                u1_profile_path = r"C:\Users\AirGT\Desktop\STAMPE 3D IA\Verifica_batch_U1\OrcaSlicer_portable\resources\profiles\Snapmaker\machine\Snapmaker U1 (0.4 nozzle).json"
-                if os.path.exists(u1_profile_path):
-                    try:
-                        with open(u1_profile_path, "r", encoding="utf-8") as pf:
-                            p_data = json.load(pf)
-                            if "machine_start_gcode" in p_data:
-                                project_cfg["machine_start_gcode"] = p_data["machine_start_gcode"]
-                    except Exception:
-                        pass
+        # Applica gcode macchina sicuri e puliti per piena compatibilità CLI/GUI
+        if os.path.exists(default_gcode_path):
+            try:
+                with open(default_gcode_path, "r", encoding="utf-8") as f:
+                    clean_gcodes = json.load(f)
+                    for k, v in clean_gcodes.items():
+                        project_cfg[k] = v
+            except Exception:
+                pass
 
         project_cfg["printer_settings_id"] = self.machine_name
         project_cfg["print_settings_id"] = self.process_name
@@ -183,9 +206,46 @@ class Snapmaker3MFPackager:
         project_cfg["default_filament_colour"] = self.filament_colors
         project_cfg["filament_type"] = self.filament_types
         project_cfg["filament_vendor"] = self.filament_vendors
-        project_cfg["filament_settings_id"] = [f"Snapmaker PLA" for _ in range(4)]
-        project_cfg["enable_prime_tower"] = "1" if self.enable_prime_tower else "0"
+        project_cfg["filament_settings_id"] = [f"PLA SnapSpeed @Snapmaker U1" for _ in range(4)]
+
+        # --- FORZATURA TOTALE PRIME TOWER & WIPE TOWER (Zero Tower per U1 IDEX/Toolhead) ---
+        prime_val_str = "1" if self.enable_prime_tower else "0"
+        prime_val_int = 1 if self.enable_prime_tower else 0
+        tower_w_str = "25"
+        tower_w_int = 25
+
+        project_cfg["enable_prime_tower"] = prime_val_str
+        project_cfg["prime_tower_width"] = tower_w_str
+        project_cfg["prime_tower_brim_width"] = "3" if self.enable_prime_tower else "0"
+        project_cfg["purge_in_prime_tower"] = "0"
+        project_cfg["wipe_tower_filament"] = 0
+        project_cfg["wipe_tower_x"] = ["218"] if self.enable_prime_tower else ["0"]
+        project_cfg["wipe_tower_y"] = ["190"] if self.enable_prime_tower else ["0"]
+        project_cfg["wipe_tower_no_sparse_layers"] = 0
+        project_cfg["wipe_tower_cone_angle"] = 0
+        project_cfg["wipe_tower_extra_spacing"] = 0
         project_cfg["enable_support"] = "1" if self.enable_support else "0"
+
+        # --- DISATTIVAZIONE BRIM / SKIRT (Ottimizzazione Piatto Textured PEI) ---
+        brim_str = "auto_brim" if self.enable_brim else "no_brim"
+        brim_w_str = "5" if self.enable_brim else "0"
+        project_cfg["brim_type"] = brim_str
+        project_cfg["brim_width"] = brim_w_str
+        project_cfg["skirt_loops"] = "0"
+        project_cfg["skirt_distance"] = "0"
+
+        # Sincronizza anche process_settings_1.config se presente
+        if process_cfg:
+            process_cfg["enable_prime_tower"] = prime_val_int
+            process_cfg["prime_tower_width"] = tower_w_int
+            process_cfg["prime_tower_brim_width"] = 3 if self.enable_prime_tower else 0
+            process_cfg["purge_in_prime_tower"] = 0
+            process_cfg["wipe_tower_filament"] = 0
+            process_cfg["brim_type"] = brim_str
+            process_cfg["brim_width"] = 5 if self.enable_brim else 0
+            process_cfg["skirt_loops"] = 0
+            process_cfg["skirt_distance"] = 0
+            process_cfg["enable_support"] = 1 if self.enable_support else 0
 
         # 5. File di relazione e types
         content_types = """<?xml version="1.0" encoding="UTF-8"?>
@@ -224,6 +284,8 @@ class Snapmaker3MFPackager:
             z.writestr("3D/Objects/model_parts.model", objects_model_content)
             z.writestr("Metadata/model_settings.config", model_settings_content)
             z.writestr("Metadata/project_settings.config", json.dumps(project_cfg, indent=4))
+            if process_cfg:
+                z.writestr("Metadata/process_settings_1.config", json.dumps(process_cfg, indent=4))
             z.writestr("Metadata/slice_info.config", slice_info)
 
         return output_path

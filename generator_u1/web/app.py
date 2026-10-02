@@ -475,10 +475,11 @@ def generate_3mf(params: Dict[str, Any]):
         project_name=proj_name,
         filament_colors=params.get("filament_colors"),
         enable_prime_tower=False,
-        enable_support=False
+        enable_support=False,
+        enable_brim=False
     )
 
-    ref_3mf = PROJECT_ROOT / "PROGETTI DEFINITIVI" / "Chernabog" / "Chernabog_U1_BICOLORE_NERO_GIALLO.3mf"
+    ref_3mf = PROJECT_ROOT / "PROGETTI DEFINITIVI" / "67_mechanism_complete_bicolor_V2" / "67_mechanism_U1_P2_ROSSO.3mf"
     default_profile = PROJECT_ROOT / "generator_u1" / "packager" / "profiles" / "snapmaker_u1_default_project.json"
     ref_path = str(ref_3mf) if ref_3mf.exists() else (str(default_profile) if default_profile.exists() else None)
     packager.export(parts, str(out_path), reference_config_path=ref_path)
