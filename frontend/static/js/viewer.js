@@ -35,16 +35,16 @@ class ModelViewer {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Spazio colore sRGB calibrato per fedeltà cromatica esatta
-    if (THREE.ColorManagement) {
+    if (typeof THREE.ColorManagement !== "undefined" && THREE.ColorManagement.enabled !== undefined) {
       THREE.ColorManagement.enabled = true;
     }
-    if (this.renderer.outputColorSpace !== undefined && THREE.SRGBColorSpace) {
+    if ("outputColorSpace" in this.renderer && typeof THREE.SRGBColorSpace !== "undefined") {
       this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    } else if (THREE.sRGBEncoding) {
+    } else if ("outputEncoding" in this.renderer && typeof THREE.sRGBEncoding !== "undefined") {
       this.renderer.outputEncoding = THREE.sRGBEncoding;
     }
 
-    if (THREE.NoToneMapping !== undefined) {
+    if (typeof THREE.NoToneMapping !== "undefined") {
       this.renderer.toneMapping = THREE.NoToneMapping;
     }
 
