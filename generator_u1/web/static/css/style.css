@@ -1028,20 +1028,52 @@ body.mode-desksign .only-desksign {
   gap: 10px;
 }
 
+.custom-icon-trigger-preview,
 .custom-icon-preview {
-  width: 22px;
-  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ff5252;
   flex-shrink: 0;
 }
 
-.custom-icon-preview svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
+.custom-icon-trigger-box {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 51, 68, 0.15);
+  border: 1px solid rgba(255, 51, 68, 0.45);
+  border-radius: 6px;
+  color: #ff3344;
+  flex-shrink: 0;
+}
+
+.custom-icon-trigger-box.none-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+}
+
+.custom-icon-trigger-box svg {
+  width: 18px;
+  height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  display: block;
+}
+
+.custom-icon-trigger-box svg path {
+  fill: currentColor !important;
+}
+
+.custom-icon-trigger-box img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  filter: brightness(0) saturate(100%) invert(26%) sepia(89%) saturate(4561%) hue-rotate(345deg) brightness(98%) contrast(106%);
 }
 
 .custom-icon-current-name {
@@ -1193,20 +1225,56 @@ body.mode-desksign .only-desksign {
   gap: 10px;
 }
 
+.custom-icon-thumbnail-box,
 .custom-icon-svg-wrap {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ff7080;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  color: #ffffff;
   flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
+.custom-icon-thumbnail-box.none-thumb {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+}
+
+.custom-icon-option-item:hover .custom-icon-thumbnail-box,
+.custom-icon-option-item.selected .custom-icon-thumbnail-box {
+  background: rgba(255, 51, 68, 0.25);
+  border-color: #ff3344;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.custom-icon-thumb-svg,
 .custom-icon-svg-wrap svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
+  width: 18px;
+  height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  display: block;
+}
+
+.custom-icon-thumb-svg path,
+.custom-icon-svg-wrap svg path {
+  fill: currentColor !important;
+}
+
+.custom-icon-thumbnail-box img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  filter: brightness(0) invert(1);
 }
 
 .custom-icon-item-texts {

@@ -946,9 +946,25 @@ class CustomIconDropdown {
 
     if (icon.d) {
       const vb = icon.viewBox || "0 0 512 512";
-    this.previewWrap.innerHTML = `<svg viewBox="${vb}"><path d="${icon.d}" fill="currentColor" /></svg>`;
+      this.previewWrap.innerHTML = `
+        <div class="custom-icon-trigger-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="18" height="18">
+            <path d="${icon.d}" fill="#ff3344" />
+          </svg>
+        </div>
+      `;
+    } else if (icon.id && icon.id !== "none") {
+      this.previewWrap.innerHTML = `
+        <div class="custom-icon-trigger-box">
+          <img src="/static/icons/${icon.id}.svg" width="18" height="18" alt="${icon.name}">
+        </div>
+      `;
     } else {
-      this.previewWrap.innerHTML = `<span class="custom-icon-none-badge">✕</span>`;
+      this.previewWrap.innerHTML = `
+        <div class="custom-icon-trigger-box none-thumb">
+          <span class="custom-icon-none-badge">✕</span>
+        </div>
+      `;
     }
 
     this.currentName.textContent = icon.name;
@@ -979,19 +995,24 @@ class CustomIconDropdown {
       item.className = `custom-icon-option-item ${isSelected ? "selected" : ""}`;
       item.dataset.value = icon.id;
 
-      const vb = icon.viewBox || "0 0 512 512";
-      const svgHtml = icon.d
-        ? `<svg viewBox="${vb}"><path d="${icon.d}" fill="currentColor" /></svg>`
-        : `<span style="font-size: 14px; opacity: 0.7;">❌</span>`;
+      let thumbHtml = "";
+      if (icon.d) {
+        const vb = icon.viewBox || "0 0 512 512";
+        thumbHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" class="custom-icon-thumb-svg" width="18" height="18"><path d="${icon.d}" fill="#ffffff" /></svg>`;
+      } else if (icon.id && icon.id !== "none") {
+        thumbHtml = `<img src="/static/icons/${icon.id}.svg" width="18" height="18" alt="${icon.name}" style="filter: brightness(0) invert(1);" />`;
+      } else {
+        thumbHtml = `<span style="font-size: 13px; color: var(--text-dim); line-height: 1;">✕</span>`;
+      }
 
       item.innerHTML = `
         <div class="custom-icon-item-left">
-          <div class="custom-icon-svg-wrap">
-            ${svgHtml}
+          <div class="custom-icon-thumbnail-box ${icon.id === 'none' ? 'none-thumb' : ''}">
+            ${thumbHtml}
           </div>
           <div class="custom-icon-item-texts">
             <div class="custom-icon-item-name">${icon.name}</div>
-            <div class="custom-icon-item-desc">${icon.desc}</div>
+            <div class="custom-icon-item-desc">${icon.desc || ''}</div>
           </div>
         </div>
         <div class="custom-icon-item-meta">
@@ -1796,7 +1817,21 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        fetch("/static/js/icons.json")
+          .then((res) => res.json())
+          .then((icons) => {
+            if (Array.isArray(icons) && icons.length > 0) {
+              globalIconsList = icons;
+              populateIconOptions(iconSelect, globalIconsList, iconSelect?.value || "none");
+              if (dropdownIcon) {
+                dropdownIcon.updateFromSelect();
+                dropdownIcon.renderOptions();
+              }
+            }
+          })
+          .catch(() => {});
+      });
   }
   loadIcons();
 
@@ -2046,7 +2081,7 @@ document.addEventListener("DOMContentLoaded", () => {
       onPaletteChange();
       triggerPreview(true);
 
-      const matSummary = (data.materials || ["Slot 1", "Slot 2", "Slot 3", "Slot 4"]).join(", ");
+      const matSummary = (data.materials || ["Estrusore 1", "Estrusore 2", "Estrusore 3", "Estrusore 4"]).join(", ");
 
       if (syncResultStatus) {
         syncResultStatus.style.display = "block";
@@ -2063,7 +2098,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ToastManager.show({
         type: "success",
         title: "Palette Sincronizzata (Snapmaker U1)",
-        message: `4 Slot aggiornati con successo da RFID: ${matSummary}`,
+        message: `4 Estrusori aggiornati con successo da RFID: ${matSummary}`,
         duration: 6000,
       });
 
@@ -2094,7 +2129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       btnExecuteSync.disabled = false;
       btnExecuteSync.classList.remove("loading");
-      btnExecuteSync.innerHTML = `<span>⚡ Connetti & Sincronizza</span>`;
+      btnExecuteSync.innerHTML = `<span>⚡ Rileva Colori RFID</span>`;
     }
   });
 
