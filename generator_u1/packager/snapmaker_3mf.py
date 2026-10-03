@@ -66,22 +66,25 @@ class Snapmaker3MFPackager:
 
     def _generate_fallback_thumbnail(self, parts: List[PartItem]) -> bytes:
         """
-        Genera un'immagine PNG di fallback a colori con sfondo scuro
-        proiettando ortograficamente le geometrie 3D dei componenti.
-        Garantisce che il pacchetto 3MF abbia SEMPRE un'anteprima valida
-        visibile in Windows Explorer e negli slicer.
+        Genera un'immagine PNG di fallback a colori 3D assonometrica con SFONDO TRASPARENTE
+        proiettando in 3D con Poly3DCollection le geometrie dei componenti.
+        Garantisce che il pacchetto 3MF abbia SEMPRE un'anteprima 3D trasparente
+        visibile in Windows Explorer e negli slicer anche senza browser WebGL.
         """
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        from matplotlib.collections import PolyCollection
+        from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-        fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
-        fig.patch.set_facecolor("#0E1014")
-        ax.set_facecolor("#16181D")
+        fig = plt.figure(figsize=(4, 4), dpi=100)
+        fig.patch.set_alpha(0.0)
+        ax = fig.add_subplot(111, projection="3d")
+        ax.patch.set_alpha(0.0)
+        ax.set_facecolor((0, 0, 0, 0))
+        ax.set_axis_off()
 
-        all_pts = []
-        # Ordina per z minimo in modo che i rilievi (testo, icone) vengano disegnati sopra la base
+        all_v = []
+        # Ordina per z medio per corretta profondità di disegno dei rilievi
         sorted_parts = sorted(
             parts,
             key=lambda p: float(p.mesh.vertices[:, 2].mean() if len(p.mesh.vertices) else 0)
@@ -90,35 +93,36 @@ class Snapmaker3MFPackager:
         for part in sorted_parts:
             if len(part.mesh.vertices) == 0 or len(part.mesh.faces) == 0:
                 continue
-            v2d = part.mesh.vertices[:, :2]
-            all_pts.append(v2d)
-            triangles = v2d[part.mesh.faces]
+            v = part.mesh.vertices
+            all_v.append(v)
+            f = part.mesh.faces
+            triangles = v[f]
             color_idx = part.extruder % len(self.filament_colors)
             col = self.filament_colors[color_idx]
-            poly = PolyCollection(triangles, facecolors=col, edgecolors="none", alpha=0.98)
-            ax.add_collection(poly)
+            poly = Poly3DCollection(triangles, facecolors=col, edgecolors="none", alpha=0.98)
+            ax.add_collection3d(poly)
 
-        if all_pts:
-            stacked = np.vstack(all_pts)
-            min_xy = stacked.min(axis=0)
-            max_xy = stacked.max(axis=0)
-            w = max_xy[0] - min_xy[0]
-            h = max_xy[1] - min_xy[1]
-            pad = max(w, h) * 0.12 or 5.0
-            cx = (min_xy[0] + max_xy[0]) / 2.0
-            cy = (min_xy[1] + max_xy[1]) / 2.0
-            span = max(w, h) / 2.0 + pad
-            ax.set_xlim(cx - span, cx + span)
-            ax.set_ylim(cy - span, cy + span)
+        if all_v:
+            stacked = np.vstack(all_v)
+            min_xyz = stacked.min(axis=0)
+            max_xyz = stacked.max(axis=0)
+            center = (min_xyz + max_xyz) / 2.0
+            max_range = np.max(max_xyz - min_xyz) / 2.0 or 10.0
+            pad = max_range * 1.15
+
+            ax.set_xlim(center[0] - pad, center[0] + pad)
+            ax.set_ylim(center[1] - pad, center[1] + pad)
+            ax.set_zlim(center[2] - pad, center[2] + pad)
         else:
             ax.set_xlim(-50, 50)
             ax.set_ylim(-50, 50)
+            ax.set_zlim(-10, 10)
 
-        ax.set_aspect("equal", adjustable="box")
-        ax.axis("off")
+        # Angolo prospettico assonometrico collaudato a 45°
+        ax.view_init(elev=35, azim=-70)
 
         buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0.08, facecolor=fig.get_facecolor(), edgecolor="none")
+        plt.savefig(buf, format="png", transparent=True, bbox_inches="tight", pad_inches=0.04)
         plt.close(fig)
         return buf.getvalue()
 

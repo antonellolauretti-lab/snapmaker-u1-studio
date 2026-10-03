@@ -30,6 +30,7 @@ class ModelViewer {
     // 3. Renderer
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
+      alpha: true,
       powerPreference: "high-performance",
       preserveDrawingBuffer: true,
     });
@@ -110,6 +111,7 @@ class ModelViewer {
   }
 
   setupBuildPlate() {
+    this.buildPlateGroup = new THREE.Group();
     // Dimensioni Snapmaker U1: 270x270 mm
     const plateSize = 270;
 
@@ -120,22 +122,24 @@ class ModelViewer {
       roughness: 0.85,
       metalness: 0.15,
     });
-    const plateMesh = new THREE.Mesh(plateGeo, plateMat);
-    plateMesh.receiveShadow = true;
-    plateMesh.position.set(0, 0, -0.05);
-    this.scene.add(plateMesh);
+    this.plateMesh = new THREE.Mesh(plateGeo, plateMat);
+    this.plateMesh.receiveShadow = true;
+    this.plateMesh.position.set(0, 0, -0.05);
+    this.buildPlateGroup.add(this.plateMesh);
 
     // Griglia millimetrata (griglia principale ogni 10mm, divisioni ogni 50mm)
-    const gridHelper = new THREE.GridHelper(plateSize, 27, 0x3d4352, 0x242833);
-    gridHelper.rotation.x = Math.PI / 2;
-    gridHelper.position.set(0, 0, 0);
-    this.scene.add(gridHelper);
+    this.gridHelper = new THREE.GridHelper(plateSize, 27, 0x3d4352, 0x242833);
+    this.gridHelper.rotation.x = Math.PI / 2;
+    this.gridHelper.position.set(0, 0, 0);
+    this.buildPlateGroup.add(this.gridHelper);
 
     // Bordo di contorno piatto
     const borderGeo = new THREE.EdgesGeometry(plateGeo);
     const borderMat = new THREE.LineBasicMaterial({ color: 0xff3344, linewidth: 1.5 });
-    const border = new THREE.LineSegments(borderGeo, borderMat);
-    this.scene.add(border);
+    this.plateBorder = new THREE.LineSegments(borderGeo, borderMat);
+    this.buildPlateGroup.add(this.plateBorder);
+
+    this.scene.add(this.buildPlateGroup);
   }
 
   onWindowResize() {
@@ -231,22 +235,81 @@ class ModelViewer {
   }
 
   /**
-   * Cattura sincrona e affidabile dell'immagine 3D corrente per la thumbnail del 3MF.
-   * Restituisce una Data URL in formato image/png (base64).
+   * Cattura sincrona e affidabile dell'immagine 3D con SFONDO TRASPARENTE
+   * e inquadratura prospettica 3D a 45° standard (isolamento modello) per la thumbnail del 3MF.
+   * Restituisce una Data URL in formato image/png (RGBA 32-bit con canale alfa reale).
    */
   captureThumbnail() {
     try {
       if (!this.renderer || !this.scene || !this.camera) return null;
-      if (this.controls) this.controls.update();
-      // Forza il rendering sincrono della scena nello stato esatto attuale
+
+      // 1. Salva lo stato corrente della scena e della camera
+      const savedBackground = this.scene.background;
+      const savedCamPos = this.camera.position.clone();
+      const savedCamTarget = this.controls ? this.controls.target.clone() : new THREE.Vector3(0, 0, 0);
+      const savedPlateVis = this.buildPlateGroup ? this.buildPlateGroup.visible : true;
+
+      // 2. Calcola Bounding Box del modello per inquadratura assonometrica 3D ottimale
+      const box = new THREE.Box3().setFromObject(this.modelGroup);
+      if (!box.isEmpty()) {
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        // Calcola la distanza camera per inquadrare perfettamente il modello con margine compatto
+        const maxDim = Math.max(size.x, size.y, size.z * 3.0, 30);
+        const fovRad = (this.camera.fov * Math.PI) / 180;
+        const fitDistance = (maxDim / 2) / Math.tan(fovRad / 2) * 1.35;
+
+        // Vettore di direzione assonometrico a 45° (inclinato da fronte-destra in alto)
+        // Evidenzia lo spessore delle lettere, il contrasto dei rilievi e l'asola laterale
+        const dir = new THREE.Vector3(0.35, -0.85, 0.75).normalize();
+        const targetCamPos = center.clone().add(dir.multiplyScalar(fitDistance));
+
+        this.camera.position.copy(targetCamPos);
+        this.camera.lookAt(center);
+        if (this.controls) {
+          this.controls.target.copy(center);
+          this.controls.update();
+        }
+      }
+
+      // 3. Nascondi temporaneamente piatto PEI, griglia e bordo
+      if (this.buildPlateGroup) {
+        this.buildPlateGroup.visible = false;
+      }
+
+      // 4. Rendi completamente trasparente lo sfondo WebGL (Alpha Channel RGBA reale)
+      this.scene.background = null;
+      this.renderer.setClearColor(0x000000, 0.0);
+
+      // 5. Render sincrono del solo modello 3D isolato
       this.renderer.render(this.scene, this.camera);
       const dataUrl = this.renderer.domElement.toDataURL("image/png");
+
+      // 6. Ripristina fedelmente lo stato precedente della viewport
+      this.scene.background = savedBackground;
+      this.renderer.setClearColor(0x0e1014, 1.0);
+      if (this.buildPlateGroup) {
+        this.buildPlateGroup.visible = savedPlateVis;
+      }
+      this.camera.position.copy(savedCamPos);
+      if (this.controls) {
+        this.controls.target.copy(savedCamTarget);
+        this.controls.update();
+      }
+      this.camera.lookAt(savedCamTarget);
+
+      // Ri-renderizza per ripristinare il frame visibile all'utente a schermo
+      this.renderer.render(this.scene, this.camera);
+
       if (dataUrl && dataUrl.startsWith("data:image/png;base64,")) {
         return dataUrl;
       }
       return null;
     } catch (err) {
-      console.warn("Impossibile catturare thumbnail Three.js:", err);
+      console.warn("Impossibile catturare thumbnail trasparente Three.js:", err);
       return null;
     }
   }
