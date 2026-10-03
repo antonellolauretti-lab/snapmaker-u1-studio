@@ -1,4 +1,6 @@
 import os
+import re
+from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
 import shapely.geometry as sg
@@ -102,78 +104,122 @@ def _normalize_to_unit(geom: Any) -> Any:
     g = affinity.scale(g, xfact=1.0 / scale, yfact=1.0 / scale, origin=(0, 0))
     return g
 
+ICONS_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
+
+ICON_ALIASES = {
+    "heart": "cuore",
+    "cuore": "cuore",
+    "star": "stella",
+    "stella": "stella",
+    "paw": "zampa",
+    "zampa": "zampa",
+    "clover": "quadrifoglio",
+    "quadrifoglio": "quadrifoglio",
+    "cat": "gatto",
+    "gatto": "gatto",
+    "dog": "cane",
+    "cane": "cane",
+    "crown": "corona",
+    "corona": "corona",
+    "lightning": "fulmine",
+    "bolt": "fulmine",
+    "fulmine": "fulmine",
+}
+
+_PARSED_SVG_CACHE: Dict[str, Any] = {}
+
 try:
     from generator_u1.assets.icons_data import ICONS_LIBRARY
     ICONS_DICT = {icon["id"].lower(): icon["d"] for icon in ICONS_LIBRARY if icon.get("d")}
 except Exception:
     ICONS_DICT = {}
 
-def _get_vector_icon(name: str) -> Optional[Any]:
-    """Libreria di sagome e simboli vettoriali 2D normalizzati da SVG path."""
-    if not name or name.lower() == "none":
+def _parse_svg_file_to_shapely(svg_path: Path) -> Optional[Any]:
+    """Converte un file SVG in una geometria Shapely manifold e normalizzata."""
+    try:
+        content = svg_path.read_text(encoding="utf-8")
+        d_matches = re.findall(r'd="([^"]+)"', content)
+        if not d_matches:
+            return None
+
+        from svgpath2mpl import parse_path
+        raw_polys = []
+        for d in d_matches:
+            p = parse_path(d)
+            for pts in p.to_polygons():
+                if len(pts) >= 3:
+                    poly = sg.Polygon(pts).buffer(0)
+                    if poly.is_valid and not poly.is_empty and poly.area > 1e-4:
+                        raw_polys.append(poly)
+
+        if not raw_polys:
+            return None
+
+        raw_polys.sort(key=lambda x: x.area, reverse=True)
+        combined = raw_polys[0]
+        for other in raw_polys[1:]:
+            combined = combined.symmetric_difference(other)
+
+        if not combined.is_valid:
+            combined = combined.buffer(0)
+
+        # Inverti asse Y (SVG ha origine top-left, 3D cartesiano bottom-left)
+        combined = affinity.scale(combined, yfact=-1.0, origin=(0, 0))
+        return _normalize_to_unit(combined)
+    except Exception as e:
+        print(f"Errore parsing SVG {svg_path}: {e}")
         return None
 
-    name_lower = name.lower()
-    svg_d = ICONS_DICT.get(name_lower)
+def _get_vector_icon(name: str) -> Optional[Any]:
+    """
+    Libreria di sagome e simboli vettoriali 2D caricata dinamicamente
+    dai file SVG in generator_u1/assets/icons/.
+    Supporta l'aggiunta di nuovi SVG senza modificare il codice Python.
+    """
+    if not name or name.lower() in ("none", "", "nessuna"):
+        return None
 
+    name_clean = name.lower().strip()
+    target_stem = ICON_ALIASES.get(name_clean, name_clean)
+
+    if target_stem in _PARSED_SVG_CACHE:
+        return _PARSED_SVG_CACHE[target_stem]
+
+    # 1. Cerca file .svg corrispondente in assets/icons/
+    if ICONS_DIR.is_dir():
+        svg_candidate = ICONS_DIR / f"{target_stem}.svg"
+        if svg_candidate.is_file():
+            geom = _parse_svg_file_to_shapely(svg_candidate)
+            if geom is not None:
+                _PARSED_SVG_CACHE[target_stem] = geom
+                return geom
+
+        # Cerca tra tutti i file .svg senza distinzione maiuscole/minuscole
+        for f in ICONS_DIR.glob("*.svg"):
+            if f.stem.lower() in (target_stem, name_clean):
+                geom = _parse_svg_file_to_shapely(f)
+                if geom is not None:
+                    _PARSED_SVG_CACHE[target_stem] = geom
+                    return geom
+
+    # 2. Fallback su ICONS_DICT se presente (per retrocompatibilità)
+    svg_d = ICONS_DICT.get(name_clean) or ICONS_DICT.get(target_stem)
     if svg_d:
         try:
             from svgpath2mpl import parse_path
             p = parse_path(svg_d)
-            raw_polys = [sg.Polygon(pts) for pts in p.to_polygons() if len(pts) >= 3]
+            raw_polys = [sg.Polygon(pts).buffer(0) for pts in p.to_polygons() if len(pts) >= 3]
             if raw_polys:
-                poly = unary_union([pl.buffer(0) for pl in raw_polys])
-                # Inverti asse Y (SVG ha origine top-left, 3D cartesiano bottom-left)
+                raw_polys.sort(key=lambda x: x.area, reverse=True)
+                poly = raw_polys[0]
+                for other in raw_polys[1:]:
+                    poly = poly.symmetric_difference(other)
                 poly = affinity.scale(poly, yfact=-1.0, origin=(0, 0))
-                return _normalize_to_unit(poly)
+                normalized = _normalize_to_unit(poly)
+                _PARSED_SVG_CACHE[target_stem] = normalized
+                return normalized
         except Exception as e:
-            print(f"Errore parsing icona SVG {name}: {e}")
-
-    # Fallback su forme geometriche parametriche
-    if name_lower == "heart":
-        t = np.linspace(0, 2 * np.pi, 64)
-        x = 16 * np.sin(t) ** 3
-        y = 13 * np.cos(t) - 5 * np.cos(2 * t) - 2 * np.cos(3 * t) - np.cos(4 * t)
-        poly = sg.Polygon(list(zip(x, y)))
-        return _normalize_to_unit(poly)
-    elif name_lower == "star":
-        angles = np.linspace(0, 2 * np.pi, 11)[:-1]
-        r_list = [1.0, 0.45] * 5
-        star_pts = [(r * np.cos(a + np.pi / 2), r * np.sin(a + np.pi / 2)) for a, r in zip(angles, r_list)]
-        poly = sg.Polygon(star_pts)
-        return _normalize_to_unit(poly)
-    elif name_lower == "lightning":
-        bolt_pts = [
-            (0.45, 1.0),
-            (0.05, 0.45),
-            (0.40, 0.45),
-            (0.15, 0.0),
-            (0.75, 0.55),
-            (0.45, 0.55),
-            (0.70, 1.0),
-        ]
-        poly = sg.Polygon(bolt_pts)
-        return _normalize_to_unit(poly)
-    elif name_lower == "paw":
-        palm = sg.Point(0, 0).buffer(0.5)
-        t1 = sg.Point(-0.4, 0.65).buffer(0.16)
-        t2 = sg.Point(-0.15, 0.85).buffer(0.16)
-        t3 = sg.Point(0.15, 0.85).buffer(0.16)
-        t4 = sg.Point(0.4, 0.65).buffer(0.16)
-        poly = unary_union([palm, t1, t2, t3, t4])
-        return _normalize_to_unit(poly)
-    elif name_lower == "crown":
-        crown_pts = [
-            (0.0, 0.0),
-            (1.0, 0.0),
-            (1.0, 0.75),
-            (0.75, 0.35),
-            (0.5, 0.95),
-            (0.25, 0.35),
-            (0.0, 0.75),
-        ]
-        poly = sg.Polygon(crown_pts)
-        return _normalize_to_unit(poly)
+            print(f"Errore fallback icona SVG {name}: {e}")
 
     return None
 

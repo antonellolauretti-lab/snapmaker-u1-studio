@@ -46,359 +46,80 @@ const DEFAULT_CURATED_ICONS = [
     "category": "forme",
     "category_name": "Forme Classiche",
     "desc": "Solo testo senza simboli aggiuntivi",
-    "d": ""
+    "d": "",
+    "viewBox": "0 0 512 512"
   },
   {
-    "id": "heart",
+    "id": "cuore",
     "name": "Cuore",
     "category": "forme",
     "category_name": "Forme Classiche",
-    "desc": "Cuore classico romantico",
-    "d": "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    "desc": "Cuore romantico solido e continuo",
+    "d": "M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z",
+    "viewBox": "0 0 512 512"
   },
   {
-    "id": "star",
+    "id": "stella",
     "name": "Stella",
     "category": "forme",
     "category_name": "Forme Classiche",
-    "desc": "Stella a 5 punte solida",
-    "d": "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+    "desc": "Stella a 5 punte bilanciata",
+    "d": "M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z",
+    "viewBox": "0 0 576 512"
   },
   {
-    "id": "crown",
-    "name": "Corona",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Corona regale maestosa",
-    "d": "M2 19h20v2H2v-2zm1.5-4.5L5 9l5 4 2-8 2 8 5-4 1.5 5.5H3.5z"
-  },
-  {
-    "id": "diamond",
-    "name": "Diamante",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Gemma diamante sfaccettata",
-    "d": "M19 3H5L2 9l10 12L22 9l-3-6z"
-  },
-  {
-    "id": "shield",
-    "name": "Scudo",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Scudo cavalleresco di protezione",
-    "d": "M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"
-  },
-  {
-    "id": "trophy",
-    "name": "Trofeo",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Coppa trofeo vincitore",
-    "d": "M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"
-  },
-  {
-    "id": "medal",
-    "name": "Medaglia",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Medaglia al valore con nastro",
-    "d": "M12 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
-  },
-  {
-    "id": "ribbon",
-    "name": "Fiocco / Coccarda",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Fiocco elegante o nastro regalo",
-    "d": "M12 2C8.69 2 6 4.69 6 8c0 2.97 2.16 5.44 5 5.91V22l4-2 4 2v-8.09c2.84-.47 5-2.94 5-5.91 0-3.31-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
-  },
-  {
-    "id": "clover",
-    "name": "Quadrifoglio",
-    "category": "forme",
-    "category_name": "Forme Classiche",
-    "desc": "Trifoglio / Quadrifoglio portafortuna",
-    "d": "M12 9.5C10.6 9.5 9.5 8.4 9.5 7s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5zm-2.5 5c0-1.4-1.1-2.5-2.5-2.5S4.5 13.1 4.5 14.5s1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5zm9.5 0c0-1.4-1.1-2.5-2.5-2.5s-2.5 1.1-2.5 2.5 1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5zm-7 5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"
-  },
-  {
-    "id": "paw",
+    "id": "zampa",
     "name": "Zampa",
     "category": "animali",
     "category_name": "Animali",
-    "desc": "Impronta zampa di cane o gatto",
-    "d": "M12 13c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm-4.5-3c1.38 0 2.5-1.12 2.5-2.5S8.88 5 7.5 5 5 6.12 5 7.5 6.12 10 7.5 10zm9 0c1.38 0 2.5-1.12 2.5-2.5S17.88 5 16.5 5 14 6.12 14 7.5s1.12 2.5 2.5 2.5zm-6-2C11.38 8 12.5 6.88 12.5 5.5S11.38 3 10 3 7.5 4.12 7.5 5.5 8.62 8 10 8zm4 0c1.38 0 2.5-1.12 2.5-2.5S15.38 3 14 3s-2.5 1.12-2.5 2.5S12.62 8 14 8z"
+    "desc": "Impronta zampa di cane o gatto con 4 dita e cuscinetto",
+    "d": "M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5l0 1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3l0-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z",
+    "viewBox": "0 0 512 512"
   },
   {
-    "id": "cat",
+    "id": "quadrifoglio",
+    "name": "Quadrifoglio",
+    "category": "forme",
+    "category_name": "Forme Classiche",
+    "desc": "Quadrifoglio 4 lobi a cuore con gambo arcuato",
+    "d": "M216.6 49.9C205.1 38.5 189.5 32 173.3 32C139.4 32 112 59.4 112 93.3l0 4.9c0 12 3.3 23.7 9.4 34l18.8 31.3c1.1 1.8 1.2 3.1 1 4.2c-.2 1.2-.8 2.5-2 3.6s-2.4 1.8-3.6 2c-1 .2-2.4 .1-4.2-1l-31.3-18.8c-10.3-6.2-22-9.4-34-9.4l-4.9 0C27.4 144 0 171.4 0 205.3c0 16.2 6.5 31.8 17.9 43.3l1.2 1.2c3.4 3.4 3.4 9 0 12.4l-1.2 1.2C6.5 274.9 0 290.5 0 306.7C0 340.6 27.4 368 61.3 368l4.9 0c12 0 23.7-3.3 34-9.4l31.3-18.8c1.8-1.1 3.1-1.2 4.2-1c1.2 .2 2.5 .8 3.6 2s1.8 2.4 2 3.6c.2 1 .1 2.4-1 4.2l-18.8 31.3c-6.2 10.3-9.4 22-9.4 34l0 4.9c0 33.8 27.4 61.3 61.3 61.3c16.2 0 31.8-6.5 43.3-17.9l1.2-1.2c3.4-3.4 9-3.4 12.4 0l1.2 1.2c11.5 11.5 27.1 17.9 43.3 17.9c33.8 0 61.3-27.4 61.3-61.3l0-4.9c0-12-3.3-23.7-9.4-34l-18.8-31.3c-1.1-1.8-1.2-3.1-1-4.2c.2-1.2 .8-2.5 2-3.6s2.4-1.8 3.6-2c1-.2 2.4-.1 4.2 1l31.3 18.8c10.3 6.2 22 9.4 34 9.4l4.9 0c33.8 0 61.3-27.4 61.3-61.3c0-16.2-6.5-31.8-17.9-43.3l-1.2-1.2c-3.4-3.4-3.4-9 0-12.4l1.2-1.2c11.5-11.5 17.9-27.1 17.9-43.3c0-33.8-27.4-61.3-61.3-61.3l-4.9 0c-12 0-23.7 3.3-34 9.4l-31.3 18.8c-1.8 1.1-3.1 1.2-4.2 1c-1.2-.2-2.5-.8-3.6-2s-1.8-2.4-2-3.6c-.2-1-.1-2.4 1-4.2l18.8-31.3c6.2-10.3 9.4-22 9.4-34l0-4.9C336 59.4 308.6 32 274.7 32c-16.2 0-31.8 6.5-43.3 17.9l-1.2 1.2c-3.4 3.4-9 3.4-12.4 0l-1.2-1.2z M 215 330 C 210 440 250 510 320 540 C 310 545 230 520 190 440 C 180 390 195 330 215 330 Z",
+    "viewBox": "0 0 512 550"
+  },
+  {
+    "id": "gatto",
     "name": "Gatto",
     "category": "animali",
     "category_name": "Animali",
-    "desc": "Testa di gattino con orecchie a punta",
-    "d": "M12 14c-3.31 0-6 2.69-6 6h12c0-3.31-2.69-6-6-6zm-7-2l2-7 4 3 3-1 3 1 4-3 2 7c-2 2-5 3-8 3s-6-1-8-3z"
+    "desc": "Silhouette gattino seduto con orecchie e coda",
+    "d": "M320 192l17.1 0c22.1 38.3 63.5 64 110.9 64c11 0 21.8-1.4 32-4l0 4 0 32 0 192c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-140.8L280 448l56 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-144 0c-53 0-96-43-96-96l0-223.5c0-16.1-12-29.8-28-31.8l-7.9-1c-17.5-2.2-30-18.2-27.8-35.7s18.2-30 35.7-27.8l7.9 1c48 6 84.1 46.8 84.1 95.3l0 85.3c34.4-51.7 93.2-85.8 160-85.8zm160 26.5s0 0 0 0c-10 3.5-20.8 5.5-32 5.5c-28.4 0-54-12.4-71.6-32c0 0 0 0 0 0c-3.7-4.1-7-8.5-9.9-13.2C357.3 164 352 146.6 352 128c0 0 0 0 0 0l0-96 0-20 0-1.3C352 4.8 356.7 .1 362.6 0l.2 0c3.3 0 6.4 1.6 8.4 4.2c0 0 0 0 0 .1L384 21.3l27.2 36.3L416 64l64 0 4.8-6.4L512 21.3 524.8 4.3c0 0 0 0 0-.1c2-2.6 5.1-4.2 8.4-4.2l.2 0C539.3 .1 544 4.8 544 10.7l0 1.3 0 20 0 96c0 17.3-4.6 33.6-12.6 47.6c-11.3 19.8-29.6 35.2-51.4 42.9zM432 128a16 16 0 1 0 -32 0 16 16 0 1 0 32 0zm48 16a16 16 0 1 0 0-32 16 16 0 1 0 0 32z",
+    "viewBox": "0 0 576 512"
   },
   {
-    "id": "dog",
+    "id": "cane",
     "name": "Cane",
     "category": "animali",
     "category_name": "Animali",
-    "desc": "Profilo muso di cane fedele",
-    "d": "M19 12c-1.5 0-2.8.6-3.7 1.6L12 10.3V5c0-1.1-.9-2-2-2H8C6.9 3 6 3.9 6 5v5.3L2.7 13.6C1.8 12.6.5 12-1 12v3c1.1 0 2 .9 2 2v2c0 1.7 1.3 3 3 3h12c1.7 0 3-1.3 3-3v-2c0-1.1.9-2 2-2v-3z"
+    "desc": "Profilo sagomato di cane con collare ed orecchie",
+    "d": "M309.6 158.5L332.7 19.8C334.6 8.4 344.5 0 356.1 0c7.5 0 14.5 3.5 19 9.5L392 32l52.1 0c12.7 0 24.9 5.1 33.9 14.1L496 64l56 0c13.3 0 24 10.7 24 24l0 24c0 44.2-35.8 80-80 80l-32 0-16 0-21.3 0-5.1 30.5-112-64zM416 256.1L416 480c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-115.2c-24 12.3-51.2 19.2-80 19.2s-56-6.9-80-19.2L160 480c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-230.2c-28.8-10.9-51.4-35.3-59.2-66.5L1 167.8c-4.3-17.1 6.1-34.5 23.3-38.8s34.5 6.1 38.8 23.3l3.9 15.5C70.5 182 83.3 192 98 192l30 0 16 0 159.8 0L416 256.1zM464 80a16 16 0 1 0 -32 0 16 16 0 1 0 32 0z",
+    "viewBox": "0 0 576 512"
   },
   {
-    "id": "fish",
-    "name": "Pesce",
-    "category": "animali",
-    "category_name": "Animali",
-    "desc": "Pesciolino marino nuotatore",
-    "d": "M2 12s4-5 11-5c3 0 6 2 9 5-3 3-6 5-9 5-7 0-11-5-11-5zm20 0l-3-4v8l3-4z"
+    "id": "corona",
+    "name": "Corona",
+    "category": "forme",
+    "category_name": "Forme Classiche",
+    "desc": "Corona regale con base solida e punte",
+    "d": "M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z",
+    "viewBox": "0 0 576 512"
   },
   {
-    "id": "butterfly",
-    "name": "Farfalla",
-    "category": "animali",
-    "category_name": "Animali",
-    "desc": "Farfalla con ali spiegate",
-    "d": "M12 5c-1 0-2 .8-2 1.8V17c0 1 .9 2 2 2s2-1 2-2V6.8c0-1-1-1.8-2-1.8zm-3 2C6 7 2 9 2 13s3 5 7 4V7zm6 0v10c4 1 7 0 7-4s-4-6-7-6z"
-  },
-  {
-    "id": "bird",
-    "name": "Uccello",
-    "category": "animali",
-    "category_name": "Animali",
-    "desc": "Uccello o colomba in volo",
-    "d": "M22 6c-1.5 1-3.5 1-5 .5C15 5 13 6 12 8c-2-1-5-1-7 1 3 0 5 1 6 3-3 0-5 2-6 4 3 0 5 0 7-1-2 2-3 4-3 6 4-1 7-4 9-8 2 0 4-1 4-7z"
-  },
-  {
-    "id": "gamepad",
-    "name": "Controller Gamer",
-    "category": "gaming",
-    "category_name": "Gaming & Geek",
-    "desc": "Joypad da console / gamepad",
-    "d": "M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"
-  },
-  {
-    "id": "sword",
-    "name": "Spada",
-    "category": "gaming",
-    "category_name": "Gaming & Geek",
-    "desc": "Spada da cavaliere RPG",
-    "d": "M19.7 4.3c-.4-.4-1-.4-1.4 0L12 10.6 8.4 7 7 8.4l3.6 3.6-7.3 7.3V21h1.7l7.3-7.3 3.6 3.6 1.4-1.4-3.6-3.6 6.3-6.3c.4-.4.4-1 0-1.7z"
-  },
-  {
-    "id": "skull",
-    "name": "Teschio",
-    "category": "gaming",
-    "category_name": "Gaming & Geek",
-    "desc": "Teschio piratesco o gothic",
-    "d": "M12 2C7.03 2 3 6.03 3 11c0 3.12 1.6 5.87 4 7.45V21c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-2.55c2.4-1.58 4-4.33 4-7.45 0-4.97-4.03-9-9-9zm-3 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
-  },
-  {
-    "id": "ghost",
-    "name": "Fantasma",
-    "category": "gaming",
-    "category_name": "Gaming & Geek",
-    "desc": "Fantasmino stile arcade rétro",
-    "d": "M12 2C7.58 2 4 5.58 4 10v10l3-3 3 3 2-2 2 2 3-3 3 3V10c0-4.42-3.58-8-8-8zm-3 9c-.83 0-1.5-.67-1.5-1.5S8.17 8 9 8s1.5.67 1.5 1.5S9.83 11 9 11zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 8 15 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-  },
-  {
-    "id": "dice",
-    "name": "Dado",
-    "category": "gaming",
-    "category_name": "Gaming & Geek",
-    "desc": "Dado a 6 facce da gioco da tavolo",
-    "d": "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-  },
-  {
-    "id": "rocket",
-    "name": "Razzo Spaziale",
-    "category": "gaming",
-    "category_name": "Gaming & Geek",
-    "desc": "Navicella / razzo in decollo",
-    "d": "M12 2.5s-5 4.5-5 10.5c0 3 1.5 5 2 6l3-1 3 1c.5-1 2-3 2-6 0-6-5-10.5-5-10.5zm0 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-7 8l2-3c-.5-1-1-2.5-1-4L2 15l3 4.5zm14 0l-2-3c.5-1 1-2.5 1-4l4 2.5-3 4.5z"
-  },
-  {
-    "id": "music",
-    "name": "Nota Musicale",
-    "category": "musica",
-    "category_name": "Musica",
-    "desc": "Nota musicale singola",
-    "d": "M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"
-  },
-  {
-    "id": "music_double",
-    "name": "Doppia Nota",
-    "category": "musica",
-    "category_name": "Musica",
-    "desc": "Due note musicali unite",
-    "d": "M21 3L9 6.5v10.3c-.6-.3-1.3-.5-2-.5-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4V10.8l8-2.3v6.3c-.6-.3-1.3-.5-2-.5-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4V3z"
-  },
-  {
-    "id": "headphones",
-    "name": "Cuffie DJ",
-    "category": "musica",
-    "category_name": "Musica",
-    "desc": "Cuffie stereo ad archetto",
-    "d": "M12 3C6.5 3 2 7.5 2 13v6c0 1.7 1.3 3 3 3h2v-8H4v-1c0-4.4 3.6-8 8-8s8 3.6 8 8v1h-3v8h2c1.7 0 3-1.3 3-3v-6c0-5.5-4.5-10-10-10z"
-  },
-  {
-    "id": "guitar",
-    "name": "Chitarra",
-    "category": "musica",
-    "category_name": "Musica",
-    "desc": "Chitarra rock o classica",
-    "d": "M20 3l-1.5 1.5 2 2L19 8l-2-2-4 4c.5 1.2.3 2.6-.6 3.5l-1 1c-.3.3-.7.5-1.1.6L8 13.5l3.5-3.5c.1-.4.3-.8.6-1.1l1-1c.9-.9 2.3-1.1 3.5-.6l4-4-2-2L20 3zM4 17.5C4 15.6 5.6 14 7.5 14S11 15.6 11 17.5 9.4 21 7.5 21 4 19.4 4 17.5z"
-  },
-  {
-    "id": "soccer",
-    "name": "Calcio",
-    "category": "sport",
-    "category_name": "Sport & Fitness",
-    "desc": "Pallone da calcio a esagoni",
-    "d": "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 3.1l2.5 1.8-.9 2.9h-3.2l-.9-2.9L13 5.1zM6.3 8.8l2.6 1.1-.9 2.9-2.7-.9c.2-1.1.5-2.1 1-3.1zm-.3 6.3l2.8-.9 1.8 2.4-1.7 2.4c-1.3-1.1-2.3-2.4-2.9-3.9zm9 4c-.7.5-1.5.8-2.3.9l-1.4-2.7 1.8-2.4 2.8.9c-.3 1.2-.5 2.2-.9 3.3zm2.7-5.1l-2.7.9-.9-2.9 2.6-1.1c.5 1 1 2 1 3.1z"
-  },
-  {
-    "id": "dumbbell",
-    "name": "Manubrio Pesi",
-    "category": "sport",
-    "category_name": "Sport & Fitness",
-    "desc": "Manubrio fitness da palestra",
-    "d": "M6.5 5h-2c-.8 0-1.5.7-1.5 1.5v11c0 .8.7 1.5 1.5 1.5h2c.8 0 1.5-.7 1.5-1.5V6.5c0-.8-.7-1.5-1.5-1.5zm13 0h-2c-.8 0-1.5.7-1.5 1.5v11c0 .8.7 1.5 1.5 1.5h2c.8 0 1.5-.7 1.5-1.5V6.5c0-.8-.7-1.5-1.5-1.5zM15 11H9v2h6v-2z"
-  },
-  {
-    "id": "target",
-    "name": "Bersaglio",
-    "category": "sport",
-    "category_name": "Sport & Fitness",
-    "desc": "Bersaglio centro perfetto",
-    "d": "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
-  },
-  {
-    "id": "car",
-    "name": "Auto Sportiva",
-    "category": "motori",
-    "category_name": "Auto & Motori",
-    "desc": "Automobile / silhouette vettura",
-    "d": "M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"
-  },
-  {
-    "id": "motorcycle",
-    "name": "Moto",
-    "category": "motori",
-    "category_name": "Auto & Motori",
-    "desc": "Motocicletta racing o scooter",
-    "d": "M19.4 9.3l-2.8-5.6c-.3-.5-.8-.7-1.3-.7H12v2h3.3l1.8 3.6L14 11H9.8l-1-2H11V7H7.8l-1.5-3H4v2h1.2l3.4 6.8c-.8.8-1.4 1.9-1.5 3.2-1.9.4-3.3 2-3.3 4 0 2.2 1.8 4 4 4s4-1.8 4-4c0-.7-.2-1.3-.5-1.9l2.7-2.1h3l3.2 4.2c-.3.6-.5 1.2-.5 1.8 0 2.2 1.8 4 4 4s4-1.8 4-4c0-2-1.4-3.6-3.3-4-.1-1.8-1.1-3.3-2.6-4.1zM7.8 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11.4 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
-  },
-  {
-    "id": "wrench",
-    "name": "Chiave Inglese",
-    "category": "motori",
-    "category_name": "Auto & Motori",
-    "desc": "Attrezzo meccanico chiave di lavoro",
-    "d": "M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.6C.5 7 1 10 3 12c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.4-.4.4-1 0-1.3z"
-  },
-  {
-    "id": "leaf",
-    "name": "Foglia",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Foglia verde biologica",
-    "d": "M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"
-  },
-  {
-    "id": "tree",
-    "name": "Albero / Pino",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Pino boschivo o abete natalizio",
-    "d": "M14 18v4h-4v-4H4l4.5-5H6l4.5-5H8l4-6 4 6h-2.5l4.5 5h-2.5l4.5 5h-6z"
-  },
-  {
-    "id": "fire",
-    "name": "Fuoco / Fiamma",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Fiamma viva potente",
-    "d": "M12 23c-4.97 0-9-4.03-9-9 0-3.61 2.21-6.7 5.37-8.08.31-.13.66.02.77.33.1.28.02.59-.21.78C7.54 8.23 7 9.8 7 11.5c0 .35.03.7.09 1.04.06.34.37.58.71.55.33-.03.58-.31.57-.64C8.28 11.23 9.49 10 11 10c.85 0 1.62.36 2.16.94.24.26.65.28.91.04.14-.13.2-.31.18-.49-.24-2.18-1.55-4.01-3.37-4.9-.3-.15-.42-.51-.27-.81.14-.28.47-.41.77-.3 3.82 1.34 6.62 5.01 6.62 9.52 0 4.97-4.03 9-9 9z"
-  },
-  {
-    "id": "lightning",
+    "id": "fulmine",
     "name": "Fulmine",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Saetta di energia elettrica",
-    "d": "M7 2v11h3v9l7-12h-4l4-8z"
-  },
-  {
-    "id": "sun",
-    "name": "Sole",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Sole raggiante splendente",
-    "d": "M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"
-  },
-  {
-    "id": "moon",
-    "name": "Mezzaluna",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Luna crescente notturna",
-    "d": "M12.3 2a10 10 0 0 0-1.9 19.8 10 10 0 0 0 11.6-11.6A10 10 0 0 1 12.3 2z"
-  },
-  {
-    "id": "snowflake",
-    "name": "Fiocco di Neve",
-    "category": "natura",
-    "category_name": "Natura & Meteo",
-    "desc": "Cristallo di ghiaccio invernale",
-    "d": "M13 2h-2v4.18L8.46 3.65 7.05 5.06 9.99 8H5.82L3.65 5.83 2.24 7.24 4.18 9.18v3.64H2v2h2.18l-1.94 1.94 1.41 1.41 2.17-2.17h4.17l-2.94 2.94 1.41 1.41L11 17.82V22h2v-4.18l2.54 2.53 1.41-1.41-2.94-2.94h4.17l2.17 2.17 1.41-1.41-1.94-1.94H22v-2h-2.18l1.94-1.94-1.41-1.41-2.17 2.17h-4.17l2.94-2.94-1.41-1.41L13 6.18V2z"
-  },
-  {
-    "id": "smile",
-    "name": "Smile Felice",
-    "category": "simboli",
-    "category_name": "Simboli & Faccine",
-    "desc": "Faccina sorridente allegra",
-    "d": "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"
-  },
-  {
-    "id": "sunglasses",
-    "name": "Occhiali da Sole",
-    "category": "simboli",
-    "category_name": "Simboli & Faccine",
-    "desc": "Stile cool con lenti scure",
-    "d": "M22 8c-.6-1.8-2.3-3-4.2-3H6.2C4.3 5 2.6 6.2 2 8L1 12v3c0 1.7 1.3 3 3 3h5c1.7 0 3-1.3 3-3v-1h.1v1c0 1.7 1.3 3 3 3h5c1.7 0 3-1.3 3-3v-3l-1-4zM8 15H5c-.6 0-1-.4-1-1v-2l1-3c.2-.6.7-1 1.3-1H8c1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2zm11 0h-3c-1.1 0-2-.9-2-2v-3c0-1.1.9-2 2-2h1.7c.6 0 1.1.4 1.3 1l1 3v2c0 .6-.4 1-1 1z"
-  },
-  {
-    "id": "infinity",
-    "name": "Infinito",
-    "category": "simboli",
-    "category_name": "Simboli & Faccine",
-    "desc": "Simbolo di infinito eterno",
-    "d": "M18.6 6.62c-1.44 0-2.8.56-3.77 1.53L12 11l-2.83-2.85c-.97-.97-2.33-1.53-3.77-1.53-2.93 0-5.4 2.47-5.4 5.4s2.47 5.4 5.4 5.4c1.44 0 2.8-.56 3.77-1.53L12 13l2.83 2.85c.97.97 2.33 1.53 3.77 1.53 2.93 0 5.4-2.47 5.4-5.4s-2.47-5.4-5.4-5.4zm-13.2 8.4c-1.65 0-3-1.35-3-3s1.35-3 3-3c.8 0 1.55.31 2.08.85L9.66 12l-2.18 2.15c-.53.54-1.28.85-2.08.85zm13.2 0c-.8 0-1.55-.31-2.08-.85L14.34 12l2.18-2.15c.53-.54 1.28-.85 2.08-.85 1.65 0 3 1.35 3 3s-1.35 3-3 3z"
-  },
-  {
-    "id": "check_circle",
-    "name": "Spunta OK",
-    "category": "simboli",
-    "category_name": "Simboli & Faccine",
-    "desc": "Cerchio con spunta di conferma",
-    "d": "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-  },
-  {
-    "id": "gift",
-    "name": "Pacco Regalo",
-    "category": "simboli",
-    "category_name": "Simboli & Faccine",
-    "desc": "Scatola regalo con nastro e fiocco",
-    "d": "M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.65-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1h-2.22l.62-.83c.37-.48.95-.77 1.6-.77zm-6 0c.65 0 1.23.29 1.6.77l.62.83H9c-.55 0-1-.45-1-1s.45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76V14h2V8.76L15.38 12 17 10.83 14.92 8H20v6z"
-  },
-  {
-    "id": "coffee",
-    "name": "Tazzina Caffè",
-    "category": "simboli",
-    "category_name": "Simboli & Faccine",
-    "desc": "Tazza di espresso fumante",
-    "d": "M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"
+    "category": "forme",
+    "category_name": "Forme Classiche",
+    "desc": "Fulmine classico geometrico e affilato",
+    "d": "M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z",
+    "viewBox": "0 0 448 512"
   }
 ];
 
@@ -783,7 +504,8 @@ class CustomIconDropdown {
     };
 
     if (icon.d) {
-      this.previewWrap.innerHTML = `<svg viewBox="0 0 24 24"><path d="${icon.d}" /></svg>`;
+      const vb = icon.viewBox || "0 0 512 512";
+    this.previewWrap.innerHTML = `<svg viewBox="${vb}"><path d="${icon.d}" fill="currentColor" /></svg>`;
     } else {
       this.previewWrap.innerHTML = `<span class="custom-icon-none-badge">✕</span>`;
     }
@@ -816,8 +538,9 @@ class CustomIconDropdown {
       item.className = `custom-icon-option-item ${isSelected ? "selected" : ""}`;
       item.dataset.value = icon.id;
 
+      const vb = icon.viewBox || "0 0 512 512";
       const svgHtml = icon.d
-        ? `<svg viewBox="0 0 24 24"><path d="${icon.d}" /></svg>`
+        ? `<svg viewBox="${vb}"><path d="${icon.d}" fill="currentColor" /></svg>`
         : `<span style="font-size: 14px; opacity: 0.7;">❌</span>`;
 
       item.innerHTML = `
@@ -1315,7 +1038,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (holeDiameterVal) holeDiameterVal.textContent = `${kc.hole_diameter} mm`;
         }
         if (iconSelect && kc.icon_name !== undefined) {
-          iconSelect.value = kc.icon_name;
+          const aliasMap = { heart: "cuore", star: "stella", paw: "zampa", clover: "quadrifoglio", cat: "gatto", dog: "cane", crown: "corona", lightning: "fulmine", bolt: "fulmine" };
+          const resolvedIcon = aliasMap[kc.icon_name.toLowerCase()] || kc.icon_name;
+          iconSelect.value = resolvedIcon;
           if (iconOptionsWrap) {
             iconOptionsWrap.style.display = (kc.icon_name && kc.icon_name !== "none") ? "flex" : "none";
           }
