@@ -1502,4 +1502,196 @@ body.mode-desksign .only-desksign {
   background: rgba(255, 51, 68, 0.08);
 }
 
+/* ==============================================================================
+   RESPONSIVE DESIGN MOBILE-FIRST & PWA OPTIMIZATION (iPhone & Android)
+   ============================================================================== */
+@media (max-width: 768px) {
+  html, body {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-header {
+    height: auto;
+    min-height: 52px;
+    padding: calc(6px + env(safe-area-inset-top)) 12px 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand h1 {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .brand-subtitle,
+  .header-badges {
+    display: none; /* Salva spazio visivo per l'interfaccia principale */
+  }
+
+  .header-product-switcher {
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .header-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .app-main {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 100px);
+    overflow: visible;
+  }
+
+  /* 1. Canvas 3D in Alto (Touch-Friendly e Fisso nello Scroll) */
+  .viewer-container {
+    width: 100%;
+    height: 42vh;
+    min-height: 270px;
+    max-height: 380px;
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    background-color: #0b0c10;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+    border-bottom: 2px solid var(--border-subtle);
+    touch-action: none; /* Consente la rotazione con un dito e pinch-to-zoom Three.js */
+  }
+
+  .viewer-toolbar {
+    top: 8px;
+    right: 8px;
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .tool-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .status-pill {
+    bottom: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  /* 2. Scheda Parametri in Basso (Drawer Scorrevole) */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-top: 1px solid var(--border-subtle);
+    overflow: visible;
+    z-index: 10;
+    padding-bottom: 110px; /* Spazio per la barra di azione fissa in basso */
+    background: var(--bg-primary);
+  }
+
+  .sidebar-content {
+    overflow: visible;
+    padding: 14px 12px;
+    gap: 14px;
+  }
+
+  .product-tabs {
+    display: none; /* Già presente nell'header switcher */
+  }
+
+  .param-section {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  /* Input e selettori dimensionati per dita (min 42px) ed evita auto-zoom Safari */
+  input[type="text"],
+  input[type="number"],
+  select,
+  .form-input,
+  .tool-select {
+    font-size: 16px !important; /* Previene lo zoom automatico di iOS Safari */
+    min-height: 40px;
+  }
+
+  .custom-font-trigger,
+  .custom-icon-trigger {
+    min-height: 44px;
+  }
+
+  /* Griglia Colori su Mobile */
+  .palette-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .tool-slot {
+    padding: 6px 4px;
+  }
+
+  .color-input-wrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .color-input-wrap input[type="color"] {
+    width: 46px;
+    height: 46px;
+  }
+
+  /* 3. Pulsante Fisso in Basso 'SCARICA 3MF PER U1' */
+  .sidebar-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(18, 19, 22, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65);
+    padding: 10px 14px max(12px, env(safe-area-inset-bottom)) 14px;
+    gap: 6px;
+  }
+
+  .dimensions-badge {
+    padding: 4px 8px;
+    font-size: 10.5px;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(255, 51, 68, 0.45);
+  }
+
+  .btn-reset-link {
+    display: none;
+  }
+
+  /* Finestra Modale Adattiva Mobile */
+  .modal-dialog {
+    width: 94%;
+    max-width: 440px;
+    margin: auto;
+  }
+}
+
+
 

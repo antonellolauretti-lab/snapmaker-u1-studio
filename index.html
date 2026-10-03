@@ -2,9 +2,22 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Snapmaker U1 - Studio Parametrico 3D</title>
+  <meta name="description" content="Studio Parametrico 3D per Snapmaker U1 - Portachiavi e Targhette Multicolore 4 Ugelli">
   <meta name="api-base-url" content="https://snapmaker-u1-backend.onrender.com">
+
+  <!-- Apple iOS & PWA Optimization -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="U1 Studio">
+  <meta name="application-name" content="U1 Studio">
+  <meta name="theme-color" content="#121316">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon.png">
+  <link rel="manifest" href="/static/manifest.json">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Cinzel:wght@700&family=Lobster&family=Montserrat:wght@700;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
@@ -682,6 +695,22 @@
           <span style="font-size: 10.5px; color: var(--text-dim); display: block; margin-top: 4px;">
             Nota: Il dispositivo da cui usi l'app deve essere connesso alla stessa rete Wi-Fi della macchina.
           </span>
+        </div>
+
+        <!-- Opzione Rapida: Incolla JSON di Stato U1 (Bypass Mixed Content HTTPS) -->
+        <div style="margin-top: 10px; border-top: 1px dashed var(--border-subtle); padding-top: 10px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin: 0; font-size: 11px;">📋 Oppure Incolla Dump JSON / Stato U1:</label>
+            <a id="linkOpenPrinterTab" href="#" target="_blank" rel="noopener" style="font-size: 10.5px; color: var(--accent-snapmaker); text-decoration: none; display: none;">
+              🔗 Apri Scheda Stampante ↗
+            </a>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="printerJsonInput" placeholder='Incolla JSON (es. {"filaments": ...} o output status)' style="flex: 1; font-size: 11px;">
+            <button type="button" id="btnApplyPrinterJson" class="btn-modal-cancel" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;">
+              Applica JSON
+            </button>
+          </div>
         </div>
 
         <!-- Sezione Risultato Rilevamento Slot -->

@@ -2001,6 +2001,179 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Parser Client-Side Palette RFID Snapmaker U1
+  function parseSnapmakerPaletteClient(data) {
+    const NAMED_COLORS = {
+      "black": "#161616", "white": "#ffffff", "red": "#e31b23",
+      "yellow": "#ffd400", "blue": "#1e88e5", "green": "#2e7d32",
+      "orange": "#f4511e", "grey": "#757575", "gray": "#757575",
+      "purple": "#8e24aa", "silver": "#b0bec5", "gold": "#d4af37"
+    };
+
+    const defaultColors = ["#161616", "#ffffff", "#e31b23", "#ffd400"];
+    const defaultMaterials = ["Estrusore 1", "Estrusore 2", "Estrusore 3", "Estrusore 4"];
+    const foundColors = [];
+    const foundMaterials = [];
+
+    function normalizeColor(val) {
+      if (!val) return null;
+      let s = String(val).trim().toLowerCase();
+      if (NAMED_COLORS[s]) return NAMED_COLORS[s];
+      let hex = s.replace(/^#/, "");
+      if (hex.length === 8) hex = hex.substring(0, 6);
+      if (hex.length === 6 && /^[0-9a-f]{6}$/i.test(hex)) {
+        return "#" + hex.toLowerCase();
+      }
+      return null;
+    }
+
+    let candidates = null;
+    if (data && typeof data === "object") {
+      const keys = ["filaments", "filament_info", "slots", "trays", "spools", "materials", "tools"];
+      for (const k of keys) {
+        if (Array.isArray(data[k])) { candidates = data[k]; break; }
+      }
+      if (!candidates && data.data && typeof data.data === "object") {
+        for (const k of keys) {
+          if (Array.isArray(data.data[k])) { candidates = data.data[k]; break; }
+        }
+      }
+      if (!candidates && data.result && typeof data.result === "object") {
+        const status = data.result.status || data.result;
+        for (const k of ["filaments", "slots", "spools"]) {
+          if (Array.isArray(status[k])) { candidates = status[k]; break; }
+        }
+      }
+    }
+
+    if (Array.isArray(candidates)) {
+      for (const item of candidates.slice(0, 4)) {
+        let col = null;
+        let mat = null;
+        if (item && typeof item === "object") {
+          for (const ck of ["color", "tray_color", "filament_color", "hex"]) {
+            if (item[ck]) {
+              col = normalizeColor(item[ck]);
+              if (col) break;
+            }
+          }
+          for (const mk of ["material", "name", "type", "filament_type"]) {
+            if (item[mk]) {
+              mat = String(item[mk]).trim();
+              break;
+            }
+          }
+        } else if (typeof item === "string") {
+          col = normalizeColor(item);
+        }
+        if (col) {
+          foundColors.push(col);
+          foundMaterials.push(mat || `Estrusore ${foundColors.length}`);
+        }
+      }
+    }
+
+    if (foundColors.length < 4 && data && typeof data === "object") {
+      function scan(obj) {
+        if (!obj || foundColors.length >= 4) return;
+        if (Array.isArray(obj)) {
+          for (const v of obj) scan(v);
+        } else if (typeof obj === "object") {
+          for (const v of Object.values(obj)) scan(v);
+        } else if (typeof obj === "string") {
+          const c = normalizeColor(obj);
+          if (c && !foundColors.includes(c) && foundColors.length < 4) {
+            foundColors.push(c);
+            foundMaterials.push(`Estrusore ${foundColors.length}`);
+          }
+        }
+      }
+      scan(data);
+    }
+
+    const finalColors = [];
+    const finalMaterials = [];
+    for (let i = 0; i < 4; i++) {
+      finalColors.push(foundColors[i] || defaultColors[i]);
+      finalMaterials.push(foundMaterials[i] || defaultMaterials[i]);
+    }
+
+    return { colors: finalColors, materials: finalMaterials };
+  }
+
+  function applyPaletteColors(colors, materials) {
+    if (!colors || colors.length < 4) return;
+    if (colorT0) colorT0.value = colors[0];
+    if (colorT1) colorT1.value = colors[1];
+    if (colorT2) colorT2.value = colors[2];
+    if (colorT3) colorT3.value = colors[3];
+    onPaletteChange();
+    triggerPreview(true);
+  }
+
+  // Gestione link a scheda stampante e inserimento manuale JSON
+  const btnApplyPrinterJson = document.getElementById("btnApplyPrinterJson");
+  const printerJsonInput = document.getElementById("printerJsonInput");
+  const linkOpenPrinterTab = document.getElementById("linkOpenPrinterTab");
+
+  function updatePrinterTabLink() {
+    const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
+    const port = printerPortInput ? parseInt(printerPortInput.value.trim()) || 8080 : 8080;
+    if (linkOpenPrinterTab) {
+      if (rawIp) {
+        linkOpenPrinterTab.href = `http://${rawIp}:${port}/filament/status`;
+        linkOpenPrinterTab.style.display = "inline-block";
+      } else {
+        linkOpenPrinterTab.style.display = "none";
+      }
+    }
+  }
+  if (printerIpInput) printerIpInput.addEventListener("input", updatePrinterTabLink);
+  if (printerPortInput) printerPortInput.addEventListener("input", updatePrinterTabLink);
+  updatePrinterTabLink();
+
+  if (btnApplyPrinterJson && printerJsonInput) {
+    btnApplyPrinterJson.addEventListener("click", () => {
+      const raw = printerJsonInput.value.trim();
+      if (!raw) {
+        ToastManager.show({
+          type: "warning",
+          title: "JSON Vuoto",
+          message: "Incolla l'output JSON della stampante prima di applicare.",
+          duration: 4000
+        });
+        return;
+      }
+      try {
+        const data = JSON.parse(raw);
+        const parsed = parseSnapmakerPaletteClient(data);
+        applyPaletteColors(parsed.colors, parsed.materials);
+        ToastManager.show({
+          type: "success",
+          title: "Palette Sincronizzata da JSON",
+          message: "I 4 estrusori sono stati aggiornati dai dati RFID incollati.",
+          duration: 5000
+        });
+        if (syncResultStatus) {
+          syncResultStatus.style.display = "block";
+          syncResultStatus.style.background = "rgba(46, 213, 115, 0.15)";
+          syncResultStatus.style.border = "1px solid #2ed573";
+          syncResultStatus.style.color = "#2ed573";
+          syncResultStatus.innerHTML = `✓ Dati JSON applicati con successo! Colori: ${parsed.colors.join(" | ")}`;
+        }
+        setTimeout(() => closeSyncModal(), 1200);
+      } catch (err) {
+        ToastManager.show({
+          type: "error",
+          title: "JSON Non Valido",
+          message: "Il testo incollato non è in formato JSON valido: " + err.message,
+          duration: 6000
+        });
+      }
+    });
+  }
+
+  // Esecuzione sincronizzazione automatica LAN (Client-Side con Fallback)
   safeAddListener(btnExecuteSync, "click", async () => {
     const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
     const port = printerPortInput ? parseInt(printerPortInput.value.trim()) || 8080 : 8080;
@@ -2017,7 +2190,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Salva impostazioni in localStorage
     try {
       localStorage.setItem("snapmaker_u1_ip", rawIp);
       localStorage.setItem("snapmaker_u1_port", port.toString());
@@ -2026,63 +2198,88 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("Impossibile salvare su localStorage:", e);
     }
 
-    // Stato di caricamento
     btnExecuteSync.disabled = true;
     btnExecuteSync.classList.add("loading");
-    btnExecuteSync.innerHTML = `<span class="spinner"></span> Connessione in corso...`;
+    btnExecuteSync.innerHTML = `<span class="spinner"></span> Connessione diretta LAN...`;
 
     if (syncResultStatus) {
       syncResultStatus.style.display = "block";
       syncResultStatus.style.background = "rgba(255, 255, 255, 0.05)";
       syncResultStatus.style.border = "1px solid var(--border-subtle)";
       syncResultStatus.style.color = "var(--text-main)";
-      syncResultStatus.innerHTML = `Interrogazione Snapmaker U1 su <code>${rawIp}:${port}</code> in corso...`;
+      syncResultStatus.innerHTML = `Interrogazione diretta dal browser verso Snapmaker U1 su <code>http://${rawIp}:${port}</code>...`;
     }
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/printer/sync`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip: rawIp, port, token }),
-      });
+    let printerData = null;
+    let mixedContentBlocked = false;
+    let fetchErrorDetail = null;
 
-      const data = await response.json();
+    // FASE 1: Interrogazione diretta dal Browser verso la LAN locale
+    const endpoints = [
+      "/filament/status",
+      "/filament/data",
+      "/api/v1/filament",
+      "/printer/objects/query?toolhead&extruder&extruder1&extruder2&extruder3&save_variables",
+      "/api/v1/status"
+    ];
 
-      if (data.status === "warning" && data.is_private_network) {
-        if (syncResultStatus) {
-          syncResultStatus.style.display = "block";
-          syncResultStatus.style.background = "rgba(255, 165, 2, 0.15)";
-          syncResultStatus.style.border = "1px solid #ffa502";
-          syncResultStatus.style.color = "#ffbe76";
-          syncResultStatus.innerHTML = `
-            <strong>⚠️ Rete Privata Rilevata:</strong> ${data.detail}<br>
-            <span style="font-size: 11px; margin-top: 6px; display: block; color: var(--text-muted);">${data.suggestion}</span>
-          `;
-        }
-        ToastManager.show({
-          type: "warning",
-          title: "Snapmaker U1 su Rete Locale",
-          message: "Il backend cloud non può accedere a IP privati della tua rete domestica. Avvia 'python run_web.py' per connetterti direttamente.",
-          duration: 9000,
+    const reqHeaders = { "Accept": "application/json" };
+    if (token) {
+      reqHeaders["Snapmaker-Token"] = token;
+      reqHeaders["Authorization"] = `Bearer ${token}`;
+    }
+
+    for (const ep of endpoints) {
+      const url = `http://${rawIp}:${port}${ep}`;
+      try {
+        const resp = await fetch(url, {
+          method: "GET",
+          headers: reqHeaders,
+          signal: AbortSignal.timeout(2400),
+          mode: "cors"
         });
-        return;
+        if (resp.ok) {
+          printerData = await resp.json();
+          break;
+        }
+      } catch (err) {
+        fetchErrorDetail = err.message;
+        if (window.location.protocol === "https:") {
+          mixedContentBlocked = true;
+        }
       }
+    }
 
-      if (data.status !== "success" || !data.colors) {
-        throw new Error(data.detail || "Impossibile recuperare i dati dalla stampante.");
+    // FASE 2: Se la chiamata diretta dal browser fallisce, prova il backend
+    if (!printerData) {
+      try {
+        const beResp = await fetch(`${API_BASE_URL}/api/printer/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip: rawIp, port, token }),
+          signal: AbortSignal.timeout(4500)
+        });
+        const beData = await beResp.json();
+        if (beData.status === "success" && beData.colors) {
+          printerData = beData;
+        } else if (beData.status === "warning" && beData.is_private_network) {
+          mixedContentBlocked = true;
+        }
+      } catch (beErr) {
+        // Backend non raggiungibile o in standby
       }
+    }
 
-      // Applica i colori agli slot
-      if (colorT0 && data.colors[0]) colorT0.value = data.colors[0];
-      if (colorT1 && data.colors[1]) colorT1.value = data.colors[1];
-      if (colorT2 && data.colors[2]) colorT2.value = data.colors[2];
-      if (colorT3 && data.colors[3]) colorT3.value = data.colors[3];
+    // FASE 3: Risultato o Assistenza Mixed Content
+    btnExecuteSync.disabled = false;
+    btnExecuteSync.classList.remove("loading");
+    btnExecuteSync.innerHTML = `<span>⚡ Rileva Colori RFID</span>`;
 
-      onPaletteChange();
-      triggerPreview(true);
+    if (printerData) {
+      const parsed = printerData.colors ? printerData : parseSnapmakerPaletteClient(printerData);
+      applyPaletteColors(parsed.colors, parsed.materials);
 
-      const matSummary = (data.materials || ["Estrusore 1", "Estrusore 2", "Estrusore 3", "Estrusore 4"]).join(", ");
-
+      const matSummary = (parsed.materials || ["Estrusore 1", "Estrusore 2", "Estrusore 3", "Estrusore 4"]).join(", ");
       if (syncResultStatus) {
         syncResultStatus.style.display = "block";
         syncResultStatus.style.background = "rgba(46, 213, 115, 0.15)";
@@ -2090,46 +2287,71 @@ document.addEventListener("DOMContentLoaded", () => {
         syncResultStatus.style.color = "#2ed573";
         syncResultStatus.innerHTML = `
           <strong>✓ Sincronizzazione Riuscita!</strong><br>
-          Colori RFID: ${data.colors.join(" | ")}<br>
+          Colori RFID: ${parsed.colors.join(" | ")}<br>
           <span style="font-size: 10.5px;">${matSummary}</span>
         `;
       }
-
       ToastManager.show({
         type: "success",
-        title: "Palette Sincronizzata (Snapmaker U1)",
-        message: `4 Estrusori aggiornati con successo da RFID: ${matSummary}`,
-        duration: 6000,
+        title: "Palette Sincronizzata",
+        message: `4 Estrusori aggiornati con successo: ${matSummary}`,
+        duration: 5000,
       });
+      setTimeout(() => closeSyncModal(), 1500);
+      return;
+    }
 
-      setTimeout(() => {
-        closeSyncModal();
-      }, 1500);
-
-    } catch (err) {
-      console.error("Errore sincronizzazione stampante:", err);
+    // Se bloccato da Mixed Content (HTTPS -> HTTP LAN):
+    if (mixedContentBlocked) {
+      if (syncResultStatus) {
+        syncResultStatus.style.display = "block";
+        syncResultStatus.style.background = "rgba(255, 165, 2, 0.15)";
+        syncResultStatus.style.border = "1px solid #ffa502";
+        syncResultStatus.style.color = "#ffd8a8";
+        syncResultStatus.innerHTML = `
+          <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⚠️ Blocco di Sicurezza Browser (HTTPS ➔ LAN HTTP)</div>
+          <div style="font-size: 11px; line-height: 1.4; margin-bottom: 8px;">
+            Essendo questo sito su <code>https://</code> (Vercel), i browser bloccano la lettura automatica verso IP locali non crittografati (<code>http://${rawIp}:${port}</code>).
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <a href="http://${rawIp}:${port}/filament/status" target="_blank" rel="noopener" style="background: var(--accent-snapmaker); color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 5px; font-weight: 600; text-align: center; font-size: 11px; display: inline-block;">
+              🔗 1. Tocca qui per aprire la risposta della stampante ↗
+            </a>
+            <div style="font-size: 10.5px; color: var(--text-muted);">
+              2. Copia il testo JSON apparso e incollalo nel campo <strong>"Incolla Dump JSON"</strong> sopra, poi premi <strong>Applica JSON</strong>.
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
+              💡 <em>In alternativa, su PC: clicca sul lucchetto dell'URL ➔ "Impostazioni sito" ➔ "Contenuto non sicuro: Consenti" per abilitare il fetch automatico.</em>
+            </div>
+          </div>
+        `;
+      }
+      ToastManager.show({
+        type: "warning",
+        title: "Protezione Browser Attiva",
+        message: "Apri la scheda della stampante con il link arancione e incolla il JSON per sincronizzare.",
+        duration: 9000
+      });
+    } else {
+      const errDetail = fetchErrorDetail || "Nessuna risposta dalla macchina";
       if (syncResultStatus) {
         syncResultStatus.style.display = "block";
         syncResultStatus.style.background = "rgba(255, 71, 87, 0.15)";
         syncResultStatus.style.border = "1px solid #ff4757";
         syncResultStatus.style.color = "#ff6b81";
         syncResultStatus.innerHTML = `
-          <strong>Errore di Connessione:</strong> ${err.message}<br>
+          <strong>Errore di Connessione:</strong> Impossibile raggiungere ${rawIp}:${port}.<br>
           <span style="font-size: 10.5px; margin-top: 4px; display: block;">
-            Verifica che l'indirizzo IP sia corretto, che la porta sia accessibile (default 8080 o 80) e che la Snapmaker U1 sia accesa.
+            Dettaglio: ${errDetail}. Verifica che il tuo dispositivo sia sulla stessa rete Wi-Fi della Snapmaker U1.
           </span>
         `;
       }
       ToastManager.show({
         type: "error",
-        title: "Errore Connessione U1",
-        message: err.message,
-        duration: 7000,
+        title: "Snapmaker U1 non Raggiungibile",
+        message: `Verifica l'indirizzo IP ${rawIp} e che la macchina sia accesa.`,
+        duration: 7000
       });
-    } finally {
-      btnExecuteSync.disabled = false;
-      btnExecuteSync.classList.remove("loading");
-      btnExecuteSync.innerHTML = `<span>⚡ Rileva Colori RFID</span>`;
     }
   });
 
@@ -2514,6 +2736,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Download automatico Blob
         const blob = await response.blob();
+
+        // Supporto nativo Web Share API per iOS / iPhone / Safari (Salva su File o AirDrop)
+        const file = new File([blob], filename, { type: "application/vnd.ms-package.3dmanufacturing-3dmodel+xml" });
+        const canShareFile = navigator.canShare && navigator.canShare({ files: [file] });
+
+        if (canShareFile && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: filename,
+              text: `Progetto 3MF pronto per Snapmaker U1 (${filename})`,
+            });
+            if (statusText) statusText.textContent = "✓ Condiviso / Salvato!";
+            ToastManager.show({
+              type: "success",
+              title: "File 3MF Pronto!",
+              message: `Salva su File o invia via AirDrop al PC di stampa: "${filename}".`,
+              duration: 6000,
+            });
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === "AbortError") {
+              if (statusText) statusText.textContent = "Pronto per la stampa";
+              return;
+            }
+            console.warn("navigator.share non completato, fallback a download classico:", shareErr);
+          }
+        }
+
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.style.display = "none";
@@ -2522,7 +2773,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        window.URL.revokeObjectURL(downloadUrl);
+        setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 5000);
 
         if (statusText) statusText.textContent = "✓ 3MF scaricato!";
 

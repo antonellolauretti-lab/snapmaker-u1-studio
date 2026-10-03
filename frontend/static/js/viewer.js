@@ -34,9 +34,10 @@ class ModelViewer {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.domElement.style.touchAction = "none";
     this.container.appendChild(this.renderer.domElement);
 
-    // 4. OrbitControls
+    // 4. OrbitControls Touch-friendly
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
@@ -44,6 +45,12 @@ class ModelViewer {
     this.controls.minDistance = 20;
     this.controls.maxDistance = 500;
     this.controls.target.set(0, 0, 2);
+    if (THREE.TOUCH) {
+      this.controls.touches = {
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN
+      };
+    }
 
     // 5. Setup Luci
     this.setupLighting();

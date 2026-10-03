@@ -1,0 +1,31 @@
+{
+  "name": "Snapmaker U1 Studio",
+  "short_name": "U1 Studio",
+  "description": "Studio Parametrico 3D per Snapmaker U1 - Portachiavi e Targhette Multicolore 4 Ugelli",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121316",
+  "theme_color": "#e31b23",
+  "categories": ["utilities", "productivity", "graphics"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
