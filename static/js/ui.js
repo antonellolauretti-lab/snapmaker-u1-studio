@@ -32,6 +32,9 @@ const DEFAULT_CURATED_FONTS = [
   { id: "Arial Black", name: "Arial Black", desc: "Ultra-Spesso Massiccio", category: "sans-serif", family: "'Arial Black', sans-serif" },
   { id: "Impact", name: "Impact", desc: "Massiccio Classico", category: "display", family: "Impact, sans-serif" },
   { id: "Segoe UI", name: "Segoe UI", desc: "Geometrico Interfaccia", category: "sans-serif", family: "'Segoe UI', sans-serif" },
+  { id: "Dancing Script", name: "Dancing Script", desc: "Corsivo Elegante Fluido", category: "script", family: "'Dancing Script', cursive" },
+  { id: "Caveat", name: "Caveat", desc: "Corsivo Scrittura a Mano", category: "script", family: "'Caveat', cursive" },
+  { id: "Great Vibes", name: "Great Vibes", desc: "Calligrafico Tradizionale", category: "script", family: "'Great Vibes', cursive" },
   { id: "Segoe Script", name: "Segoe Script", desc: "Corsivo Continuo Saldato", category: "script", family: "'Segoe Script', cursive" },
   { id: "Georgia", name: "Georgia", desc: "Serif Classico", category: "serif", family: "Georgia, serif" },
   { id: "Consolas", name: "Consolas", desc: "Monospazio Tecnico", category: "monospace", family: "Consolas, monospace" },
@@ -1085,6 +1088,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const letterSpacingInput = document.getElementById("letterSpacingInput");
   const letterSpacingVal = document.getElementById("letterSpacingVal");
 
+  // --- Elementi Seconda Riga Portachiavi ---
+  const kcLine2Toggle = document.getElementById("kcLine2Toggle");
+  const kcLine2Wrap = document.getElementById("kcLine2Wrap");
+  const kcText2Input = document.getElementById("kcText2Input");
+  const kcFontSize2Input = document.getElementById("kcFontSize2Input");
+  const kcFontSize2Val = document.getElementById("kcFontSize2Val");
+  const kcLineSpacingInput = document.getElementById("kcLineSpacingInput");
+  const kcLineSpacingVal = document.getElementById("kcLineSpacingVal");
+  const extruderLine2Select = document.getElementById("extruderLine2Select");
+
   const iconOptionsWrap = document.getElementById("iconOptionsWrap");
   const extruderIconSelect = document.getElementById("extruderIconSelect");
 
@@ -1537,6 +1550,11 @@ document.addEventListener("DOMContentLoaded", () => {
         font_family: fontSelect ? fontSelect.value : "Anton",
         font_size: fontSizeInput ? parseFloat(fontSizeInput.value) : 14.0,
         letter_spacing: letterSpacingInput ? parseFloat(letterSpacingInput.value) : 0.0,
+        line2_enabled: kcLine2Toggle ? kcLine2Toggle.checked : false,
+        text_line2: kcText2Input ? kcText2Input.value : "LAURETTI",
+        font_size_line2: kcFontSize2Input ? parseFloat(kcFontSize2Input.value) : 10.5,
+        line_spacing: kcLineSpacingInput ? parseFloat(kcLineSpacingInput.value) : 3.5,
+        extruder_line2: extruderLine2Select ? parseInt(extruderLine2Select.value) : -1,
         base_style: document.querySelector('input[name="baseStyle"]:checked')?.value || "rectangle",
         base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
         text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,
@@ -1713,6 +1731,22 @@ document.addEventListener("DOMContentLoaded", () => {
       if (letterSpacingInput && kc.letter_spacing !== undefined) {
         letterSpacingInput.value = kc.letter_spacing;
         if (letterSpacingVal) letterSpacingVal.textContent = `${kc.letter_spacing} mm`;
+      }
+      if (kcLine2Toggle && kc.line2_enabled !== undefined) {
+        kcLine2Toggle.checked = Boolean(kc.line2_enabled);
+        if (kcLine2Wrap) kcLine2Wrap.style.display = kcLine2Toggle.checked ? "flex" : "none";
+      }
+      if (kcText2Input && kc.text_line2 !== undefined) kcText2Input.value = kc.text_line2;
+      if (kcFontSize2Input && kc.font_size_line2 !== undefined) {
+        kcFontSize2Input.value = kc.font_size_line2;
+        if (kcFontSize2Val) kcFontSize2Val.textContent = `${kc.font_size_line2} mm`;
+      }
+      if (kcLineSpacingInput && kc.line_spacing !== undefined) {
+        kcLineSpacingInput.value = kc.line_spacing;
+        if (kcLineSpacingVal) kcLineSpacingVal.textContent = `${kc.line_spacing} mm`;
+      }
+      if (extruderLine2Select && kc.extruder_line2 !== undefined) {
+        extruderLine2Select.value = kc.extruder_line2.toString();
       }
       if (kc.base_style) {
         const r = document.querySelector(`input[name="baseStyle"][value="${kc.base_style}"]`);
@@ -1938,6 +1972,20 @@ document.addEventListener("DOMContentLoaded", () => {
       letterSpacingInput.value = "0";
       if (letterSpacingVal) letterSpacingVal.textContent = "0 mm";
     }
+    if (kcLine2Toggle) {
+      kcLine2Toggle.checked = false;
+      if (kcLine2Wrap) kcLine2Wrap.style.display = "none";
+    }
+    if (kcText2Input) kcText2Input.value = "LAURETTI";
+    if (kcFontSize2Input) {
+      kcFontSize2Input.value = "10.5";
+      if (kcFontSize2Val) kcFontSize2Val.textContent = "10.5 mm";
+    }
+    if (kcLineSpacingInput) {
+      kcLineSpacingInput.value = "3.5";
+      if (kcLineSpacingVal) kcLineSpacingVal.textContent = "3.5 mm";
+    }
+    if (extruderLine2Select) extruderLine2Select.value = "-1";
     const rBaseRec = document.querySelector('input[name="baseStyle"][value="rectangle"]');
     if (rBaseRec) rBaseRec.checked = true;
     if (baseThicknessInput) {
@@ -2834,6 +2882,26 @@ document.addEventListener("DOMContentLoaded", () => {
     if (letterSpacingVal) letterSpacingVal.textContent = `${e.target.value} mm`;
     triggerPreview(false);
   });
+
+  // Seconda Riga Portachiavi
+  if (kcLine2Toggle) {
+    kcLine2Toggle.addEventListener("change", () => {
+      if (kcLine2Wrap) {
+        kcLine2Wrap.style.display = kcLine2Toggle.checked ? "flex" : "none";
+      }
+      triggerPreview(true);
+    });
+  }
+  safeAddListener(kcText2Input, "input", () => triggerPreview(false));
+  safeAddListener(kcFontSize2Input, "input", (e) => {
+    if (kcFontSize2Val) kcFontSize2Val.textContent = `${e.target.value} mm`;
+    triggerPreview(false);
+  });
+  safeAddListener(kcLineSpacingInput, "input", (e) => {
+    if (kcLineSpacingVal) kcLineSpacingVal.textContent = `${e.target.value} mm`;
+    triggerPreview(false);
+  });
+  safeAddListener(extruderLine2Select, "change", () => triggerPreview(true));
   safeAddListener(baseThicknessInput, "input", (e) => {
     if (baseThicknessVal) baseThicknessVal.textContent = `${e.target.value} mm`;
     triggerPreview(false);
@@ -3027,6 +3095,13 @@ document.addEventListener("DOMContentLoaded", () => {
       let iconExtruder = extruderIconSelect ? parseInt(extruderIconSelect.value) : -1;
       if (iconExtruder === -1) iconExtruder = textExtruder;
 
+      const line2Enabled = kcLine2Toggle ? kcLine2Toggle.checked : false;
+      const textLine2 = kcText2Input ? kcText2Input.value.trim() : "";
+      const fontSizeLine2 = kcFontSize2Input ? parseFloat(kcFontSize2Input.value) : 10.5;
+      const lineSpacing = kcLineSpacingInput ? parseFloat(kcLineSpacingInput.value) : 3.5;
+      let extruderLine2 = extruderLine2Select ? parseInt(extruderLine2Select.value) : -1;
+      if (extruderLine2 === -1) extruderLine2 = textExtruder;
+
       return {
         generator: "keychain",
         text: textInput ? textInput.value.trim() || "NOME" : "NOME",
@@ -3034,6 +3109,11 @@ document.addEventListener("DOMContentLoaded", () => {
         font_path: selectedFontOpt?.dataset?.path || null,
         font_size: fontSizeInput ? parseFloat(fontSizeInput.value) : 14.0,
         letter_spacing: letterSpacingInput ? parseFloat(letterSpacingInput.value) : 0.0,
+        line2_enabled: line2Enabled,
+        text_line2: textLine2,
+        font_size_line2: fontSizeLine2,
+        line_spacing: lineSpacing,
+        extruder_line2: extruderLine2,
         base_style: baseStyle,
         base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
         text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,

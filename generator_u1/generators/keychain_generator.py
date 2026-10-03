@@ -11,6 +11,7 @@ from matplotlib.textpath import TextPath
 from matplotlib.font_manager import FontProperties
 
 from generator_u1.packager.snapmaker_3mf import PartItem
+from generator_u1.font_resolver import get_font_properties
 
 def _ensure_single_connected_polygon(geom: Any, bridge_width: float = 4.0) -> sg.Polygon:
     """
@@ -286,13 +287,40 @@ def _extrude_geometry(geom: Any, height: float) -> trimesh.Trimesh:
         return sub_meshes[0]
     return trimesh.util.concatenate(sub_meshes)
 
+def _generate_text_line_2d(
+    text: str,
+    fp: FontProperties,
+    font_size: float,
+    letter_spacing: float = 0.0
+) -> sg.base.BaseGeometry:
+    """Genera la geometria 2D vettoriale di una singola riga di testo con corretta gestione dei fori."""
+    if letter_spacing == 0.0 or len(text) <= 1:
+        tp = TextPath((0, 0), text, size=font_size, prop=fp)
+        return _extract_shapely_polygons_from_textpath(tp)
+
+    char_polys = []
+    cur_x = 0.0
+    for char in text:
+        char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
+        if len(char_tp.to_polygons()) > 0:
+            cp = _extract_shapely_polygons_from_textpath(char_tp)
+            char_polys.append(cp)
+            cbounds = cp.bounds
+            cur_x = cbounds[2] + letter_spacing
+        else:
+            cur_x += (font_size * 0.4) + letter_spacing
+
+    if not char_polys:
+        raise ValueError(f"Nessun carattere valido generato per '{text}'")
+    return unary_union(char_polys)
+
 def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     """
-    Genera le mesh 3D della Base, del Testo e dell'eventuale Icona
+    Genera le mesh 3D della Base, del Testo (1 o 2 righe sovrapposte) e dell'eventuale Icona
     rispettando la configurazione degli utensili Snapmaker U1 (T0..T3).
     """
     text = params.get("text", "ANTONELLO").strip()
-    font_family = params.get("font_family", "Arial")
+    font_family = params.get("font_family", "Anton")
     font_path = params.get("font_path")
     font_size = float(params.get("font_size", 14.0))
     letter_spacing = float(params.get("letter_spacing", 0.0))
@@ -310,41 +338,73 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     icon_position = params.get("icon_position", "left")
     extruder_base = int(params.get("extruder_base", 0))
     extruder_text = int(params.get("extruder_text", 1))
-    extruder_icon = int(params.get("extruder_icon", extruder_text))
 
-    # 1. Configurazione del Font (Supporta sia font di sistema che file .ttf/.otf caricato)
-    if font_path and os.path.exists(font_path):
-        fp = FontProperties(fname=font_path)
-    else:
-        weight = "bold" if font_family in ["Arial", "Segoe UI", "Georgia"] else "normal"
-        fp = FontProperties(family=font_family, weight=weight)
+    # Parametri Seconda Riga (Sottotitolo / Cognome)
+    line2_enabled = bool(params.get("line2_enabled", False))
+    text_line2 = (params.get("text_line2") or "").strip()
+    font_size_line2 = float(params.get("font_size_line2", font_size * 0.75))
+    letter_spacing_line2 = float(params.get("letter_spacing_line2", 0.0))
+    line_spacing = float(params.get("line_spacing", 3.5))
+    font_family_line2 = params.get("font_family_line2") or font_family
+    font_path_line2 = params.get("font_path_line2") or font_path
 
-    # 2. Generazione vettoriale del Testo
-    if letter_spacing == 0.0 or len(text) <= 1:
-        tp = TextPath((0, 0), text, size=font_size, prop=fp)
-        text_2d = _extract_shapely_polygons_from_textpath(tp)
+    extruder_line2 = int(params.get("extruder_line2", -1))
+    if extruder_line2 == -1:
+        extruder_line2 = extruder_text
+
+    extruder_icon = int(params.get("extruder_icon", -1))
+    if extruder_icon == -1:
+        extruder_icon = extruder_text
+
+    # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
+    fp1 = get_font_properties(font_family, font_path)
+    fp2 = get_font_properties(font_family_line2, font_path_line2)
+
+    # 2. Generazione vettoriale Riga 1
+    t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing)
+    t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
+    w1 = t1_maxx - t1_minx
+    h1 = t1_maxy - t1_miny
+    t1_norm = affinity.translate(t1_raw, xoff=-t1_minx, yoff=-t1_miny)
+
+    # 3. Generazione vettoriale Riga 2 (se presente e abilitata)
+    t2_norm = None
+    w2, h2 = 0.0, 0.0
+    if line2_enabled and text_line2:
+        try:
+            t2_raw = _generate_text_line_2d(text_line2, fp2, font_size_line2, letter_spacing_line2)
+            t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
+            w2 = t2_maxx - t2_minx
+            h2 = t2_maxy - t2_miny
+            t2_norm = affinity.translate(t2_raw, xoff=-t2_minx, yoff=-t2_miny)
+        except Exception as e:
+            print(f"Avviso: impossibile generare riga 2 '{text_line2}': {e}")
+            t2_norm = None
+
+    # 4. Impilamento e Centratura Orizzontale delle 2 righe
+    if t2_norm is not None:
+        w_text = max(w1, w2)
+        x1 = (w_text - w1) / 2.0
+        x2 = (w_text - w2) / 2.0
+        y1 = h2 + line_spacing  # Riga 1 in alto
+        y2 = 0.0                # Riga 2 in basso
+
+        text1_2d = affinity.translate(t1_norm, xoff=x1, yoff=y1)
+        text2_2d = affinity.translate(t2_norm, xoff=x2, yoff=y2)
+        text_2d = unary_union([text1_2d, text2_2d])
     else:
-        char_polys = []
-        cur_x = 0.0
-        for char in text:
-            char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
-            if len(char_tp.to_polygons()) > 0:
-                cp = _extract_shapely_polygons_from_textpath(char_tp)
-                char_polys.append(cp)
-                cbounds = cp.bounds
-                cur_x = cbounds[2] + letter_spacing
-            else:
-                cur_x += (font_size * 0.4) + letter_spacing
-        text_2d = unary_union(char_polys)
+        text1_2d = t1_norm
+        text2_2d = None
+        text_2d = t1_norm
 
     minx, miny, maxx, maxy = text_2d.bounds
     mid_y = (miny + maxy) / 2.0
 
-    # 3. Generazione e posizionamento dell'Icona Vettoriale
+    # 5. Generazione e posizionamento dell'Icona Vettoriale
     icon_raw = _get_vector_icon(icon_name)
     icon_2d = None
     if icon_raw is not None:
-        icon_h = font_size * 0.90
+        icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
         icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
         iminx, iminy, imaxx, imaxy = icon_scaled.bounds
         iw = imaxx - iminx
@@ -352,18 +412,18 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         spacing_icon = 2.5
         if icon_position == "left":
-            # A sinistra del testo
             ix = minx - iw - spacing_icon
             iy = mid_y - (ih / 2.0)
             icon_2d = affinity.translate(icon_scaled, xoff=ix, yoff=iy)
         else:
-            # A destra del testo
             ix = maxx + spacing_icon
             iy = mid_y - (ih / 2.0)
             icon_2d = affinity.translate(icon_scaled, xoff=ix, yoff=iy)
 
-    # Unione elementi in rilievo per il calcolo della base
-    foreground_items = [text_2d]
+    # 6. Unione elementi in rilievo per il calcolo della base
+    foreground_items = [text1_2d]
+    if text2_2d is not None:
+        foreground_items.append(text2_2d)
     if icon_2d is not None:
         foreground_items.append(icon_2d)
     foreground_union = unary_union(foreground_items)
@@ -371,31 +431,30 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     fg_minx, fg_miny, fg_maxx, fg_maxy = foreground_union.bounds
     fg_mid_y = (fg_miny + fg_maxy) / 2.0
 
-    # 4. Creazione del Contorno della Base e dell'Asola Anello
+    # 7. Creazione del Contorno della Base e dell'Asola Anello
     hole_radius = hole_diameter / 2.0
     hole_wall = max(3.0, hole_radius * 1.0)
     outer_radius = hole_radius + hole_wall
 
     if base_style == "contour":
-        # Rinforzo strutturale anti-rottura: garantisce almeno 8-10 mm di spessore continuo tra parole e simboli
         font_h = fg_maxy - fg_miny
-        min_structural_h = max(8.5, min(10.5, font_h * 0.70))
+        min_structural_h = max(8.5, min(14.0, font_h * 0.50))
 
-        # 1. Morphological closing per colmare gole profonde e insenature tra lettere/parole
+        # Morphological closing per colmare gole profonde tra lettere e righe sovrapposte
         close_r = max(4.0, font_size * 0.30)
         closed_fg = foreground_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
 
-        # 2. Ponte strutturale centrale lungo l'asse X che collega l'intero corpo del portachiavi
+        # Ponte strutturale centrale lungo l'asse X che collega l'intero corpo del portachiavi
         spine_y0 = fg_mid_y - (min_structural_h / 2.0)
         spine_y1 = fg_mid_y + (min_structural_h / 2.0)
         spine_box = sg.box(fg_minx + padding_y, spine_y0, fg_maxx - padding_y, spine_y1)
 
-        # Unione base con ponte strutturale e arrotondamento smussato
         base_contour = unary_union([
             closed_fg.buffer(padding_y, resolution=16),
             spine_box
         ]).buffer(0)
         base_contour = base_contour.buffer(0.8, resolution=16).buffer(-0.8, resolution=16)
+
         if hole_enabled:
             if hole_position == "left":
                 hx = fg_minx - hole_radius - (hole_wall * 0.2)
@@ -440,10 +499,9 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 hx = (fg_minx + fg_maxx) / 2.0
                 hy = y1 - (hole_radius + hole_wall)
 
-    # Assicura tassativamente che la base sia un poligono unico e compatto prima del foro
     base_contour = _ensure_single_connected_polygon(base_contour, bridge_width=outer_radius * 1.2)
 
-    # 5. Applicazione del Foro
+    # 8. Applicazione del Foro
     if hole_enabled:
         hole_geom = sg.Point(hx, hy).buffer(hole_radius, resolution=32)
         base_2d = base_contour.difference(hole_geom)
@@ -451,26 +509,35 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     else:
         base_2d = base_contour
 
-    # 6. Centratura delle geometrie in (0, 0)
+    # 9. Centratura delle geometrie in (0, 0)
     bx0, by0, bx1, by1 = base_2d.bounds
     cx = (bx0 + bx1) / 2.0
     cy = (by0 + by1) / 2.0
 
     base_2d = affinity.translate(base_2d, xoff=-cx, yoff=-cy)
-    text_2d = affinity.translate(text_2d, xoff=-cx, yoff=-cy)
+    text1_2d = affinity.translate(text1_2d, xoff=-cx, yoff=-cy)
+    if text2_2d is not None:
+        text2_2d = affinity.translate(text2_2d, xoff=-cx, yoff=-cy)
     if icon_2d is not None:
         icon_2d = affinity.translate(icon_2d, xoff=-cx, yoff=-cy)
 
-    # 7. Estrusione 3D e Definizione Parti
+    # 10. Estrusione 3D e Definizione Parti
     parts: List[PartItem] = []
 
     if text_mode == "embossed":
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
         parts.append(PartItem(name="Base", mesh=mesh_base, extruder=extruder_base))
 
-        mesh_text = _extrude_geometry(text_2d, height=text_thickness)
-        mesh_text.apply_translation([0, 0, base_thickness])
-        parts.append(PartItem(name=f"Text_{text}", mesh=mesh_text, extruder=extruder_text))
+        clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
+        mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness)
+        mesh_text1.apply_translation([0, 0, base_thickness])
+        parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=extruder_text))
+
+        if text2_2d is not None:
+            clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
+            mesh_text2 = _extrude_geometry(text2_2d, height=text_thickness)
+            mesh_text2.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=extruder_line2))
 
         if icon_2d is not None:
             mesh_icon = _extrude_geometry(icon_2d, height=text_thickness)
@@ -479,7 +546,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     elif text_mode == "flush":
         inlay_depth = min(text_thickness, base_thickness * 0.5)
-        relief_union = text_2d if icon_2d is None else unary_union([text_2d, icon_2d])
+        relief_items = [text1_2d]
+        if text2_2d is not None:
+            relief_items.append(text2_2d)
+        if icon_2d is not None:
+            relief_items.append(icon_2d)
+        relief_union = unary_union(relief_items)
 
         base_bottom_2d = base_2d.difference(relief_union)
         mesh_base_bottom = _extrude_geometry(base_bottom_2d, height=inlay_depth)
@@ -488,8 +560,14 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base = trimesh.util.concatenate([mesh_base_bottom, mesh_base_top])
         parts.append(PartItem(name="Base", mesh=mesh_base, extruder=extruder_base))
 
-        mesh_text = _extrude_geometry(text_2d, height=inlay_depth)
-        parts.append(PartItem(name=f"Text_{text}_Inlay", mesh=mesh_text, extruder=extruder_text))
+        clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
+        mesh_text1 = _extrude_geometry(text1_2d, height=inlay_depth)
+        parts.append(PartItem(name=f"Text_{clean_t1}_Inlay", mesh=mesh_text1, extruder=extruder_text))
+
+        if text2_2d is not None:
+            clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
+            mesh_text2 = _extrude_geometry(text2_2d, height=inlay_depth)
+            parts.append(PartItem(name=f"Text_{clean_t2}_Inlay", mesh=mesh_text2, extruder=extruder_line2))
 
         if icon_2d is not None:
             mesh_icon = _extrude_geometry(icon_2d, height=inlay_depth)
@@ -497,7 +575,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     elif text_mode == "debossed":
         deboss_depth = min(text_thickness, base_thickness - 0.8)
-        relief_union = text_2d if icon_2d is None else unary_union([text_2d, icon_2d])
+        relief_items = [text1_2d]
+        if text2_2d is not None:
+            relief_items.append(text2_2d)
+        if icon_2d is not None:
+            relief_items.append(icon_2d)
+        relief_union = unary_union(relief_items)
 
         mesh_base_bottom = _extrude_geometry(base_2d, height=base_thickness - deboss_depth)
         base_top_2d = base_2d.difference(relief_union)
@@ -507,3 +590,4 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         parts.append(PartItem(name="Base_Engraved", mesh=mesh_base, extruder=extruder_base))
 
     return parts
+

@@ -9,6 +9,7 @@ from matplotlib.textpath import TextPath
 from matplotlib.font_manager import FontProperties
 
 from generator_u1.packager.snapmaker_3mf import PartItem
+from generator_u1.font_resolver import get_font_properties
 
 def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
     """
@@ -59,11 +60,7 @@ def _generate_text_2d(
     letter_spacing: float
 ) -> sg.base.BaseGeometry:
     """Genera la geometria 2D vettoriale di una riga di testo."""
-    if font_path and os.path.exists(font_path):
-        fp = FontProperties(fname=font_path)
-    else:
-        weight = "bold" if font_family in ["Arial", "Segoe UI", "Georgia"] else "normal"
-        fp = FontProperties(family=font_family, weight=weight)
+    fp = get_font_properties(font_family, font_path)
 
     if letter_spacing == 0.0 or len(text) <= 1:
         tp = TextPath((0, 0), text, size=font_size, prop=fp)

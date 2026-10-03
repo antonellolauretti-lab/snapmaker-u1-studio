@@ -1,3 +1,29 @@
+/* Font-Face Fallback per Corsivi e Script nel Cloud e Mobile */
+@font-face {
+  font-family: 'Segoe Script';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Segoe Script'), url('/fonts/DancingScript-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/DancingScript-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/Caveat-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Great Vibes';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/GreatVibes-Regular.ttf') format('truetype');
+}
+
 :root {
   --bg-primary: #121316;
   --bg-secondary: #1a1c22;

@@ -51,16 +51,19 @@ def healthcheck():
     return {"status": "ok", "service": "snapmaker-u1-parametric-studio", "version": "4.0"}
 
 
+from generator_u1.packager.snapmaker_3mf import Snapmaker3MFPackager, PartItem
+from generator_u1.generators.keychain_generator import generate_keychain_parts
+from generator_u1.generators.desk_sign_generator import generate_desk_sign_parts
+from generator_u1.font_resolver import resolve_font_path, ASSETS_FONTS_DIR, FONTS_DIR
+
 WEB_DIR = Path(__file__).resolve().parent
 STATIC_DIR = WEB_DIR / "static"
 TEMPLATES_DIR = WEB_DIR / "templates"
-FONTS_DIR = WEB_DIR.parent / "fonts"
-FONTS_DIR.mkdir(parents=True, exist_ok=True)
 FONTS_UPLOAD_DIR = WEB_DIR / "uploads" / "fonts"
 FONTS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-app.mount("/fonts", StaticFiles(directory=str(FONTS_DIR)), name="fonts")
+app.mount("/fonts", StaticFiles(directory=str(ASSETS_FONTS_DIR if ASSETS_FONTS_DIR.is_dir() else FONTS_DIR)), name="fonts")
 app.mount("/uploads/fonts", StaticFiles(directory=str(FONTS_UPLOAD_DIR)), name="uploads_fonts")
 
 CURATED_FONTS = [
@@ -193,53 +196,84 @@ CURATED_FONTS = [
         "file": "Ubuntu.ttf",
     },
     {
-        "id": "Arial",
-        "name": "Arial",
-        "desc": "Sans-Serif Standard",
-        "category": "sans-serif",
-        "family": "Arial, sans-serif",
+        "id": "Dancing Script",
+        "name": "Dancing Script",
+        "desc": "Corsivo Elegante Fluido",
+        "category": "script",
+        "family": "'Dancing Script', cursive",
+        "file": "DancingScript-Bold.ttf",
     },
     {
-        "id": "Arial Black",
-        "name": "Arial Black",
-        "desc": "Ultra-Spesso Massiccio",
-        "category": "sans-serif",
-        "family": "'Arial Black', sans-serif",
+        "id": "Caveat",
+        "name": "Caveat",
+        "desc": "Corsivo Scrittura a Mano",
+        "category": "script",
+        "family": "'Caveat', cursive",
+        "file": "Caveat-Bold.ttf",
     },
     {
-        "id": "Impact",
-        "name": "Impact",
-        "desc": "Massiccio Classico",
-        "category": "display",
-        "family": "Impact, sans-serif",
-    },
-    {
-        "id": "Segoe UI",
-        "name": "Segoe UI",
-        "desc": "Geometrico Interfaccia",
-        "category": "sans-serif",
-        "family": "'Segoe UI', sans-serif",
+        "id": "Great Vibes",
+        "name": "Great Vibes",
+        "desc": "Calligrafico Tradizionale",
+        "category": "script",
+        "family": "'Great Vibes', cursive",
+        "file": "GreatVibes-Regular.ttf",
     },
     {
         "id": "Segoe Script",
         "name": "Segoe Script",
         "desc": "Corsivo Continuo Saldato",
         "category": "script",
-        "family": "'Segoe Script', cursive",
+        "family": "'Dancing Script', 'Segoe Script', cursive",
+        "file": "DancingScript-Bold.ttf",
+    },
+    {
+        "id": "Impact",
+        "name": "Impact",
+        "desc": "Massiccio Classico",
+        "category": "display",
+        "family": "Impact, 'Anton', sans-serif",
+        "file": "Impact.ttf",
+    },
+    {
+        "id": "Arial Black",
+        "name": "Arial Black",
+        "desc": "Ultra-Spesso Massiccio",
+        "category": "sans-serif",
+        "family": "'Arial Black', 'Anton', sans-serif",
+        "file": "Anton.ttf",
+    },
+    {
+        "id": "Segoe UI",
+        "name": "Segoe UI",
+        "desc": "Geometrico Interfaccia",
+        "category": "sans-serif",
+        "family": "'Segoe UI', 'Montserrat', sans-serif",
+        "file": "Montserrat.ttf",
     },
     {
         "id": "Georgia",
         "name": "Georgia",
         "desc": "Serif Classico",
         "category": "serif",
-        "family": "Georgia, serif",
+        "family": "Georgia, 'Playfair Display', serif",
+        "file": "Playfair_Display.ttf",
     },
     {
         "id": "Consolas",
         "name": "Consolas",
         "desc": "Monospazio Tecnico",
         "category": "monospace",
-        "family": "Consolas, monospace",
+        "family": "Consolas, 'Ubuntu', monospace",
+        "file": "Ubuntu.ttf",
+    },
+    {
+        "id": "Arial",
+        "name": "Arial",
+        "desc": "Sans-Serif Standard",
+        "category": "sans-serif",
+        "family": "Arial, 'Roboto', sans-serif",
+        "file": "Roboto.ttf",
     },
 ]
 
@@ -256,28 +290,20 @@ def _resolve_font_path(params: Dict[str, Any], font_key: str = "font_family", pa
     if not font_id:
         return None
 
-    # 1. Controlla nei font curati bundled
-    for cf in CURATED_FONTS:
-        if cf["id"] == font_id and "file" in cf:
-            candidate = FONTS_DIR / cf["file"]
-            if candidate.is_file():
-                return str(candidate)
-
-    # 2. Controlla per nome file sanitizzato
-    safe_name = font_id.replace(" ", "_") + ".ttf"
-    candidate = FONTS_DIR / safe_name
-    if candidate.is_file():
-        return str(candidate)
-
-    # 3. Cerca tra i font caricati dall'utente
+    # 1. Cerca tra i font caricati dall'utente
     for uf in UPLOADED_FONTS:
         if uf["id"] == font_id or uf.get("path") == font_id:
             return uf["path"]
 
-    # 4. Controlla se è un file nella cartella uploads
+    # 2. Controlla nella cartella uploads
     candidate = FONTS_UPLOAD_DIR / font_id
     if candidate.is_file():
         return str(candidate)
+
+    # 3. Risoluzione centralizzata tramite font_resolver (assets/fonts o fonts)
+    resolved = resolve_font_path(font_id, explicit_path=font_path)
+    if resolved:
+        return resolved
 
     return None
 
@@ -295,11 +321,10 @@ def list_fonts():
     all_fonts = []
     for f in CURATED_FONTS:
         entry = dict(f)
-        if "file" in f:
-            p = FONTS_DIR / f["file"]
-            if p.is_file():
-                entry["path"] = str(p)
-                entry["url"] = f"/fonts/{f['file']}"
+        resolved_p = resolve_font_path(f.get("file", f["id"]))
+        if resolved_p and os.path.isfile(resolved_p):
+            entry["path"] = resolved_p
+            entry["url"] = f"/fonts/{Path(resolved_p).name}"
         all_fonts.append(entry)
 
     for uf in UPLOADED_FONTS:
@@ -313,6 +338,7 @@ def list_fonts():
             "url": f"/uploads/fonts/{Path(uf['path']).name}"
         })
     return all_fonts
+
 
 try:
     from generator_u1.assets.icons_data import ICONS_LIBRARY
@@ -391,6 +417,10 @@ def preview_model(params: Dict[str, Any]):
         font_path = _resolve_font_path(params, font_key="font_family", path_key="font_path")
         if font_path:
             params["font_path"] = font_path
+        if params.get("line2_enabled"):
+            fp2 = _resolve_font_path(params, font_key="font_family_line2", path_key="font_path_line2")
+            if fp2:
+                params["font_path_line2"] = fp2
 
         try:
             parts = generate_keychain_parts(params)
@@ -462,6 +492,10 @@ def generate_3mf(params: Dict[str, Any]):
         font_path = _resolve_font_path(params, font_key="font_family", path_key="font_path")
         if font_path:
             params["font_path"] = font_path
+        if params.get("line2_enabled"):
+            fp2 = _resolve_font_path(params, font_key="font_family_line2", path_key="font_path_line2")
+            if fp2:
+                params["font_path_line2"] = fp2
 
         try:
             parts = generate_keychain_parts(params)
@@ -470,6 +504,10 @@ def generate_3mf(params: Dict[str, Any]):
 
         text = params.get("text", "Model").strip()
         clean_name = "".join(c for c in text if c.isalnum() or c in " _-").strip() or "Keychain"
+        if params.get("line2_enabled") and params.get("text_line2"):
+            clean_t2 = "".join(c for c in params.get("text_line2") if c.isalnum() or c in " _-").strip()
+            if clean_t2:
+                clean_name = f"{clean_name}_{clean_t2}"
         filename = f"{clean_name}_Keychain_Snapmaker_U1.3mf"
         proj_name = f"{clean_name}_Keychain"
 
