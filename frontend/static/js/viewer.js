@@ -33,7 +33,21 @@ class ModelViewer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
+
+    // Spazio colore sRGB calibrato per fedeltà cromatica esatta
+    if (THREE.ColorManagement) {
+      THREE.ColorManagement.enabled = true;
+    }
+    if (this.renderer.outputColorSpace !== undefined && THREE.SRGBColorSpace) {
+      this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    } else if (THREE.sRGBEncoding) {
+      this.renderer.outputEncoding = THREE.sRGBEncoding;
+    }
+
+    if (THREE.NoToneMapping !== undefined) {
+      this.renderer.toneMapping = THREE.NoToneMapping;
+    }
+
     this.renderer.domElement.style.touchAction = "none";
     this.container.appendChild(this.renderer.domElement);
 
@@ -69,25 +83,25 @@ class ModelViewer {
   }
 
   setupLighting() {
-    // Luce d'ambiente soffusa
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+    // Luce d'ambiente neutra bilanciata (evita sovraesposizione che sbianca i colori)
+    const ambient = new THREE.AmbientLight(0xffffff, 0.42);
     this.scene.add(ambient);
 
-    // Luce primaria superiore frontale (esalta il rilievo)
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
+    // Luce primaria superiore frontale neutra (esalta il rilievo senza bruciare le alte luci)
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.68);
     dirLight1.position.set(40, -60, 100);
     dirLight1.castShadow = true;
     dirLight1.shadow.mapSize.width = 1024;
     dirLight1.shadow.mapSize.height = 1024;
     this.scene.add(dirLight1);
 
-    // Luce secondaria morbida dal lato opposto
-    const dirLight2 = new THREE.DirectionalLight(0xa5c4ff, 0.4);
+    // Luce secondaria di schiarita calda neutra (sostituito l'azzurro con bianco caldo morbido per evitare viraggi del rosso verso il rosa/magenta)
+    const dirLight2 = new THREE.DirectionalLight(0xfff7ea, 0.22);
     dirLight2.position.set(-60, 50, 40);
     this.scene.add(dirLight2);
 
     // Luce di rimbalzo inferiore sottile
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x22242a, 0.3);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1a1c22, 0.18);
     this.scene.add(hemiLight);
   }
 
@@ -158,8 +172,8 @@ class ModelViewer {
       const colorHex = palette[p.extruder] || "#ffffff";
       const mat = new THREE.MeshStandardMaterial({
         color: new THREE.Color(colorHex),
-        roughness: 0.38,
-        metalness: 0.08,
+        roughness: 0.60,
+        metalness: 0.02,
         wireframe: this.wireframeMode,
       });
 

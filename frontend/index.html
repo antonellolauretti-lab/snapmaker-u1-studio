@@ -581,96 +581,156 @@
               <div class="tool-slot">
                 <div class="tool-badge-row">
                   <span class="tool-badge">Slot 1</span>
-                  <div class="color-input-wrap">
-                    <input type="color" id="colorT0" value="#161616" title="Estrusore 1">
+                  <div class="color-input-wrap" id="wrapColorT0" title="Seleziona filamento Slot 1">
+                    <input type="color" id="colorT0" value="#080A0D" title="Estrusore 1">
                   </div>
                 </div>
-                <select class="quick-color-select" id="quickColorT0" title="Colore rapido Slot 1">
-                  <option value="#161616" selected>⚫ Nero</option>
-                  <option value="#ffffff">⚪ Bianco</option>
-                  <option value="#ffd400">🟡 Giallo U1</option>
-                  <option value="#e31b23">🔴 Rosso U1</option>
-                  <option value="#757575">🔘 Grigio</option>
-                  <option value="#d4af37">✨ Oro Seta</option>
-                  <option value="#1e88e5">🔵 Blu</option>
-                  <option value="#2e7d32">🟢 Verde</option>
-                  <option value="#f4511e">🟠 Arancio</option>
-                  <option value="#7b2cbf">🟣 Viola</option>
-                  <option value="#b87333">🟤 Rame</option>
-                  <option value="#00f5d4">💎 Ciano</option>
-                  <option value="custom">🎨 Altro</option>
+                <select class="quick-color-select" id="quickColorT0" title="Filamento Snapmaker Slot 1">
+                  <optgroup label="SnapSpeed PLA (Solidi)">
+                    <option value="34062" data-hex="#080A0D" selected>⚫ Black (#080A0D)</option>
+                    <option value="34073" data-hex="#D9DFE5">⚪ Cool White (#D9DFE5)</option>
+                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
+                    <option value="34065" data-hex="#E72F1D">🔴 Red (#E72F1D)</option>
+                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
+                    <option value="34112" data-hex="#F8F81C">🟡 Bright Yellow (#F8F81C)</option>
+                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
+                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
+                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
+                  </optgroup>
+                  <optgroup label="Silk Dual-Color PLA (Seta)">
+                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
+                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
+                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
+                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
+                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
+                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
+                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
+                  </optgroup>
+                  <optgroup label="PETG HF / Translucent & TPU">
+                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
+                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
+                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
+                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
+                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
+                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
+                  </optgroup>
                 </select>
               </div>
 
               <div class="tool-slot">
                 <div class="tool-badge-row">
                   <span class="tool-badge">Slot 2</span>
-                  <div class="color-input-wrap">
-                    <input type="color" id="colorT1" value="#ffffff" title="Estrusore 2">
+                  <div class="color-input-wrap" id="wrapColorT1" title="Seleziona filamento Slot 2">
+                    <input type="color" id="colorT1" value="#D9DFE5" title="Estrusore 2">
                   </div>
                 </div>
-                <select class="quick-color-select" id="quickColorT1" title="Colore rapido Slot 2">
-                  <option value="#161616">⚫ Nero</option>
-                  <option value="#ffffff" selected>⚪ Bianco</option>
-                  <option value="#ffd400">🟡 Giallo U1</option>
-                  <option value="#e31b23">🔴 Rosso U1</option>
-                  <option value="#757575">🔘 Grigio</option>
-                  <option value="#d4af37">✨ Oro Seta</option>
-                  <option value="#1e88e5">🔵 Blu</option>
-                  <option value="#2e7d32">🟢 Verde</option>
-                  <option value="#f4511e">🟠 Arancio</option>
-                  <option value="#7b2cbf">🟣 Viola</option>
-                  <option value="#b87333">🟤 Rame</option>
-                  <option value="#00f5d4">💎 Ciano</option>
-                  <option value="custom">🎨 Altro</option>
+                <select class="quick-color-select" id="quickColorT1" title="Filamento Snapmaker Slot 2">
+                  <optgroup label="SnapSpeed PLA (Solidi)">
+                    <option value="34062" data-hex="#080A0D">⚫ Black (#080A0D)</option>
+                    <option value="34073" data-hex="#D9DFE5" selected>⚪ Cool White (#D9DFE5)</option>
+                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
+                    <option value="34065" data-hex="#E72F1D">🔴 Red (#E72F1D)</option>
+                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
+                    <option value="34112" data-hex="#F8F81C">🟡 Bright Yellow (#F8F81C)</option>
+                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
+                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
+                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
+                  </optgroup>
+                  <optgroup label="Silk Dual-Color PLA (Seta)">
+                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
+                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
+                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
+                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
+                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
+                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
+                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
+                  </optgroup>
+                  <optgroup label="PETG HF / Translucent & TPU">
+                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
+                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
+                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
+                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
+                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
+                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
+                  </optgroup>
                 </select>
               </div>
 
               <div class="tool-slot">
                 <div class="tool-badge-row">
                   <span class="tool-badge">Slot 3</span>
-                  <div class="color-input-wrap">
-                    <input type="color" id="colorT2" value="#e31b23" title="Estrusore 3">
+                  <div class="color-input-wrap" id="wrapColorT2" title="Seleziona filamento Slot 3">
+                    <input type="color" id="colorT2" value="#E72F1D" title="Estrusore 3">
                   </div>
                 </div>
-                <select class="quick-color-select" id="quickColorT2" title="Colore rapido Slot 3">
-                  <option value="#161616">⚫ Nero</option>
-                  <option value="#ffffff">⚪ Bianco</option>
-                  <option value="#ffd400">🟡 Giallo U1</option>
-                  <option value="#e31b23" selected>🔴 Rosso U1</option>
-                  <option value="#757575">🔘 Grigio</option>
-                  <option value="#d4af37">✨ Oro Seta</option>
-                  <option value="#1e88e5">🔵 Blu</option>
-                  <option value="#2e7d32">🟢 Verde</option>
-                  <option value="#f4511e">🟠 Arancio</option>
-                  <option value="#7b2cbf">🟣 Viola</option>
-                  <option value="#b87333">🟤 Rame</option>
-                  <option value="#00f5d4">💎 Ciano</option>
-                  <option value="custom">🎨 Altro</option>
+                <select class="quick-color-select" id="quickColorT2" title="Filamento Snapmaker Slot 3">
+                  <optgroup label="SnapSpeed PLA (Solidi)">
+                    <option value="34062" data-hex="#080A0D">⚫ Black (#080A0D)</option>
+                    <option value="34073" data-hex="#D9DFE5">⚪ Cool White (#D9DFE5)</option>
+                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
+                    <option value="34065" data-hex="#E72F1D" selected>🔴 Red (#E72F1D)</option>
+                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
+                    <option value="34112" data-hex="#F8F81C">🟡 Bright Yellow (#F8F81C)</option>
+                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
+                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
+                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
+                  </optgroup>
+                  <optgroup label="Silk Dual-Color PLA (Seta)">
+                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
+                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
+                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
+                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
+                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
+                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
+                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
+                  </optgroup>
+                  <optgroup label="PETG HF / Translucent & TPU">
+                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
+                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
+                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
+                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
+                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
+                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
+                  </optgroup>
                 </select>
               </div>
 
               <div class="tool-slot">
                 <div class="tool-badge-row">
                   <span class="tool-badge">Slot 4</span>
-                  <div class="color-input-wrap">
-                    <input type="color" id="colorT3" value="#ffd400" title="Estrusore 4">
+                  <div class="color-input-wrap" id="wrapColorT3" title="Seleziona filamento Slot 4">
+                    <input type="color" id="colorT3" value="#F8F81C" title="Estrusore 4">
                   </div>
                 </div>
-                <select class="quick-color-select" id="quickColorT3" title="Colore rapido Slot 4">
-                  <option value="#161616">⚫ Nero</option>
-                  <option value="#ffffff">⚪ Bianco</option>
-                  <option value="#ffd400" selected>🟡 Giallo U1</option>
-                  <option value="#e31b23">🔴 Rosso U1</option>
-                  <option value="#757575">🔘 Grigio</option>
-                  <option value="#d4af37">✨ Oro Seta</option>
-                  <option value="#1e88e5">🔵 Blu</option>
-                  <option value="#2e7d32">🟢 Verde</option>
-                  <option value="#f4511e">🟠 Arancio</option>
-                  <option value="#7b2cbf">🟣 Viola</option>
-                  <option value="#b87333">🟤 Rame</option>
-                  <option value="#00f5d4">💎 Ciano</option>
-                  <option value="custom">🎨 Altro</option>
+                <select class="quick-color-select" id="quickColorT3" title="Filamento Snapmaker Slot 4">
+                  <optgroup label="SnapSpeed PLA (Solidi)">
+                    <option value="34062" data-hex="#080A0D">⚫ Black (#080A0D)</option>
+                    <option value="34073" data-hex="#D9DFE5">⚪ Cool White (#D9DFE5)</option>
+                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
+                    <option value="34065" data-hex="#E72F1D">🔴 Red (#E72F1D)</option>
+                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
+                    <option value="34112" data-hex="#F8F81C" selected>🟡 Bright Yellow (#F8F81C)</option>
+                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
+                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
+                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
+                  </optgroup>
+                  <optgroup label="Silk Dual-Color PLA (Seta)">
+                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
+                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
+                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
+                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
+                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
+                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
+                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
+                  </optgroup>
+                  <optgroup label="PETG HF / Translucent & TPU">
+                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
+                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
+                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
+                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
+                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
+                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -680,26 +740,26 @@
           <div class="form-group" style="margin-top: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
               <label class="form-label" style="margin: 0;">Preset Ufficiali</label>
-              <button type="button" id="btnSaveCustomPreset" class="btn-save-preset" title="Salva la combinazione colori corrente come preset personale">
+              <button type="button" id="btnSaveCustomPreset" class="btn-save-preset" title="Salva la combinazione filamenti corrente come preset personale">
                 <span>➕ Salva Setup</span>
               </button>
             </div>
             <div class="presets-row">
-              <button type="button" class="preset-btn" data-preset="snapmaker" title="Snapmaker Original">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #161616 25%, #ffffff 25% 50%, #e31b23 50% 75%, #ffd400 75%);"></span>
+              <button type="button" class="preset-btn" data-preset="snapmaker" title="SnapSpeed U1 Original (Nero, Bianco, Rosso, Giallo)">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9DFE5 25% 50%, #E72F1D 50% 75%, #F8F81C 75%);"></span>
                 Official U1
               </button>
-              <button type="button" class="preset-btn" data-preset="sunset" title="Sunset Ember & Gold">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #1c120c 25%, #ff7b00 25% 50%, #ffd700 50% 75%, #e63946 75%);"></span>
+              <button type="button" class="preset-btn" data-preset="sunset" title="Sunset Ember & Gold (Nero, Sunset Ember, Arancio, Rosso)">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9A63A 25% 50%, #F97429 50% 75%, #E72F1D 75%);"></span>
                 Sunset Gold
               </button>
-              <button type="button" class="preset-btn" data-preset="cyberpunk" title="Neon Cyberpunk">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #0e111a 25%, #00f5d4 25% 50%, #f72585 50% 75%, #7b2cbf 75%);"></span>
-                Cyberpunk
+              <button type="button" class="preset-btn" data-preset="silk_trio" title="Silk Elegance (Nero, Aurora Gold, Sea Glass, Ice Lake)">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9A63A 25% 50%, #44ADE5 50% 75%, #C4C7D9 75%);"></span>
+                Silk Trio
               </button>
-              <button type="button" class="preset-btn" data-preset="forest" title="Forest & Sage">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #18231c 25%, #84a98c 25% 50%, #52796f 50% 75%, #cad2c5 75%);"></span>
-                Forest Sage
+              <button type="button" class="preset-btn" data-preset="contrast" title="Tech Contrast (Nero, Bianco, Blu, Verde)">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9DFE5 25% 50%, #003776 50% 75%, #2D9E59 75%);"></span>
+                Tech Contrast
               </button>
             </div>
 

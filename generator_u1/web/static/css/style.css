@@ -564,16 +564,26 @@ input[type="range"] {
   overflow: hidden;
   border: 2px solid var(--border-subtle);
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+
+.color-input-wrap:hover {
+  transform: scale(1.08);
+  border-color: var(--accent-snapmaker);
+  box-shadow: 0 0 8px rgba(255, 212, 0, 0.4);
 }
 
 .color-input-wrap input[type="color"] {
   position: absolute;
-  top: -10px;
-  left: -10px;
-  width: 48px;
-  height: 48px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
   border: none;
-  cursor: pointer;
 }
 
 .tool-select {
@@ -1801,11 +1811,6 @@ body.mode-desksign .only-desksign {
   .color-input-wrap {
     width: 32px;
     height: 32px;
-  }
-
-  .color-input-wrap input[type="color"] {
-    width: 44px;
-    height: 44px;
   }
 
   /* 3. Pulsante Fisso in Basso 'SCARICA 3MF PER U1' */

@@ -1058,12 +1058,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el) el.addEventListener(evt, handler);
   }
 
-  // Preset Palettes U1
+  // Preset Palettes U1 (Filamenti Ufficiali Snapmaker da Fattura)
   const PALETTE_PRESETS = {
-    snapmaker: ["#161616", "#ffffff", "#e31b23", "#ffd400"],
-    sunset: ["#1c120c", "#ff7b00", "#ffd700", "#e63946"],
-    cyberpunk: ["#0e111a", "#00f5d4", "#f72585", "#7b2cbf"],
-    forest: ["#18231c", "#84a98c", "#52796f", "#cad2c5"],
+    snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
+    sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
+    silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
+    contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
   };
 
   // --- Elementi Switcher Prodotto ---
@@ -1525,10 +1525,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (colorT1) colorT1.value = state.palette[1];
       if (colorT2) colorT2.value = state.palette[2];
       if (colorT3) colorT3.value = state.palette[3];
-      const c0 = colorT0 ? colorT0.value : "#161616";
-      const c1 = colorT1 ? colorT1.value : "#ffffff";
-      const c2 = colorT2 ? colorT2.value : "#e31b23";
-      const c3 = colorT3 ? colorT3.value : "#ffd400";
+      const c0 = colorT0 ? colorT0.value : "#080A0D";
+      const c1 = colorT1 ? colorT1.value : "#D9DFE5";
+      const c2 = colorT2 ? colorT2.value : "#E72F1D";
+      const c3 = colorT3 ? colorT3.value : "#F8F81C";
       viewer.updateColors([c0, c1, c2, c3]);
       if (typeof syncAllQuickSelects === "function") syncAllQuickSelects();
     }
@@ -1890,11 +1890,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (dsExtruderBorderSelect) dsExtruderBorderSelect.value = "3";
 
-    // Palette U1 Official
-    if (colorT0) colorT0.value = "#161616";
-    if (colorT1) colorT1.value = "#ffffff";
-    if (colorT2) colorT2.value = "#e31b23";
-    if (colorT3) colorT3.value = "#ffd400";
+    // Palette U1 Official Snapmaker
+    if (colorT0) colorT0.value = "#080A0D";
+    if (colorT1) colorT1.value = "#D9DFE5";
+    if (colorT2) colorT2.value = "#E72F1D";
+    if (colorT3) colorT3.value = "#F8F81C";
     onPaletteChange();
 
     setProduct("keychain", true);
@@ -2037,22 +2037,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ==========================================
-  // 3. PRESET PALETTE, SLOT RAPIDI & COLORI
-  // ==========================================
-  const QUICK_COLOR_OPTIONS = [
-    { hex: "#161616", name: "⚫ Nero" },
-    { hex: "#ffffff", name: "⚪ Bianco" },
-    { hex: "#ffd400", name: "🟡 Giallo Snapmaker" },
-    { hex: "#e31b23", name: "🔴 Rosso Snapmaker" },
-    { hex: "#757575", name: "🔘 Grigio Tecnico" },
-    { hex: "#d4af37", name: "✨ Oro Seta (Silk Gold)" },
-    { hex: "#1e88e5", name: "🔵 Blu Cobalto" },
-    { hex: "#2e7d32", name: "🟢 Verde Bosco" },
-    { hex: "#f4511e", name: "🟠 Arancione Neon" },
-    { hex: "#7b2cbf", name: "🟣 Viola Deep" },
-    { hex: "#b87333", name: "🟤 Rame / Bronzo" },
-    { hex: "#00f5d4", name: "💎 Ciano Neon" }
+  // ==============================================================================
+  // 3. CATALOGO UFFICIALE FILAMENTI SNAPMAKER (DA DISTINTA FATTURA) & PRESET PALETTE
+  // ==============================================================================
+  const SNAPMAKER_FILAMENTS = [
+    // A) SnapSpeed PLA (Colori Pieni Solidi)
+    { sku: "34062", name: "SnapSpeed PLA Black", group: "SnapSpeed PLA", hex: "#080A0D", type: "PLA", icon: "⚫" },
+    { sku: "34073", name: "SnapSpeed PLA Cool White", group: "SnapSpeed PLA", hex: "#D9DFE5", type: "PLA", icon: "⚪" },
+    { sku: "34061", name: "SnapSpeed PLA Pearl White", group: "SnapSpeed PLA", hex: "#E2DEDB", type: "PLA", icon: "◽" },
+    { sku: "34065", name: "SnapSpeed PLA Red", group: "SnapSpeed PLA", hex: "#E72F1D", type: "PLA", icon: "🔴" },
+    { sku: "34064", name: "SnapSpeed PLA Blue", group: "SnapSpeed PLA", hex: "#003776", type: "PLA", icon: "🔵" },
+    { sku: "34112", name: "SnapSpeed PLA Bright Yellow", group: "SnapSpeed PLA", hex: "#F8F81C", type: "PLA", icon: "🟡" },
+    { sku: "34067", name: "SnapSpeed PLA Orange", group: "SnapSpeed PLA", hex: "#F97429", type: "PLA", icon: "🟠" },
+    { sku: "34068", name: "SnapSpeed PLA Green", group: "SnapSpeed PLA", hex: "#2D9E59", type: "PLA", icon: "🟢" },
+    { sku: "34074", name: "SnapSpeed PLA Magenta", group: "SnapSpeed PLA", hex: "#F24574", type: "PLA", icon: "🌺" },
+
+    // B) Silk Dual-Color PLA (Bicolore Seta)
+    { sku: "34202", name: "Silk Sunset Ember", group: "Silk Dual-Color", hex: "#D9A63A", secondaryHex: "#CC434F", type: "PLA", icon: "✨" },
+    { sku: "34203", name: "Silk Aurora Gold", group: "Silk Dual-Color", hex: "#D9A63A", secondaryHex: "#9675CD", type: "PLA", icon: "✨" },
+    { sku: "34204", name: "Silk Solar Alloy", group: "Silk Dual-Color", hex: "#D9A63A", secondaryHex: "#C4C7D9", type: "PLA", icon: "✨" },
+    { sku: "34205", name: "Silk Mint Lemonade", group: "Silk Dual-Color", hex: "#ECED17", secondaryHex: "#44ADE5", type: "PLA", icon: "✨" },
+    { sku: "34206", name: "Silk Sea Glass", group: "Silk Dual-Color", hex: "#44ADE5", secondaryHex: "#18CCAF", type: "PLA", icon: "✨" },
+    { sku: "34207", name: "Silk Ice Lake", group: "Silk Dual-Color", hex: "#C4C7D9", secondaryHex: "#44ADE5", type: "PLA", icon: "✨" },
+    { sku: "34208", name: "Silk City Billboard", group: "Silk Dual-Color", hex: "#CBF914", secondaryHex: "#D623AA", type: "PLA", icon: "✨" },
+
+    // C) PETG HF / Translucent & TPU
+    { sku: "34157", name: "PETG HF Black", group: "PETG/TPU", hex: "#16171B", type: "PETG", icon: "⬛" },
+    { sku: "34176", name: "TPU 95A HF Black", group: "PETG/TPU", hex: "#000000", type: "TPU", icon: "⬛" },
+    { sku: "34220", name: "PETG Translucent Green", group: "PETG/TPU", hex: "#537A37", type: "PETG", icon: "🧪" },
+    { sku: "34222", name: "PETG Translucent Orange", group: "PETG/TPU", hex: "#FB8D02", type: "PETG", icon: "🧪" },
+    { sku: "34223", name: "PETG Translucent Pink", group: "PETG/TPU", hex: "#E68FBD", type: "PETG", icon: "🧪" },
+    { sku: "34218", name: "PETG Translucent Blue", group: "PETG/TPU", hex: "#338CC4", type: "PETG", icon: "🧪" },
   ];
 
   const quickColorT0 = document.getElementById("quickColorT0");
@@ -2061,66 +2076,107 @@ document.addEventListener("DOMContentLoaded", () => {
   const quickColorT3 = document.getElementById("quickColorT3");
   const btnSwapExtruders12 = document.getElementById("btnSwapExtruders12");
 
-  function syncQuickSelectWithInput(colorInput, quickSelect) {
+  function findFilamentBySkuOrHex(val) {
+    if (!val) return null;
+    const s = String(val).trim().toLowerCase();
+    // 1. Cerca per SKU
+    let match = SNAPMAKER_FILAMENTS.find(f => f.sku.toLowerCase() === s);
+    if (match) return match;
+    // 2. Cerca per esatto codice HEX
+    match = SNAPMAKER_FILAMENTS.find(f => f.hex.toLowerCase() === s);
+    if (match) return match;
+    return null;
+  }
+
+  function updateSlotSwatchUI(slotIndex, filament) {
+    const wrap = document.getElementById(`wrapColorT${slotIndex}`);
+    if (!wrap || !filament) return;
+    if (filament.secondaryHex) {
+      wrap.style.background = `linear-gradient(135deg, ${filament.hex} 50%, ${filament.secondaryHex} 50%)`;
+      wrap.title = `${filament.name} (Primario: ${filament.hex} - Secondario: ${filament.secondaryHex}) [SKU ${filament.sku}]`;
+    } else {
+      wrap.style.background = filament.hex;
+      wrap.title = `${filament.name} (${filament.hex}) [SKU ${filament.sku}]`;
+    }
+  }
+
+  function syncQuickSelectWithInput(colorInput, quickSelect, slotIndex) {
     if (!colorInput || !quickSelect) return;
     const hex = colorInput.value.toLowerCase();
-    const match = QUICK_COLOR_OPTIONS.find(opt => opt.hex.toLowerCase() === hex);
-    if (match) {
-      quickSelect.value = match.hex;
-    } else {
-      quickSelect.value = "custom";
+    let filament = findFilamentBySkuOrHex(quickSelect.value);
+    if (!filament || (filament.hex.toLowerCase() !== hex && findFilamentBySkuOrHex(hex))) {
+      filament = findFilamentBySkuOrHex(hex) || filament || SNAPMAKER_FILAMENTS[0];
+    }
+    if (filament) {
+      quickSelect.value = filament.sku;
+      colorInput.value = filament.hex;
+      updateSlotSwatchUI(slotIndex, filament);
     }
   }
 
   function syncAllQuickSelects() {
-    syncQuickSelectWithInput(colorT0, quickColorT0);
-    syncQuickSelectWithInput(colorT1, quickColorT1);
-    syncQuickSelectWithInput(colorT2, quickColorT2);
-    syncQuickSelectWithInput(colorT3, quickColorT3);
+    syncQuickSelectWithInput(colorT0, quickColorT0, 0);
+    syncQuickSelectWithInput(colorT1, quickColorT1, 1);
+    syncQuickSelectWithInput(colorT2, quickColorT2, 2);
+    syncQuickSelectWithInput(colorT3, quickColorT3, 3);
   }
 
-  function setupQuickColorSelect(colorInput, quickSelect) {
+  function setupQuickColorSelect(colorInput, quickSelect, slotIndex) {
     if (!colorInput || !quickSelect) return;
-    syncQuickSelectWithInput(colorInput, quickSelect);
+    syncQuickSelectWithInput(colorInput, quickSelect, slotIndex);
 
     quickSelect.addEventListener("change", () => {
-      if (quickSelect.value && quickSelect.value !== "custom") {
-        colorInput.value = quickSelect.value;
+      const filament = findFilamentBySkuOrHex(quickSelect.value);
+      if (filament) {
+        colorInput.value = filament.hex;
+        updateSlotSwatchUI(slotIndex, filament);
         onPaletteChange();
         triggerPreview(true);
       }
     });
 
-    colorInput.addEventListener("input", () => {
-      syncQuickSelectWithInput(colorInput, quickSelect);
-      onPaletteChange();
-    });
+    const wrap = document.getElementById(`wrapColorT${slotIndex}`);
+    if (wrap) {
+      wrap.addEventListener("click", () => {
+        quickSelect.focus();
+        if (typeof quickSelect.showPicker === "function") {
+          try { quickSelect.showPicker(); } catch (_) {}
+        }
+      });
+    }
   }
 
-  setupQuickColorSelect(colorT0, quickColorT0);
-  setupQuickColorSelect(colorT1, quickColorT1);
-  setupQuickColorSelect(colorT2, quickColorT2);
-  setupQuickColorSelect(colorT3, quickColorT3);
+  setupQuickColorSelect(colorT0, quickColorT0, 0);
+  setupQuickColorSelect(colorT1, quickColorT1, 1);
+  setupQuickColorSelect(colorT2, quickColorT2, 2);
+  setupQuickColorSelect(colorT3, quickColorT3, 3);
 
   // Inversione Colori Estrusore 1 ⇄ 2 (Base / Testo)
   if (btnSwapExtruders12) {
     btnSwapExtruders12.addEventListener("click", () => {
-      if (!colorT0 || !colorT1) return;
-      const temp = colorT0.value;
+      if (!colorT0 || !colorT1 || !quickColorT0 || !quickColorT1) return;
+      const tempVal = quickColorT0.value;
+      const tempHex = colorT0.value;
+
+      quickColorT0.value = quickColorT1.value;
       colorT0.value = colorT1.value;
-      colorT1.value = temp;
+
+      quickColorT1.value = tempVal;
+      colorT1.value = tempHex;
+
+      syncAllQuickSelects();
       onPaletteChange();
       triggerPreview(true);
       ToastManager.show({
         type: "info",
-        title: "Colori Invertiti",
+        title: "Filamenti Scambiati",
         message: "Estrusore 1 ⇄ Estrusore 2 scambiati (Base e Testo).",
         duration: 2500
       });
     });
   }
 
-  // Preset Ufficiali
+  // Preset Ufficiali Snapmaker
   document.querySelectorAll(".preset-btn[data-preset]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const presetKey = btn.dataset.preset;
@@ -2130,6 +2186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (colorT1) colorT1.value = colors[1];
         if (colorT2) colorT2.value = colors[2];
         if (colorT3) colorT3.value = colors[3];
+        syncAllQuickSelects();
         onPaletteChange();
         triggerPreview(true);
       }
@@ -2137,10 +2194,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function onPaletteChange() {
-    const c0 = colorT0 ? colorT0.value : "#161616";
-    const c1 = colorT1 ? colorT1.value : "#ffffff";
-    const c2 = colorT2 ? colorT2.value : "#e31b23";
-    const c3 = colorT3 ? colorT3.value : "#ffd400";
+    const c0 = colorT0 ? colorT0.value : "#080A0D";
+    const c1 = colorT1 ? colorT1.value : "#D9DFE5";
+    const c2 = colorT2 ? colorT2.value : "#E72F1D";
+    const c3 = colorT3 ? colorT3.value : "#F8F81C";
     viewer.updateColors([c0, c1, c2, c3]);
     syncAllQuickSelects();
     saveCurrentStateToLocalStorage();
@@ -2249,10 +2306,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openSavePresetModal() {
     if (!savePresetModal) return;
-    const c0 = colorT0 ? colorT0.value : "#161616";
-    const c1 = colorT1 ? colorT1.value : "#ffffff";
-    const c2 = colorT2 ? colorT2.value : "#e31b23";
-    const c3 = colorT3 ? colorT3.value : "#ffd400";
+    const c0 = colorT0 ? colorT0.value : "#080A0D";
+    const c1 = colorT1 ? colorT1.value : "#D9DFE5";
+    const c2 = colorT2 ? colorT2.value : "#E72F1D";
+    const c3 = colorT3 ? colorT3.value : "#F8F81C";
 
     if (savePresetPreviewStrip) {
       savePresetPreviewStrip.style.background = `linear-gradient(90deg, ${c0} 25%, ${c1} 25% 50%, ${c2} 50% 75%, ${c3} 75%)`;
@@ -2283,10 +2340,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const c0 = colorT0 ? colorT0.value : "#161616";
-    const c1 = colorT1 ? colorT1.value : "#ffffff";
-    const c2 = colorT2 ? colorT2.value : "#e31b23";
-    const c3 = colorT3 ? colorT3.value : "#ffd400";
+    const c0 = colorT0 ? colorT0.value : "#080A0D";
+    const c1 = colorT1 ? colorT1.value : "#D9DFE5";
+    const c2 = colorT2 ? colorT2.value : "#E72F1D";
+    const c3 = colorT3 ? colorT3.value : "#F8F81C";
 
     const presets = getUserPresets();
     presets.push({
@@ -2456,18 +2513,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   safeAddListener(btnExportPrinterConfig, "click", () => {
-    const c0 = colorT0 ? colorT0.value : "#161616";
-    const c1 = colorT1 ? colorT1.value : "#ffffff";
-    const c2 = colorT2 ? colorT2.value : "#e31b23";
-    const c3 = colorT3 ? colorT3.value : "#ffd400";
+    const c0 = colorT0 ? colorT0.value : "#080A0D";
+    const c1 = colorT1 ? colorT1.value : "#D9DFE5";
+    const c2 = colorT2 ? colorT2.value : "#E72F1D";
+    const c3 = colorT3 ? colorT3.value : "#F8F81C";
     const exportData = {
       printer: "Snapmaker U1",
       exported_at: new Date().toISOString(),
       filaments: [
-        { slot: 1, tool: "T0", color: c0, material: "Estrusore 1" },
-        { slot: 2, tool: "T1", color: c1, material: "Estrusore 2" },
-        { slot: 3, tool: "T2", color: c2, material: "Estrusore 3" },
-        { slot: 4, tool: "T3", color: c3, material: "Estrusore 4" }
+        { slot: 1, tool: "T0", color: c0, sku: quickColorT0?.value, material: "Estrusore 1" },
+        { slot: 2, tool: "T1", color: c1, sku: quickColorT1?.value, material: "Estrusore 2" },
+        { slot: 3, tool: "T2", color: c2, sku: quickColorT2?.value, material: "Estrusore 3" },
+        { slot: 4, tool: "T3", color: c3, sku: quickColorT3?.value, material: "Estrusore 4" }
       ],
       colors: [c0, c1, c2, c3]
     };
@@ -2497,13 +2554,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Parser Client-Side Palette RFID Snapmaker U1
   function parseSnapmakerPaletteClient(data) {
     const NAMED_COLORS = {
-      "black": "#161616", "white": "#ffffff", "red": "#e31b23",
-      "yellow": "#ffd400", "blue": "#1e88e5", "green": "#2e7d32",
-      "orange": "#f4511e", "grey": "#757575", "gray": "#757575",
-      "purple": "#8e24aa", "silver": "#b0bec5", "gold": "#d4af37"
+      "black": "#080A0D", "white": "#D9DFE5", "cool white": "#D9DFE5", "pearl white": "#E2DEDB",
+      "red": "#E72F1D", "yellow": "#F8F81C", "bright yellow": "#F8F81C", "blue": "#003776",
+      "green": "#2D9E59", "orange": "#F97429", "magenta": "#F24574", "grey": "#C4C7D9", "gray": "#C4C7D9",
+      "purple": "#9675CD", "silver": "#C4C7D9", "gold": "#D9A63A"
     };
 
-    const defaultColors = ["#161616", "#ffffff", "#e31b23", "#ffd400"];
+    const defaultColors = ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"];
     const defaultMaterials = ["Estrusore 1", "Estrusore 2", "Estrusore 3", "Estrusore 4"];
     const foundColors = [];
     const foundMaterials = [];
@@ -2906,12 +2963,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // 5. RACCOLTA PARAMETRI PER L'API
   // ==========================================
   function getParams() {
+    const fil0 = findFilamentBySkuOrHex(quickColorT0?.value) || findFilamentBySkuOrHex(colorT0?.value);
+    const fil1 = findFilamentBySkuOrHex(quickColorT1?.value) || findFilamentBySkuOrHex(colorT1?.value);
+    const fil2 = findFilamentBySkuOrHex(quickColorT2?.value) || findFilamentBySkuOrHex(colorT2?.value);
+    const fil3 = findFilamentBySkuOrHex(quickColorT3?.value) || findFilamentBySkuOrHex(colorT3?.value);
+
     const palette = [
-      colorT0 ? colorT0.value : "#161616",
-      colorT1 ? colorT1.value : "#ffffff",
-      colorT2 ? colorT2.value : "#e31b23",
-      colorT3 ? colorT3.value : "#ffd400",
+      colorT0 ? colorT0.value : (fil0 ? fil0.hex : "#080A0D"),
+      colorT1 ? colorT1.value : (fil1 ? fil1.hex : "#D9DFE5"),
+      colorT2 ? colorT2.value : (fil2 ? fil2.hex : "#E72F1D"),
+      colorT3 ? colorT3.value : (fil3 ? fil3.hex : "#F8F81C"),
     ];
+
+    const filamentTypes = [
+      fil0 ? fil0.type : "PLA",
+      fil1 ? fil1.type : "PLA",
+      fil2 ? fil2.type : "PLA",
+      fil3 ? fil3.type : "PLA",
+    ];
+
     const baseExtruder = extruderBaseSelect ? parseInt(extruderBaseSelect.value) : 0;
 
     if (currentProduct === "desk_sign") {
@@ -2943,12 +3013,13 @@ document.addEventListener("DOMContentLoaded", () => {
         font_size_line2: dsFontSize2Input ? parseFloat(dsFontSize2Input.value) : 7.5,
         thickness_line2: dsThickness2Input ? parseFloat(dsThickness2Input.value) : 1.0,
         extruder_line2: dsExtruderLine2Select ? parseInt(dsExtruderLine2Select.value) : 2,
-        border_enabled: dsBorderToggle ? dsBorderToggle.checked : true,
+        border_enabled: dsBorderToggle ? dsBorderToggle.checked : false,
         border_width: dsBorderWidthInput ? parseFloat(dsBorderWidthInput.value) : 2.0,
         border_thickness: dsBorderThicknessInput ? parseFloat(dsBorderThicknessInput.value) : 1.0,
         extruder_border: dsExtruderBorderSelect ? parseInt(dsExtruderBorderSelect.value) : 3,
         extruder_base: baseExtruder,
         filament_colors: palette,
+        filament_types: filamentTypes,
       };
     } else {
       // Template Keychain
@@ -2985,6 +3056,7 @@ document.addEventListener("DOMContentLoaded", () => {
         extruder_text: textExtruder,
         extruder_icon: iconExtruder,
         filament_colors: palette,
+        filament_types: filamentTypes,
       };
     }
   }

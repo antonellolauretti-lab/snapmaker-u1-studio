@@ -502,26 +502,27 @@ def generate_3mf(params: Dict[str, Any]):
 # ==============================================================================
 
 NAMED_COLORS_MAP = {
-    "black": "#161616", "nero": "#161616",
-    "white": "#ffffff", "bianco": "#ffffff",
-    "red": "#e31b23", "rosso": "#e31b23",
-    "yellow": "#ffd400", "giallo": "#ffd400",
-    "blue": "#0070ba", "blu": "#0070ba",
-    "green": "#2ecc71", "verde": "#2ecc71",
-    "orange": "#e67e22", "arancione": "#e67e22",
-    "grey": "#7f8c8d", "gray": "#7f8c8d", "grigio": "#7f8c8d",
-    "silver": "#bdc3c7", "argento": "#bdc3c7",
-    "gold": "#d4af37", "oro": "#d4af37",
-    "purple": "#8e44ad", "viola": "#8e44ad",
-    "pink": "#ff69b4", "rosa": "#ff69b4",
-    "cyan": "#00e5ff", "ciano": "#00e5ff",
+    "black": "#080A0D", "nero": "#080A0D",
+    "white": "#D9DFE5", "bianco": "#D9DFE5", "cool white": "#D9DFE5", "pearl white": "#E2DEDB",
+    "red": "#E72F1D", "rosso": "#E72F1D",
+    "yellow": "#F8F81C", "giallo": "#F8F81C", "bright yellow": "#F8F81C",
+    "blue": "#003776", "blu": "#003776",
+    "green": "#2D9E59", "verde": "#2D9E59",
+    "orange": "#F97429", "arancione": "#F97429",
+    "magenta": "#F24574",
+    "grey": "#C4C7D9", "gray": "#C4C7D9", "grigio": "#C4C7D9",
+    "silver": "#C4C7D9", "argento": "#C4C7D9",
+    "gold": "#D9A63A", "oro": "#D9A63A",
+    "purple": "#9675CD", "viola": "#9675CD",
+    "pink": "#E68FBD", "rosa": "#E68FBD",
+    "cyan": "#44ADE5", "ciano": "#44ADE5",
 }
 
 def _parse_snapmaker_palette_data(data: Any) -> Tuple[List[str], List[str]]:
     """
     Estrae fino a 4 colori esadecimali e nomi materiale da un payload Snapmaker/Moonraker.
     """
-    default_colors = ["#161616", "#ffffff", "#e31b23", "#ffd400"]
+    default_colors = ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"]
     default_materials = ["PLA Slot 1", "PLA Slot 2", "PLA Slot 3", "PLA Slot 4"]
     found_colors: List[str] = []
     found_materials: List[str] = []

@@ -36,7 +36,7 @@ class Snapmaker3MFPackager:
         self.machine_name = machine_name
         self.process_name = process_name
         self.bed_type = bed_type
-        self.filament_colors = filament_colors or ["#000000", "#FFFFFF", "#E31B23", "#FFD700"]
+        self.filament_colors = filament_colors or ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"]
         self.filament_types = filament_types or ["PLA", "PLA", "PLA", "PLA"]
         self.filament_vendors = filament_vendors or ["Snapmaker", "Snapmaker", "Snapmaker", "Snapmaker"]
         self.enable_prime_tower = enable_prime_tower
