@@ -523,37 +523,18 @@
         <div class="param-section">
           <div class="section-title">
             <span>Estrusori & Palette U1</span>
-          </div>
-
-          <!-- Preset Rapidi Palette & Sincronizzazione LAN -->
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-              <label class="form-label" style="margin: 0;">Preset Rapidi Filamenti</label>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button type="button" id="btnSwapExtruders12" class="btn-swap-extruders" title="Inverti i colori tra Estrusore 1 e Estrusore 2 (Base ⇄ Testo)">
+                <span>🔀 Inverti 1 ⇄ 2</span>
+              </button>
               <button type="button" id="btnOpenSyncModal" class="btn-sync-u1-lan" title="Importa in tempo reale i colori dai 4 estrusori della Snapmaker U1 via LAN/RFID">
-                <span>🔄 Sincronizza da Stampante U1 (LAN)</span>
-              </button>
-            </div>
-            <div class="presets-row">
-              <button type="button" class="preset-btn" data-preset="snapmaker" title="Snapmaker Original">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #161616 25%, #ffffff 25% 50%, #e31b23 50% 75%, #ffd400 75%);"></span>
-                Official U1
-              </button>
-              <button type="button" class="preset-btn" data-preset="sunset" title="Sunset Ember & Gold">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #1c120c 25%, #ff7b00 25% 50%, #ffd700 50% 75%, #e63946 75%);"></span>
-                Sunset Gold
-              </button>
-              <button type="button" class="preset-btn" data-preset="cyberpunk" title="Neon Cyberpunk">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #0e111a 25%, #00f5d4 25% 50%, #f72585 50% 75%, #7b2cbf 75%);"></span>
-                Cyberpunk
-              </button>
-              <button type="button" class="preset-btn" data-preset="forest" title="Forest & Sage">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #18231c 25%, #84a98c 25% 50%, #52796f 50% 75%, #cad2c5 75%);"></span>
-                Forest Sage
+                <span>🔄 Sync U1</span>
               </button>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+          <!-- Assegnazione Estrusori ai Componenti -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; margin-bottom: 12px;">
             <div class="form-group">
               <label class="form-label" for="extruderBaseSelect">Estrusore Base</label>
               <select id="extruderBaseSelect" class="tool-select">
@@ -574,31 +555,144 @@
             </div>
           </div>
 
-          <label class="form-label" style="margin-top: 6px;">Colori Assegnati ai 4 Estrusori U1</label>
-          <div class="palette-grid">
-            <div class="tool-slot">
-              <span class="tool-badge">1</span>
-              <div class="color-input-wrap">
-                <input type="color" id="colorT0" value="#161616" title="Estrusore 1">
+          <!-- Colori Assegnati ai 4 Estrusori U1 con Slot Rapidi -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" style="margin: 0;">Colori 4 Slot Estrusori U1</label>
+              <span style="font-size: 10.5px; color: var(--text-dim);">Scelta rapida o selettore</span>
+            </div>
+            <div class="palette-grid">
+              <div class="tool-slot">
+                <div class="tool-badge-row">
+                  <span class="tool-badge">Slot 1</span>
+                  <div class="color-input-wrap">
+                    <input type="color" id="colorT0" value="#161616" title="Estrusore 1">
+                  </div>
+                </div>
+                <select class="quick-color-select" id="quickColorT0" title="Colore rapido Slot 1">
+                  <option value="#161616" selected>⚫ Nero</option>
+                  <option value="#ffffff">⚪ Bianco</option>
+                  <option value="#ffd400">🟡 Giallo U1</option>
+                  <option value="#e31b23">🔴 Rosso U1</option>
+                  <option value="#757575">🔘 Grigio</option>
+                  <option value="#d4af37">✨ Oro Seta</option>
+                  <option value="#1e88e5">🔵 Blu</option>
+                  <option value="#2e7d32">🟢 Verde</option>
+                  <option value="#f4511e">🟠 Arancio</option>
+                  <option value="#7b2cbf">🟣 Viola</option>
+                  <option value="#b87333">🟤 Rame</option>
+                  <option value="#00f5d4">💎 Ciano</option>
+                  <option value="custom">🎨 Altro</option>
+                </select>
+              </div>
+
+              <div class="tool-slot">
+                <div class="tool-badge-row">
+                  <span class="tool-badge">Slot 2</span>
+                  <div class="color-input-wrap">
+                    <input type="color" id="colorT1" value="#ffffff" title="Estrusore 2">
+                  </div>
+                </div>
+                <select class="quick-color-select" id="quickColorT1" title="Colore rapido Slot 2">
+                  <option value="#161616">⚫ Nero</option>
+                  <option value="#ffffff" selected>⚪ Bianco</option>
+                  <option value="#ffd400">🟡 Giallo U1</option>
+                  <option value="#e31b23">🔴 Rosso U1</option>
+                  <option value="#757575">🔘 Grigio</option>
+                  <option value="#d4af37">✨ Oro Seta</option>
+                  <option value="#1e88e5">🔵 Blu</option>
+                  <option value="#2e7d32">🟢 Verde</option>
+                  <option value="#f4511e">🟠 Arancio</option>
+                  <option value="#7b2cbf">🟣 Viola</option>
+                  <option value="#b87333">🟤 Rame</option>
+                  <option value="#00f5d4">💎 Ciano</option>
+                  <option value="custom">🎨 Altro</option>
+                </select>
+              </div>
+
+              <div class="tool-slot">
+                <div class="tool-badge-row">
+                  <span class="tool-badge">Slot 3</span>
+                  <div class="color-input-wrap">
+                    <input type="color" id="colorT2" value="#e31b23" title="Estrusore 3">
+                  </div>
+                </div>
+                <select class="quick-color-select" id="quickColorT2" title="Colore rapido Slot 3">
+                  <option value="#161616">⚫ Nero</option>
+                  <option value="#ffffff">⚪ Bianco</option>
+                  <option value="#ffd400">🟡 Giallo U1</option>
+                  <option value="#e31b23" selected>🔴 Rosso U1</option>
+                  <option value="#757575">🔘 Grigio</option>
+                  <option value="#d4af37">✨ Oro Seta</option>
+                  <option value="#1e88e5">🔵 Blu</option>
+                  <option value="#2e7d32">🟢 Verde</option>
+                  <option value="#f4511e">🟠 Arancio</option>
+                  <option value="#7b2cbf">🟣 Viola</option>
+                  <option value="#b87333">🟤 Rame</option>
+                  <option value="#00f5d4">💎 Ciano</option>
+                  <option value="custom">🎨 Altro</option>
+                </select>
+              </div>
+
+              <div class="tool-slot">
+                <div class="tool-badge-row">
+                  <span class="tool-badge">Slot 4</span>
+                  <div class="color-input-wrap">
+                    <input type="color" id="colorT3" value="#ffd400" title="Estrusore 4">
+                  </div>
+                </div>
+                <select class="quick-color-select" id="quickColorT3" title="Colore rapido Slot 4">
+                  <option value="#161616">⚫ Nero</option>
+                  <option value="#ffffff">⚪ Bianco</option>
+                  <option value="#ffd400" selected>🟡 Giallo U1</option>
+                  <option value="#e31b23">🔴 Rosso U1</option>
+                  <option value="#757575">🔘 Grigio</option>
+                  <option value="#d4af37">✨ Oro Seta</option>
+                  <option value="#1e88e5">🔵 Blu</option>
+                  <option value="#2e7d32">🟢 Verde</option>
+                  <option value="#f4511e">🟠 Arancio</option>
+                  <option value="#7b2cbf">🟣 Viola</option>
+                  <option value="#b87333">🟤 Rame</option>
+                  <option value="#00f5d4">💎 Ciano</option>
+                  <option value="custom">🎨 Altro</option>
+                </select>
               </div>
             </div>
-            <div class="tool-slot">
-              <span class="tool-badge">2</span>
-              <div class="color-input-wrap">
-                <input type="color" id="colorT1" value="#ffffff" title="Estrusore 2">
-              </div>
+          </div>
+
+          <!-- Preset Rapidi Filamenti & Preset Personali -->
+          <div class="form-group" style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <label class="form-label" style="margin: 0;">Preset Ufficiali</label>
+              <button type="button" id="btnSaveCustomPreset" class="btn-save-preset" title="Salva la combinazione colori corrente come preset personale">
+                <span>➕ Salva Setup</span>
+              </button>
             </div>
-            <div class="tool-slot">
-              <span class="tool-badge">3</span>
-              <div class="color-input-wrap">
-                <input type="color" id="colorT2" value="#e31b23" title="Estrusore 3">
-              </div>
+            <div class="presets-row">
+              <button type="button" class="preset-btn" data-preset="snapmaker" title="Snapmaker Original">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #161616 25%, #ffffff 25% 50%, #e31b23 50% 75%, #ffd400 75%);"></span>
+                Official U1
+              </button>
+              <button type="button" class="preset-btn" data-preset="sunset" title="Sunset Ember & Gold">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #1c120c 25%, #ff7b00 25% 50%, #ffd700 50% 75%, #e63946 75%);"></span>
+                Sunset Gold
+              </button>
+              <button type="button" class="preset-btn" data-preset="cyberpunk" title="Neon Cyberpunk">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #0e111a 25%, #00f5d4 25% 50%, #f72585 50% 75%, #7b2cbf 75%);"></span>
+                Cyberpunk
+              </button>
+              <button type="button" class="preset-btn" data-preset="forest" title="Forest & Sage">
+                <span class="swatch-strip" style="background: linear-gradient(90deg, #18231c 25%, #84a98c 25% 50%, #52796f 50% 75%, #cad2c5 75%);"></span>
+                Forest Sage
+              </button>
             </div>
-            <div class="tool-slot">
-              <span class="tool-badge">4</span>
-              <div class="color-input-wrap">
-                <input type="color" id="colorT3" value="#ffd400" title="Estrusore 4">
+
+            <!-- I Miei Preset Personali (Salvati in LocalStorage) -->
+            <div id="userPresetsWrap" style="margin-top: 10px; display: none;">
+              <div style="font-size: 10.5px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">
+                I Miei Preset Personali
               </div>
+              <div id="userPresetsRow" class="presets-row" style="flex-wrap: wrap;"></div>
             </div>
           </div>
         </div>
@@ -658,13 +752,24 @@
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 16px;">🔄</span>
-          <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Sincronizza Palette da Snapmaker U1</h3>
+          <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Sincronizza da Snapmaker U1</h3>
         </div>
         <button type="button" class="modal-close" id="btnCloseSyncModal" aria-label="Chiudi">&times;</button>
       </div>
       <div class="modal-body">
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
-          Interroga la tua Snapmaker U1 sulla rete locale Wi-Fi per rilevare in tempo reale i colori (tag RFID) e i materiali caricati nei 4 estrusori.
+        
+        <!-- Info Banner Dinamico: Cloud HTTPS vs Locale HTTP -->
+        <div id="syncModalCloudNotice" class="modal-guide-box" style="display: none; background: rgba(255, 165, 2, 0.08); border-color: rgba(255, 165, 2, 0.35);">
+          <strong style="color: #ffa502; display: block; margin-bottom: 4px;">🌐 Connessione Cloud (HTTPS Vercel)</strong>
+          Per politica di sicurezza del browser, da una connessione HTTPS non è consentito interrogare automaticamente indirizzi IP privati (LAN).
+          <div style="margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--text-main);">
+            • <strong>Uso Immediato:</strong> Usa i nuovi <strong>Slot Rapidi</strong> nella palette a 1 clic e salvali nei tuoi <strong>Preset Personali</strong>.<br>
+            • <strong>Rilevamento LAN Automatico:</strong> Per leggere in tempo reale i tag RFID dalla stampante, apri l'app in locale sul tuo computer (<code>AVVIA_STUDIO_U1.bat</code> o <code>http://localhost:8000</code>).
+          </div>
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+          Interroga la tua Snapmaker U1 sulla rete locale Wi-Fi per rilevare in tempo reale i colori (tag RFID) caricati nei 4 estrusori.
         </p>
 
         <div class="form-group" style="margin-bottom: 12px;">
@@ -691,35 +796,45 @@
           <strong style="color: #fff; display: block; margin-bottom: 4px;">💡 Come trovare l'IP sulla Snapmaker U1:</strong>
           1. Sul touchscreen tocca l'icona <strong>Impostazioni (⚙️)</strong>.<br>
           2. Tocca <strong>Wi-Fi</strong> e seleziona la rete connessa per aprire i dettagli.<br>
-          3. Leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).<br>
-          <span style="font-size: 10.5px; color: var(--text-dim); display: block; margin-top: 4px;">
-            Nota: Il dispositivo da cui usi l'app deve essere connesso alla stessa rete Wi-Fi della macchina.
-          </span>
-        </div>
-
-        <!-- Opzione Rapida: Incolla JSON di Stato U1 (Bypass Mixed Content HTTPS) -->
-        <div style="margin-top: 10px; border-top: 1px dashed var(--border-subtle); padding-top: 10px; margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="form-label" style="margin: 0; font-size: 11px;">📋 Oppure Incolla Dump JSON / Stato U1:</label>
-            <a id="linkOpenPrinterTab" href="#" target="_blank" rel="noopener" style="font-size: 10.5px; color: var(--accent-snapmaker); text-decoration: none; display: none;">
-              🔗 Apri Scheda Stampante ↗
-            </a>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="printerJsonInput" placeholder='Incolla JSON (es. {"filaments": ...} o output status)' style="flex: 1; font-size: 11px;">
-            <button type="button" id="btnApplyPrinterJson" class="btn-modal-cancel" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;">
-              Applica JSON
-            </button>
-          </div>
+          3. Leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).
         </div>
 
         <!-- Sezione Risultato Rilevamento Slot -->
         <div id="syncResultStatus" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 11.5px; margin-bottom: 12px; line-height: 1.4;"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-modal-cancel" id="btnCancelSyncModal">Annulla</button>
+        <button type="button" class="btn-modal-cancel" id="btnCancelSyncModal">Chiudi</button>
         <button type="button" class="btn-modal-action" id="btnExecuteSync">
           <span>⚡ Rileva Colori RFID</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Salva Preset Personale -->
+  <div id="savePresetModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog" style="max-width: 380px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">💾</span>
+          <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Salva Preset Personale</h3>
+        </div>
+        <button type="button" class="modal-close" id="btnCloseSavePresetModal" aria-label="Chiudi">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+          Assegna un nome per memorizzare i 4 colori attuali della palette nei tuoi preset personali:
+        </p>
+        <div id="savePresetPreviewStrip" style="height: 16px; border-radius: 4px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.2);"></div>
+        <div class="form-group">
+          <label class="form-label" for="customPresetNameInput">Nome Preset</label>
+          <input type="text" id="customPresetNameInput" placeholder="Es. Nero + Oro Silk, Setup Portachiavi..." maxlength="30">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" id="btnCancelSavePresetModal">Annulla</button>
+        <button type="button" class="btn-modal-action" id="btnConfirmSavePreset">
+          <span>Salva Preset</span>
         </button>
       </div>
     </div>

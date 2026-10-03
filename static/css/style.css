@@ -388,7 +388,7 @@ input[type="range"] {
 /* Toolchanger Swatches Grid */
 .palette-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
@@ -396,19 +396,142 @@ input[type="range"] {
   background-color: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
-  padding: 8px 6px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 6px;
+  transition: border-color var(--transition-speed);
+}
+
+.tool-slot:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.tool-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .tool-badge {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text-main);
   white-space: nowrap;
-  letter-spacing: -0.2px;
+}
+
+.btn-swap-extruders {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-swap-extruders:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-save-preset {
+  background: rgba(46, 213, 115, 0.12);
+  border: 1px solid rgba(46, 213, 115, 0.4);
+  color: #2ed573;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-save-preset:hover {
+  background: rgba(46, 213, 115, 0.22);
+  border-color: #2ed573;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.quick-color-select {
+  width: 100%;
+  font-size: 11px;
+  padding: 4px 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: border-color var(--transition-speed);
+}
+
+.quick-color-select:hover,
+.quick-color-select:focus {
+  border-color: var(--accent-snapmaker);
+  outline: none;
+}
+
+/* User Custom Preset Chips */
+.user-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.user-preset-chip:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.user-preset-chip .preset-btn {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 5px 8px;
+}
+
+.user-preset-chip .preset-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.user-preset-title {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-preset-del {
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-preset-del:hover {
+  background: rgba(255, 71, 87, 0.2);
+  color: #ff4757;
 }
 
 .btn-sync-u1-lan {
@@ -1633,22 +1756,27 @@ body.mode-desksign .only-desksign {
 
   /* Griglia Colori su Mobile */
   .palette-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .tool-slot {
-    padding: 6px 4px;
+    padding: 8px;
+  }
+
+  .quick-color-select {
+    font-size: 13px !important;
+    min-height: 36px;
   }
 
   .color-input-wrap {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
   }
 
   .color-input-wrap input[type="color"] {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
   }
 
   /* 3. Pulsante Fisso in Basso 'SCARICA 3MF PER U1' */

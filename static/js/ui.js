@@ -1444,6 +1444,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const c2 = colorT2 ? colorT2.value : "#e31b23";
         const c3 = colorT3 ? colorT3.value : "#ffd400";
         viewer.updateColors([c0, c1, c2, c3]);
+        if (typeof syncAllQuickSelects === "function") syncAllQuickSelects();
       }
 
       // 2. Ripristino Parametri Portachiavi
@@ -1916,9 +1917,90 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================
-  // 3. PRESET PALETTE & COLORI
+  // 3. PRESET PALETTE, SLOT RAPIDI & COLORI
   // ==========================================
-  document.querySelectorAll(".preset-btn").forEach((btn) => {
+  const QUICK_COLOR_OPTIONS = [
+    { hex: "#161616", name: "⚫ Nero" },
+    { hex: "#ffffff", name: "⚪ Bianco" },
+    { hex: "#ffd400", name: "🟡 Giallo Snapmaker" },
+    { hex: "#e31b23", name: "🔴 Rosso Snapmaker" },
+    { hex: "#757575", name: "🔘 Grigio Tecnico" },
+    { hex: "#d4af37", name: "✨ Oro Seta (Silk Gold)" },
+    { hex: "#1e88e5", name: "🔵 Blu Cobalto" },
+    { hex: "#2e7d32", name: "🟢 Verde Bosco" },
+    { hex: "#f4511e", name: "🟠 Arancione Neon" },
+    { hex: "#7b2cbf", name: "🟣 Viola Deep" },
+    { hex: "#b87333", name: "🟤 Rame / Bronzo" },
+    { hex: "#00f5d4", name: "💎 Ciano Neon" }
+  ];
+
+  const quickColorT0 = document.getElementById("quickColorT0");
+  const quickColorT1 = document.getElementById("quickColorT1");
+  const quickColorT2 = document.getElementById("quickColorT2");
+  const quickColorT3 = document.getElementById("quickColorT3");
+  const btnSwapExtruders12 = document.getElementById("btnSwapExtruders12");
+
+  function syncQuickSelectWithInput(colorInput, quickSelect) {
+    if (!colorInput || !quickSelect) return;
+    const hex = colorInput.value.toLowerCase();
+    const match = QUICK_COLOR_OPTIONS.find(opt => opt.hex.toLowerCase() === hex);
+    if (match) {
+      quickSelect.value = match.hex;
+    } else {
+      quickSelect.value = "custom";
+    }
+  }
+
+  function syncAllQuickSelects() {
+    syncQuickSelectWithInput(colorT0, quickColorT0);
+    syncQuickSelectWithInput(colorT1, quickColorT1);
+    syncQuickSelectWithInput(colorT2, quickColorT2);
+    syncQuickSelectWithInput(colorT3, quickColorT3);
+  }
+
+  function setupQuickColorSelect(colorInput, quickSelect) {
+    if (!colorInput || !quickSelect) return;
+    syncQuickSelectWithInput(colorInput, quickSelect);
+
+    quickSelect.addEventListener("change", () => {
+      if (quickSelect.value && quickSelect.value !== "custom") {
+        colorInput.value = quickSelect.value;
+        onPaletteChange();
+        triggerPreview(true);
+      }
+    });
+
+    colorInput.addEventListener("input", () => {
+      syncQuickSelectWithInput(colorInput, quickSelect);
+      onPaletteChange();
+    });
+  }
+
+  setupQuickColorSelect(colorT0, quickColorT0);
+  setupQuickColorSelect(colorT1, quickColorT1);
+  setupQuickColorSelect(colorT2, quickColorT2);
+  setupQuickColorSelect(colorT3, quickColorT3);
+
+  // Inversione Colori Estrusore 1 ⇄ 2 (Base / Testo)
+  if (btnSwapExtruders12) {
+    btnSwapExtruders12.addEventListener("click", () => {
+      if (!colorT0 || !colorT1) return;
+      const temp = colorT0.value;
+      colorT0.value = colorT1.value;
+      colorT1.value = temp;
+      onPaletteChange();
+      triggerPreview(true);
+      ToastManager.show({
+        type: "info",
+        title: "Colori Invertiti",
+        message: "Estrusore 1 ⇄ Estrusore 2 scambiati (Base e Testo).",
+        duration: 2500
+      });
+    });
+  }
+
+  // Preset Ufficiali
+  document.querySelectorAll(".preset-btn[data-preset]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const presetKey = btn.dataset.preset;
       const colors = PALETTE_PRESETS[presetKey];
@@ -1928,6 +2010,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (colorT2) colorT2.value = colors[2];
         if (colorT3) colorT3.value = colors[3];
         onPaletteChange();
+        triggerPreview(true);
       }
     });
   });
@@ -1938,6 +2021,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const c2 = colorT2 ? colorT2.value : "#e31b23";
     const c3 = colorT3 ? colorT3.value : "#ffd400";
     viewer.updateColors([c0, c1, c2, c3]);
+    syncAllQuickSelects();
     saveCurrentStateToLocalStorage();
   }
 
@@ -1947,7 +2031,178 @@ document.addEventListener("DOMContentLoaded", () => {
   safeAddListener(colorT3, "input", onPaletteChange);
 
   // ==========================================
-  // 3.1 SINCRONIZZAZIONE SNAPMAKER U1 (RFID)
+  // 3.1 I MIEI PRESET PERSONALI (LocalStorage)
+  // ==========================================
+  const USER_PRESETS_KEY = "snapmaker_u1_custom_presets";
+  const btnSaveCustomPreset = document.getElementById("btnSaveCustomPreset");
+  const savePresetModal = document.getElementById("savePresetModal");
+  const btnCloseSavePresetModal = document.getElementById("btnCloseSavePresetModal");
+  const btnCancelSavePresetModal = document.getElementById("btnCancelSavePresetModal");
+  const btnConfirmSavePreset = document.getElementById("btnConfirmSavePreset");
+  const customPresetNameInput = document.getElementById("customPresetNameInput");
+  const savePresetPreviewStrip = document.getElementById("savePresetPreviewStrip");
+
+  function getUserPresets() {
+    try {
+      const raw = localStorage.getItem(USER_PRESETS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveUserPresets(presets) {
+    try {
+      localStorage.setItem(USER_PRESETS_KEY, JSON.stringify(presets));
+    } catch (e) {
+      console.warn("Impossibile salvare preset utente:", e);
+    }
+  }
+
+  function renderUserPresets() {
+    const container = document.getElementById("userPresetsRow");
+    const wrap = document.getElementById("userPresetsWrap");
+    if (!container || !wrap) return;
+
+    const presets = getUserPresets();
+    if (presets.length === 0) {
+      wrap.style.display = "none";
+      container.innerHTML = "";
+      return;
+    }
+
+    wrap.style.display = "block";
+    container.innerHTML = "";
+
+    presets.forEach((p) => {
+      const chip = document.createElement("div");
+      chip.className = "user-preset-chip";
+
+      const c0 = p.colors[0] || "#161616";
+      const c1 = p.colors[1] || "#ffffff";
+      const c2 = p.colors[2] || "#e31b23";
+      const c3 = p.colors[3] || "#ffd400";
+      const gradient = `linear-gradient(90deg, ${c0} 25%, ${c1} 25% 50%, ${c2} 50% 75%, ${c3} 75%)`;
+
+      chip.innerHTML = `
+        <button type="button" class="preset-btn user-preset-apply" title="Applica preset '${p.name}'">
+          <span class="swatch-strip" style="background: ${gradient};"></span>
+          <span class="user-preset-title">${p.name}</span>
+        </button>
+        <button type="button" class="user-preset-del" title="Elimina '${p.name}'" aria-label="Elimina">&times;</button>
+      `;
+
+      chip.querySelector(".user-preset-apply").addEventListener("click", () => {
+        if (colorT0) colorT0.value = c0;
+        if (colorT1) colorT1.value = c1;
+        if (colorT2) colorT2.value = c2;
+        if (colorT3) colorT3.value = c3;
+
+        onPaletteChange();
+        triggerPreview(true);
+
+        ToastManager.show({
+          type: "success",
+          title: "Preset Applicato",
+          message: `Palette impostata su "${p.name}".`,
+          duration: 3000
+        });
+      });
+
+      chip.querySelector(".user-preset-del").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const updated = getUserPresets().filter(item => item.id !== p.id);
+        saveUserPresets(updated);
+        renderUserPresets();
+        ToastManager.show({
+          type: "info",
+          title: "Preset Rimosso",
+          message: `Il preset "${p.name}" è stato eliminato.`,
+          duration: 2500
+        });
+      });
+
+      container.appendChild(chip);
+    });
+  }
+
+  function openSavePresetModal() {
+    if (!savePresetModal) return;
+    const c0 = colorT0 ? colorT0.value : "#161616";
+    const c1 = colorT1 ? colorT1.value : "#ffffff";
+    const c2 = colorT2 ? colorT2.value : "#e31b23";
+    const c3 = colorT3 ? colorT3.value : "#ffd400";
+
+    if (savePresetPreviewStrip) {
+      savePresetPreviewStrip.style.background = `linear-gradient(90deg, ${c0} 25%, ${c1} 25% 50%, ${c2} 50% 75%, ${c3} 75%)`;
+    }
+    if (customPresetNameInput) {
+      customPresetNameInput.value = "";
+    }
+    savePresetModal.style.display = "flex";
+    setTimeout(() => {
+      if (customPresetNameInput) customPresetNameInput.focus();
+    }, 100);
+  }
+
+  function closeSavePresetModal() {
+    if (!savePresetModal) return;
+    savePresetModal.style.display = "none";
+  }
+
+  function handleConfirmSavePreset() {
+    const name = customPresetNameInput ? customPresetNameInput.value.trim() : "";
+    if (!name) {
+      ToastManager.show({
+        type: "warning",
+        title: "Nome Mancante",
+        message: "Inserisci un nome per identificare il tuo preset.",
+        duration: 3000
+      });
+      return;
+    }
+
+    const c0 = colorT0 ? colorT0.value : "#161616";
+    const c1 = colorT1 ? colorT1.value : "#ffffff";
+    const c2 = colorT2 ? colorT2.value : "#e31b23";
+    const c3 = colorT3 ? colorT3.value : "#ffd400";
+
+    const presets = getUserPresets();
+    presets.push({
+      id: Date.now().toString(),
+      name: name,
+      colors: [c0, c1, c2, c3]
+    });
+    saveUserPresets(presets);
+    renderUserPresets();
+    closeSavePresetModal();
+
+    ToastManager.show({
+      type: "success",
+      title: "Preset Salvato",
+      message: `Il setup "${name}" è pronto nei tuoi preset!`,
+      duration: 3500
+    });
+  }
+
+  safeAddListener(btnSaveCustomPreset, "click", openSavePresetModal);
+  safeAddListener(btnCloseSavePresetModal, "click", closeSavePresetModal);
+  safeAddListener(btnCancelSavePresetModal, "click", closeSavePresetModal);
+  safeAddListener(btnConfirmSavePreset, "click", handleConfirmSavePreset);
+  if (customPresetNameInput) {
+    customPresetNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleConfirmSavePreset();
+    });
+  }
+  if (savePresetModal) {
+    savePresetModal.addEventListener("click", (e) => {
+      if (e.target === savePresetModal) closeSavePresetModal();
+    });
+  }
+  renderUserPresets();
+
+  // ==========================================
+  // 3.2 SINCRONIZZAZIONE SNAPMAKER U1 (LAN)
   // ==========================================
   const btnOpenSyncModal = document.getElementById("btnOpenSyncModal");
   const syncPrinterModal = document.getElementById("syncPrinterModal");
@@ -1958,6 +2213,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const printerPortInput = document.getElementById("printerPortInput");
   const printerTokenInput = document.getElementById("printerTokenInput");
   const syncResultStatus = document.getElementById("syncResultStatus");
+  const syncModalCloudNotice = document.getElementById("syncModalCloudNotice");
 
   // Ripristina impostazioni salvate da localStorage
   try {
@@ -1980,6 +2236,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (syncResultStatus) {
       syncResultStatus.style.display = "none";
       syncResultStatus.innerHTML = "";
+    }
+    if (syncModalCloudNotice) {
+      syncModalCloudNotice.style.display = window.location.protocol === "https:" ? "block" : "none";
     }
     if (printerIpInput && !printerIpInput.value) {
       printerIpInput.focus();
@@ -2111,68 +2370,6 @@ document.addEventListener("DOMContentLoaded", () => {
     triggerPreview(true);
   }
 
-  // Gestione link a scheda stampante e inserimento manuale JSON
-  const btnApplyPrinterJson = document.getElementById("btnApplyPrinterJson");
-  const printerJsonInput = document.getElementById("printerJsonInput");
-  const linkOpenPrinterTab = document.getElementById("linkOpenPrinterTab");
-
-  function updatePrinterTabLink() {
-    const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
-    const port = printerPortInput ? parseInt(printerPortInput.value.trim()) || 8080 : 8080;
-    if (linkOpenPrinterTab) {
-      if (rawIp) {
-        linkOpenPrinterTab.href = `http://${rawIp}:${port}/filament/status`;
-        linkOpenPrinterTab.style.display = "inline-block";
-      } else {
-        linkOpenPrinterTab.style.display = "none";
-      }
-    }
-  }
-  if (printerIpInput) printerIpInput.addEventListener("input", updatePrinterTabLink);
-  if (printerPortInput) printerPortInput.addEventListener("input", updatePrinterTabLink);
-  updatePrinterTabLink();
-
-  if (btnApplyPrinterJson && printerJsonInput) {
-    btnApplyPrinterJson.addEventListener("click", () => {
-      const raw = printerJsonInput.value.trim();
-      if (!raw) {
-        ToastManager.show({
-          type: "warning",
-          title: "JSON Vuoto",
-          message: "Incolla l'output JSON della stampante prima di applicare.",
-          duration: 4000
-        });
-        return;
-      }
-      try {
-        const data = JSON.parse(raw);
-        const parsed = parseSnapmakerPaletteClient(data);
-        applyPaletteColors(parsed.colors, parsed.materials);
-        ToastManager.show({
-          type: "success",
-          title: "Palette Sincronizzata da JSON",
-          message: "I 4 estrusori sono stati aggiornati dai dati RFID incollati.",
-          duration: 5000
-        });
-        if (syncResultStatus) {
-          syncResultStatus.style.display = "block";
-          syncResultStatus.style.background = "rgba(46, 213, 115, 0.15)";
-          syncResultStatus.style.border = "1px solid #2ed573";
-          syncResultStatus.style.color = "#2ed573";
-          syncResultStatus.innerHTML = `✓ Dati JSON applicati con successo! Colori: ${parsed.colors.join(" | ")}`;
-        }
-        setTimeout(() => closeSyncModal(), 1200);
-      } catch (err) {
-        ToastManager.show({
-          type: "error",
-          title: "JSON Non Valido",
-          message: "Il testo incollato non è in formato JSON valido: " + err.message,
-          duration: 6000
-        });
-      }
-    });
-  }
-
   // Esecuzione sincronizzazione automatica LAN (Client-Side con Fallback)
   safeAddListener(btnExecuteSync, "click", async () => {
     const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
@@ -2200,21 +2397,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     btnExecuteSync.disabled = true;
     btnExecuteSync.classList.add("loading");
-    btnExecuteSync.innerHTML = `<span class="spinner"></span> Connessione diretta LAN...`;
+    btnExecuteSync.innerHTML = `<span class="spinner"></span> Connessione LAN...`;
 
     if (syncResultStatus) {
       syncResultStatus.style.display = "block";
       syncResultStatus.style.background = "rgba(255, 255, 255, 0.05)";
       syncResultStatus.style.border = "1px solid var(--border-subtle)";
       syncResultStatus.style.color = "var(--text-main)";
-      syncResultStatus.innerHTML = `Interrogazione diretta dal browser verso Snapmaker U1 su <code>http://${rawIp}:${port}</code>...`;
+      syncResultStatus.innerHTML = `Interrogazione verso Snapmaker U1 su <code>http://${rawIp}:${port}</code>...`;
     }
 
     let printerData = null;
     let mixedContentBlocked = false;
     let fetchErrorDetail = null;
 
-    // FASE 1: Interrogazione diretta dal Browser verso la LAN locale
     const endpoints = [
       "/filament/status",
       "/filament/data",
@@ -2250,7 +2446,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // FASE 2: Se la chiamata diretta dal browser fallisce, prova il backend
+    // Se la chiamata diretta dal browser fallisce, prova il backend
     if (!printerData) {
       try {
         const beResp = await fetch(`${API_BASE_URL}/api/printer/sync`, {
@@ -2270,7 +2466,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // FASE 3: Risultato o Assistenza Mixed Content
     btnExecuteSync.disabled = false;
     btnExecuteSync.classList.remove("loading");
     btnExecuteSync.innerHTML = `<span>⚡ Rileva Colori RFID</span>`;
@@ -2309,28 +2504,19 @@ document.addEventListener("DOMContentLoaded", () => {
         syncResultStatus.style.border = "1px solid #ffa502";
         syncResultStatus.style.color = "#ffd8a8";
         syncResultStatus.innerHTML = `
-          <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⚠️ Blocco di Sicurezza Browser (HTTPS ➔ LAN HTTP)</div>
-          <div style="font-size: 11px; line-height: 1.4; margin-bottom: 8px;">
-            Essendo questo sito su <code>https://</code> (Vercel), i browser bloccano la lettura automatica verso IP locali non crittografati (<code>http://${rawIp}:${port}</code>).
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <a href="http://${rawIp}:${port}/filament/status" target="_blank" rel="noopener" style="background: var(--accent-snapmaker); color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 5px; font-weight: 600; text-align: center; font-size: 11px; display: inline-block;">
-              🔗 1. Tocca qui per aprire la risposta della stampante ↗
-            </a>
-            <div style="font-size: 10.5px; color: var(--text-muted);">
-              2. Copia il testo JSON apparso e incollalo nel campo <strong>"Incolla Dump JSON"</strong> sopra, poi premi <strong>Applica JSON</strong>.
-            </div>
-            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">
-              💡 <em>In alternativa, su PC: clicca sul lucchetto dell'URL ➔ "Impostazioni sito" ➔ "Contenuto non sicuro: Consenti" per abilitare il fetch automatico.</em>
-            </div>
+          <strong style="color: #fff; display: block; margin-bottom: 4px;">⚠️ Protezione Browser Cloud Attiva (HTTPS ➔ LAN)</strong>
+          Sul sito online HTTPS (Vercel), i browser bloccano le chiamate dirette verso indirizzi IP privati (<code>http://${rawIp}:${port}</code>).<br>
+          <div style="font-size: 11px; margin-top: 6px; line-height: 1.4;">
+            💡 <strong>Esperienza Immediata a 1 Clic:</strong> Usa i nuovi <strong>Slot Rapidi</strong> della palette a sinistra o richiama i tuoi <strong>Preset Personali</strong>.<br>
+            Per la sincronizzazione LAN continua automatica, avvia l'app in locale sul tuo PC con <code>AVVIA_STUDIO_U1.bat</code>.
           </div>
         `;
       }
       ToastManager.show({
         type: "warning",
-        title: "Protezione Browser Attiva",
-        message: "Apri la scheda della stampante con il link arancione e incolla il JSON per sincronizzare.",
-        duration: 9000
+        title: "Blocco Sicurezza HTTPS del Browser",
+        message: "Per la lettura diretta LAN avvia l'app in locale, oppure imposta i filamenti con gli Slot Rapidi a 1 clic.",
+        duration: 7000
       });
     } else {
       const errDetail = fetchErrorDetail || "Nessuna risposta dalla macchina";
