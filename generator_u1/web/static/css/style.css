@@ -1388,3 +1388,26 @@ body.mode-desksign .only-desksign {
   opacity: 0.8;
 }
 
+/* Reset Defaults Button in Sidebar Footer */
+.btn-reset-link {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition-speed);
+  margin-top: 2px;
+}
+
+.btn-reset-link:hover {
+  color: #ff5263;
+  background: rgba(255, 51, 68, 0.08);
+}
+
+

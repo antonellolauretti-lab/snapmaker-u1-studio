@@ -970,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const colorT3 = document.getElementById("colorT3");
 
   const btnGenerate = document.getElementById("btnGenerate");
+  const btnResetDefaults = document.getElementById("btnResetDefaults");
   const dimWidth = document.getElementById("dimWidth");
   const dimHeight = document.getElementById("dimHeight");
   const dimDepth = document.getElementById("dimDepth");
@@ -980,7 +981,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // 1.1 GESTIONE SELETTORE PRODOTTO (TABS)
   // ==========================================
-  function setProduct(product) {
+  function setProduct(product, skipPreview = false) {
     currentProduct = product;
     if (product === "desk_sign") {
       if (tabDeskSign) tabDeskSign.classList.add("active");
@@ -995,7 +996,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (headerTabDeskSign) headerTabDeskSign.classList.remove("active");
       document.body.classList.remove("mode-desksign");
     }
-    triggerPreview(true);
+    if (!skipPreview) {
+      triggerPreview(true);
+    }
   }
 
   safeAddListener(tabKeychain, "click", () => setProduct("keychain"));
@@ -1152,30 +1155,465 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function loadFonts(selectedId = null) {
-    fetch(`${API_BASE_URL}/api/fonts`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Status " + res.status);
-        return res.json();
-      })
-      .then((fonts) => {
-        if (Array.isArray(fonts) && fonts.length > 0) {
-          globalFontsList = fonts;
-          populateSelectOptions(fontSelect, globalFontsList, selectedId || fontSelect?.value || "Anton");
-          populateSelectOptions(dsFont1Select, globalFontsList, dsFont1Select?.value || "Anton");
-          populateSelectOptions(dsFont2Select, globalFontsList, dsFont2Select?.value || "Montserrat");
-          refreshAllDropdowns();
-          triggerPreview(true);
-        }
-      })
-      .catch(() => {
-        // Fallback tranquillo sui font integrati
-        refreshAllDropdowns();
-        triggerPreview(true);
-      });
+  // ==============================================================================
+  // 2.1 PERSISTENZA STATO UTENTE (AUTO-SAVE / AUTO-RESTORE IN LOCALSTORAGE)
+  // ==============================================================================
+  const STORAGE_STATE_KEY = "snapmaker_u1_last_state";
+
+  function collectFullState() {
+    const palette = [
+      colorT0 ? colorT0.value : "#161616",
+      colorT1 ? colorT1.value : "#ffffff",
+      colorT2 ? colorT2.value : "#e31b23",
+      colorT3 ? colorT3.value : "#ffd400",
+    ];
+
+    const baseExtruder = extruderBaseSelect ? parseInt(extruderBaseSelect.value) : 0;
+    const textExtruder = extruderTextSelect ? parseInt(extruderTextSelect.value) : 1;
+    let iconExtruder = extruderIconSelect ? parseInt(extruderIconSelect.value) : -1;
+    if (iconExtruder === -1) iconExtruder = textExtruder;
+
+    return {
+      version: "1.0",
+      currentProduct: currentProduct || "keychain",
+      palette: palette,
+
+      // Parametri Portachiavi
+      keychain: {
+        text: textInput ? textInput.value : "ANTONELLO",
+        font_family: fontSelect ? fontSelect.value : "Anton",
+        font_size: fontSizeInput ? parseFloat(fontSizeInput.value) : 14.0,
+        letter_spacing: letterSpacingInput ? parseFloat(letterSpacingInput.value) : 0.0,
+        base_style: document.querySelector('input[name="baseStyle"]:checked')?.value || "rectangle",
+        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
+        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,
+        text_mode: document.querySelector('input[name="textMode"]:checked')?.value || "embossed",
+        corner_radius: cornerRadiusInput ? parseFloat(cornerRadiusInput.value) : 4.0,
+        padding_x: paddingXInput ? parseFloat(paddingXInput.value) : 5.0,
+        padding_y: paddingYInput ? parseFloat(paddingYInput.value) : 4.5,
+        hole_enabled: holeToggle ? holeToggle.checked : true,
+        hole_position: document.querySelector('input[name="holePos"]:checked')?.value || "left",
+        hole_diameter: holeDiameterInput ? parseFloat(holeDiameterInput.value) : 5.0,
+        icon_name: iconSelect ? iconSelect.value : "none",
+        icon_position: document.querySelector('input[name="iconPos"]:checked')?.value || "left",
+        extruder_base: baseExtruder,
+        extruder_text: textExtruder,
+        extruder_icon: extruderIconSelect ? parseInt(extruderIconSelect.value) : -1,
+      },
+
+      // Parametri Targhetta da Tavolo
+      desk_sign: {
+        base_mode: document.querySelector('input[name="dsBaseMode"]:checked')?.value || "wedge",
+        wedge_angle: dsWedgeAngleInput ? parseFloat(dsWedgeAngleInput.value) : 45.0,
+        base_thickness: dsBaseThicknessInput ? parseFloat(dsBaseThicknessInput.value) : 3.0,
+        corner_radius: dsCornerRadiusInput ? parseFloat(dsCornerRadiusInput.value) : 3.0,
+        padding_x: dsPaddingXInput ? parseFloat(dsPaddingXInput.value) : 8.0,
+        padding_y: dsPaddingYInput ? parseFloat(dsPaddingYInput.value) : 6.0,
+        line_spacing: dsLineSpacingInput ? parseFloat(dsLineSpacingInput.value) : 3.5,
+        text_align: document.querySelector('input[name="dsTextAlign"]:checked')?.value || "center",
+        text_line1: dsText1Input ? dsText1Input.value : "STUDIO U1",
+        font_family_line1: dsFont1Select ? dsFont1Select.value : "Anton",
+        font_size_line1: dsFontSize1Input ? parseFloat(dsFontSize1Input.value) : 14.0,
+        thickness_line1: dsThickness1Input ? parseFloat(dsThickness1Input.value) : 1.2,
+        extruder_line1: dsExtruderLine1Select ? parseInt(dsExtruderLine1Select.value) : 1,
+        line2_enabled: dsLine2Toggle ? dsLine2Toggle.checked : false,
+        text_line2: dsText2Input ? dsText2Input.value : "BASE SET 1999",
+        font_family_line2: dsFont2Select ? dsFont2Select.value : "Montserrat",
+        font_size_line2: dsFontSize2Input ? parseFloat(dsFontSize2Input.value) : 7.5,
+        thickness_line2: dsThickness2Input ? parseFloat(dsThickness2Input.value) : 1.0,
+        extruder_line2: dsExtruderLine2Select ? parseInt(dsExtruderLine2Select.value) : 2,
+        border_enabled: dsBorderToggle ? dsBorderToggle.checked : true,
+        border_width: dsBorderWidthInput ? parseFloat(dsBorderWidthInput.value) : 2.0,
+        border_thickness: dsBorderThicknessInput ? parseFloat(dsBorderThicknessInput.value) : 1.0,
+        cornerRadius: dsCornerRadiusInput ? parseFloat(dsCornerRadiusInput.value) : 3.0,
+        extruder_border: dsExtruderBorderSelect ? parseInt(dsExtruderBorderSelect.value) : 3,
+        extruder_base: baseExtruder,
+      }
+    };
   }
 
-  // Caricamento asincrono icone dal backend (opzionale)
+  function saveCurrentStateToLocalStorage() {
+    try {
+      const state = collectFullState();
+      localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify(state));
+    } catch (err) {
+      console.warn("Impossibile salvare lo stato in localStorage:", err);
+    }
+  }
+
+  function restoreStateFromLocalStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_STATE_KEY);
+      if (!raw) return false;
+      const state = JSON.parse(raw);
+      if (!state || typeof state !== "object") return false;
+
+      // 1. Ripristino Palette Colori
+      if (Array.isArray(state.palette) && state.palette.length >= 4) {
+        if (colorT0) colorT0.value = state.palette[0];
+        if (colorT1) colorT1.value = state.palette[1];
+        if (colorT2) colorT2.value = state.palette[2];
+        if (colorT3) colorT3.value = state.palette[3];
+        const c0 = colorT0 ? colorT0.value : "#161616";
+        const c1 = colorT1 ? colorT1.value : "#ffffff";
+        const c2 = colorT2 ? colorT2.value : "#e31b23";
+        const c3 = colorT3 ? colorT3.value : "#ffd400";
+        viewer.updateColors([c0, c1, c2, c3]);
+      }
+
+      // 2. Ripristino Parametri Portachiavi
+      const kc = state.keychain || (state.generator === "keychain" ? state : null);
+      if (kc) {
+        if (textInput && kc.text !== undefined) textInput.value = kc.text;
+        if (fontSelect && kc.font_family) fontSelect.value = kc.font_family;
+        if (fontSizeInput && kc.font_size !== undefined) {
+          fontSizeInput.value = kc.font_size;
+          if (fontSizeVal) fontSizeVal.textContent = `${kc.font_size} mm`;
+        }
+        if (letterSpacingInput && kc.letter_spacing !== undefined) {
+          letterSpacingInput.value = kc.letter_spacing;
+          if (letterSpacingVal) letterSpacingVal.textContent = `${kc.letter_spacing} mm`;
+        }
+        if (kc.base_style) {
+          const r = document.querySelector(`input[name="baseStyle"][value="${kc.base_style}"]`);
+          if (r) r.checked = true;
+        }
+        if (baseThicknessInput && kc.base_thickness !== undefined) {
+          baseThicknessInput.value = kc.base_thickness;
+          if (baseThicknessVal) baseThicknessVal.textContent = `${kc.base_thickness} mm`;
+        }
+        if (textThicknessInput && kc.text_thickness !== undefined) {
+          textThicknessInput.value = kc.text_thickness;
+          if (textThicknessVal) textThicknessVal.textContent = `${kc.text_thickness} mm`;
+        }
+        if (kc.text_mode) {
+          const r = document.querySelector(`input[name="textMode"][value="${kc.text_mode}"]`);
+          if (r) r.checked = true;
+        }
+        if (cornerRadiusInput && kc.corner_radius !== undefined) {
+          cornerRadiusInput.value = kc.corner_radius;
+          if (cornerRadiusVal) cornerRadiusVal.textContent = `${kc.corner_radius} mm`;
+        }
+        if (paddingXInput && kc.padding_x !== undefined) {
+          paddingXInput.value = kc.padding_x;
+          if (paddingXVal) paddingXVal.textContent = `${kc.padding_x} mm`;
+        }
+        if (paddingYInput && kc.padding_y !== undefined) {
+          paddingYInput.value = kc.padding_y;
+          if (paddingYVal) paddingYVal.textContent = `${kc.padding_y} mm`;
+        }
+        if (holeToggle && kc.hole_enabled !== undefined) {
+          holeToggle.checked = Boolean(kc.hole_enabled);
+          if (holeOptionsWrap) holeOptionsWrap.style.display = holeToggle.checked ? "flex" : "none";
+        }
+        if (kc.hole_position) {
+          const r = document.querySelector(`input[name="holePos"][value="${kc.hole_position}"]`);
+          if (r) r.checked = true;
+        }
+        if (holeDiameterInput && kc.hole_diameter !== undefined) {
+          holeDiameterInput.value = kc.hole_diameter;
+          if (holeDiameterVal) holeDiameterVal.textContent = `${kc.hole_diameter} mm`;
+        }
+        if (iconSelect && kc.icon_name !== undefined) {
+          iconSelect.value = kc.icon_name;
+          if (iconOptionsWrap) {
+            iconOptionsWrap.style.display = (kc.icon_name && kc.icon_name !== "none") ? "flex" : "none";
+          }
+        }
+        if (kc.icon_position) {
+          const r = document.querySelector(`input[name="iconPos"][value="${kc.icon_position}"]`);
+          if (r) r.checked = true;
+        }
+        if (extruderBaseSelect && kc.extruder_base !== undefined) {
+          extruderBaseSelect.value = kc.extruder_base.toString();
+        }
+        if (extruderTextSelect && kc.extruder_text !== undefined) {
+          extruderTextSelect.value = kc.extruder_text.toString();
+        }
+        if (extruderIconSelect && kc.extruder_icon !== undefined) {
+          extruderIconSelect.value = kc.extruder_icon.toString();
+        }
+      }
+
+      // 3. Ripristino Parametri Targhetta da Tavolo
+      const ds = state.desk_sign || (state.generator === "desk_sign" ? state : null);
+      if (ds) {
+        if (ds.base_mode) {
+          const r = document.querySelector(`input[name="dsBaseMode"][value="${ds.base_mode}"]`);
+          if (r) r.checked = true;
+          if (dsWedgeAngleGroup) dsWedgeAngleGroup.style.display = ds.base_mode === "wedge" ? "flex" : "none";
+        }
+        if (dsWedgeAngleInput && ds.wedge_angle !== undefined) {
+          dsWedgeAngleInput.value = ds.wedge_angle;
+          if (dsWedgeAngleVal) dsWedgeAngleVal.textContent = `${ds.wedge_angle}°`;
+        }
+        if (dsBaseThicknessInput && ds.base_thickness !== undefined) {
+          dsBaseThicknessInput.value = ds.base_thickness;
+          if (dsBaseThicknessVal) dsBaseThicknessVal.textContent = `${ds.base_thickness} mm`;
+        }
+        if (dsCornerRadiusInput && ds.corner_radius !== undefined) {
+          dsCornerRadiusInput.value = ds.corner_radius;
+          if (dsCornerRadiusVal) dsCornerRadiusVal.textContent = `${ds.corner_radius} mm`;
+        }
+        if (dsPaddingXInput && ds.padding_x !== undefined) {
+          dsPaddingXInput.value = ds.padding_x;
+          if (dsPaddingXVal) dsPaddingXVal.textContent = `${ds.padding_x} mm`;
+        }
+        if (dsPaddingYInput && ds.padding_y !== undefined) {
+          dsPaddingYInput.value = ds.padding_y;
+          if (dsPaddingYVal) dsPaddingYVal.textContent = `${ds.padding_y} mm`;
+        }
+        if (dsLineSpacingInput && ds.line_spacing !== undefined) {
+          dsLineSpacingInput.value = ds.line_spacing;
+          if (dsLineSpacingVal) dsLineSpacingVal.textContent = `${ds.line_spacing} mm`;
+        }
+        if (ds.text_align) {
+          const r = document.querySelector(`input[name="dsTextAlign"][value="${ds.text_align}"]`);
+          if (r) r.checked = true;
+        }
+        if (dsText1Input && ds.text_line1 !== undefined) dsText1Input.value = ds.text_line1;
+        if (dsFont1Select && ds.font_family_line1) dsFont1Select.value = ds.font_family_line1;
+        if (dsFontSize1Input && ds.font_size_line1 !== undefined) {
+          dsFontSize1Input.value = ds.font_size_line1;
+          if (dsFontSize1Val) dsFontSize1Val.textContent = `${ds.font_size_line1} mm`;
+        }
+        if (dsThickness1Input && ds.thickness_line1 !== undefined) {
+          dsThickness1Input.value = ds.thickness_line1;
+          if (dsThickness1Val) dsThickness1Val.textContent = `${ds.thickness_line1} mm`;
+        }
+        if (dsExtruderLine1Select && ds.extruder_line1 !== undefined) {
+          dsExtruderLine1Select.value = ds.extruder_line1.toString();
+        }
+        if (dsLine2Toggle && ds.line2_enabled !== undefined) {
+          dsLine2Toggle.checked = Boolean(ds.line2_enabled);
+          if (dsLine2Wrap) dsLine2Wrap.style.display = dsLine2Toggle.checked ? "flex" : "none";
+        }
+        if (dsText2Input && ds.text_line2 !== undefined) dsText2Input.value = ds.text_line2;
+        if (dsFont2Select && ds.font_family_line2) dsFont2Select.value = ds.font_family_line2;
+        if (dsFontSize2Input && ds.font_size_line2 !== undefined) {
+          dsFontSize2Input.value = ds.font_size_line2;
+          if (dsFontSize2Val) dsFontSize2Val.textContent = `${ds.font_size_line2} mm`;
+        }
+        if (dsThickness2Input && ds.thickness_line2 !== undefined) {
+          dsThickness2Input.value = ds.thickness_line2;
+          if (dsThickness2Val) dsThickness2Val.textContent = `${ds.thickness_line2} mm`;
+        }
+        if (dsExtruderLine2Select && ds.extruder_line2 !== undefined) {
+          dsExtruderLine2Select.value = ds.extruder_line2.toString();
+        }
+        if (dsBorderToggle && ds.border_enabled !== undefined) {
+          dsBorderToggle.checked = Boolean(ds.border_enabled);
+          if (dsBorderWrap) dsBorderWrap.style.display = dsBorderToggle.checked ? "flex" : "none";
+        }
+        if (dsBorderWidthInput && ds.border_width !== undefined) {
+          dsBorderWidthInput.value = ds.border_width;
+          if (dsBorderWidthVal) dsBorderWidthVal.textContent = `${ds.border_width} mm`;
+        }
+        if (dsBorderThicknessInput && ds.border_thickness !== undefined) {
+          dsBorderThicknessInput.value = ds.border_thickness;
+          if (dsBorderThicknessVal) dsBorderThicknessVal.textContent = `${ds.border_thickness} mm`;
+        }
+        if (dsCornerRadiusInput && (ds.corner_radius !== undefined || ds.cornerRadius !== undefined)) {
+          const cr = ds.corner_radius !== undefined ? ds.corner_radius : ds.cornerRadius;
+          dsCornerRadiusInput.value = cr;
+          if (dsCornerRadiusVal) dsCornerRadiusVal.textContent = `${cr} mm`;
+        }
+        if (dsExtruderBorderSelect && ds.extruder_border !== undefined) {
+          dsExtruderBorderSelect.value = ds.extruder_border.toString();
+        }
+      }
+
+      // 4. Aggiorna Custom Dropdowns per riflettere le selezioni ripristinate
+      refreshAllDropdowns();
+      if (dropdownIcon) {
+        dropdownIcon.updateFromSelect();
+        dropdownIcon.renderOptions();
+      }
+
+      // 5. Attiva Tab salvata
+      const targetProduct = state.currentProduct || (state.generator === "desk_sign" ? "desk_sign" : "keychain");
+      setProduct(targetProduct, true);
+
+      return true;
+    } catch (err) {
+      console.error("Errore ripristino stato da localStorage:", err);
+      return false;
+    }
+  }
+
+  function resetDefaults() {
+    if (!confirm("Vuoi davvero ripristinare tutti i parametri e la palette ai valori predefiniti?")) {
+      return;
+    }
+    try {
+      localStorage.removeItem(STORAGE_STATE_KEY);
+    } catch (e) {
+      console.warn("Impossibile rimuovere lo stato da localStorage:", e);
+    }
+
+    // Reset Keychain
+    if (textInput) textInput.value = "ANTONELLO";
+    if (fontSelect) fontSelect.value = "Anton";
+    if (fontSizeInput) {
+      fontSizeInput.value = "14";
+      if (fontSizeVal) fontSizeVal.textContent = "14 mm";
+    }
+    if (letterSpacingInput) {
+      letterSpacingInput.value = "0";
+      if (letterSpacingVal) letterSpacingVal.textContent = "0 mm";
+    }
+    const rBaseRec = document.querySelector('input[name="baseStyle"][value="rectangle"]');
+    if (rBaseRec) rBaseRec.checked = true;
+    if (baseThicknessInput) {
+      baseThicknessInput.value = "2.4";
+      if (baseThicknessVal) baseThicknessVal.textContent = "2.4 mm";
+    }
+    if (cornerRadiusInput) {
+      cornerRadiusInput.value = "4";
+      if (cornerRadiusVal) cornerRadiusVal.textContent = "4 mm";
+    }
+    if (paddingXInput) {
+      paddingXInput.value = "5";
+      if (paddingXVal) paddingXVal.textContent = "5 mm";
+    }
+    if (paddingYInput) {
+      paddingYInput.value = "4.5";
+      if (paddingYVal) paddingYVal.textContent = "4.5 mm";
+    }
+    const rTextEmb = document.querySelector('input[name="textMode"][value="embossed"]');
+    if (rTextEmb) rTextEmb.checked = true;
+    if (textThicknessInput) {
+      textThicknessInput.value = "1.2";
+      if (textThicknessVal) textThicknessVal.textContent = "1.2 mm";
+    }
+    if (holeToggle) {
+      holeToggle.checked = true;
+      if (holeOptionsWrap) holeOptionsWrap.style.display = "flex";
+    }
+    const rHoleLeft = document.querySelector('input[name="holePos"][value="left"]');
+    if (rHoleLeft) rHoleLeft.checked = true;
+    if (holeDiameterInput) {
+      holeDiameterInput.value = "5";
+      if (holeDiameterVal) holeDiameterVal.textContent = "5 mm";
+    }
+    if (iconSelect) {
+      iconSelect.value = "none";
+      if (iconOptionsWrap) iconOptionsWrap.style.display = "none";
+    }
+    const rIconLeft = document.querySelector('input[name="iconPos"][value="left"]');
+    if (rIconLeft) rIconLeft.checked = true;
+    if (extruderIconSelect) extruderIconSelect.value = "-1";
+    if (extruderBaseSelect) extruderBaseSelect.value = "0";
+    if (extruderTextSelect) extruderTextSelect.value = "1";
+
+    // Reset Desk Sign
+    const rWedge = document.querySelector('input[name="dsBaseMode"][value="wedge"]');
+    if (rWedge) rWedge.checked = true;
+    if (dsWedgeAngleGroup) dsWedgeAngleGroup.style.display = "flex";
+    if (dsWedgeAngleInput) {
+      dsWedgeAngleInput.value = "45";
+      if (dsWedgeAngleVal) dsWedgeAngleVal.textContent = "45°";
+    }
+    if (dsBaseThicknessInput) {
+      dsBaseThicknessInput.value = "3.0";
+      if (dsBaseThicknessVal) dsBaseThicknessVal.textContent = "3.0 mm";
+    }
+    if (dsCornerRadiusInput) {
+      dsCornerRadiusInput.value = "3";
+      if (dsCornerRadiusVal) dsCornerRadiusVal.textContent = "3 mm";
+    }
+    if (dsPaddingXInput) {
+      dsPaddingXInput.value = "8";
+      if (dsPaddingXVal) dsPaddingXVal.textContent = "8 mm";
+    }
+    if (dsPaddingYInput) {
+      dsPaddingYInput.value = "6";
+      if (dsPaddingYVal) dsPaddingYVal.textContent = "6 mm";
+    }
+    if (dsLineSpacingInput) {
+      dsLineSpacingInput.value = "3.5";
+      if (dsLineSpacingVal) dsLineSpacingVal.textContent = "3.5 mm";
+    }
+    const rAlignCenter = document.querySelector('input[name="dsTextAlign"][value="center"]');
+    if (rAlignCenter) rAlignCenter.checked = true;
+    if (dsText1Input) dsText1Input.value = "STUDIO U1";
+    if (dsFont1Select) dsFont1Select.value = "Anton";
+    if (dsFontSize1Input) {
+      dsFontSize1Input.value = "14";
+      if (dsFontSize1Val) dsFontSize1Val.textContent = "14 mm";
+    }
+    if (dsThickness1Input) {
+      dsThickness1Input.value = "1.2";
+      if (dsThickness1Val) dsThickness1Val.textContent = "1.2 mm";
+    }
+    if (dsExtruderLine1Select) dsExtruderLine1Select.value = "1";
+
+    if (dsLine2Toggle) {
+      dsLine2Toggle.checked = true;
+      if (dsLine2Wrap) dsLine2Wrap.style.display = "flex";
+    }
+    if (dsText2Input) dsText2Input.value = "BASE SET 1999";
+    if (dsFont2Select) dsFont2Select.value = "Montserrat";
+    if (dsFontSize2Input) {
+      dsFontSize2Input.value = "7.5";
+      if (dsFontSize2Val) dsFontSize2Val.textContent = "7.5 mm";
+    }
+    if (dsThickness2Input) {
+      dsThickness2Input.value = "1.0";
+      if (dsThickness2Val) dsThickness2Val.textContent = "1.0 mm";
+    }
+    if (dsExtruderLine2Select) dsExtruderLine2Select.value = "2";
+
+    if (dsBorderToggle) {
+      dsBorderToggle.checked = true;
+      if (dsBorderWrap) dsBorderWrap.style.display = "flex";
+    }
+    if (dsBorderWidthInput) {
+      dsBorderWidthInput.value = "2";
+      if (dsBorderWidthVal) dsBorderWidthVal.textContent = "2 mm";
+    }
+    if (dsBorderThicknessInput) {
+      dsBorderThicknessInput.value = "1";
+      if (dsBorderThicknessVal) dsBorderThicknessVal.textContent = "1 mm";
+    }
+    if (dsCornerRadiusInput) {
+      dsCornerRadiusInput.value = "3";
+      if (dsCornerRadiusVal) dsCornerRadiusVal.textContent = "3 mm";
+    }
+    if (dsExtruderBorderSelect) dsExtruderBorderSelect.value = "3";
+
+    // Palette U1 Official
+    if (colorT0) colorT0.value = "#161616";
+    if (colorT1) colorT1.value = "#ffffff";
+    if (colorT2) colorT2.value = "#e31b23";
+    if (colorT3) colorT3.value = "#ffd400";
+    onPaletteChange();
+
+    setProduct("keychain", true);
+    refreshAllDropdowns();
+    if (dropdownIcon) {
+      dropdownIcon.updateFromSelect();
+      dropdownIcon.renderOptions();
+    }
+
+    saveCurrentStateToLocalStorage();
+    triggerPreview(true);
+
+    ToastManager.show({
+      type: "info",
+      title: "Configurazione Ripristinata",
+      message: "Tutti i parametri e la palette sono stati reimpostati ai valori di fabbrica.",
+      duration: 4000
+    });
+  }
+
+  safeAddListener(btnResetDefaults, "click", resetDefaults);
+
+  // Esegui ripristino all'avvio: se esiste stato salvato, applicalo e avvia l'anteprima 3D
+  const hasRestored = restoreStateFromLocalStorage();
+  triggerPreview(true);
+
+  // Caricamento asincrono icone dal backend (preserva la selezione)
   function loadIcons() {
     fetch(`${API_BASE_URL}/api/icons`)
       .then((res) => {
@@ -1196,8 +1634,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   loadIcons();
 
-  // Caricamento asincrono font dal backend
-  loadFonts();
+  // Caricamento asincrono font dal backend (preserva la selezione)
+  function loadFonts(selectedId = null, triggerPreviewAfter = false) {
+    fetch(`${API_BASE_URL}/api/fonts`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Status " + res.status);
+        return res.json();
+      })
+      .then((fonts) => {
+        if (Array.isArray(fonts) && fonts.length > 0) {
+          globalFontsList = fonts;
+          populateSelectOptions(fontSelect, globalFontsList, selectedId || fontSelect?.value || "Anton");
+          populateSelectOptions(dsFont1Select, globalFontsList, dsFont1Select?.value || "Anton");
+          populateSelectOptions(dsFont2Select, globalFontsList, dsFont2Select?.value || "Montserrat");
+          refreshAllDropdowns();
+          if (triggerPreviewAfter) {
+            triggerPreview(true);
+          }
+        }
+      })
+      .catch(() => {
+        refreshAllDropdowns();
+      });
+  }
+  loadFonts(null, false);
 
   // Upload Font .ttf / .otf
   safeAddListener(btnUploadFont, "click", () => {
@@ -1277,6 +1737,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const c2 = colorT2 ? colorT2.value : "#e31b23";
     const c3 = colorT3 ? colorT3.value : "#ffd400";
     viewer.updateColors([c0, c1, c2, c3]);
+    saveCurrentStateToLocalStorage();
   }
 
   safeAddListener(colorT0, "input", onPaletteChange);
@@ -1723,6 +2184,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function executePreview() {
+    saveCurrentStateToLocalStorage();
     const params = getParams();
     if (statusDot) statusDot.classList.add("busy");
     if (statusText) statusText.textContent = "Calcolo geometria 3D...";
