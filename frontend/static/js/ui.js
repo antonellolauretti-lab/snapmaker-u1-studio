@@ -2204,12 +2204,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // 3.2 SINCRONIZZAZIONE SNAPMAKER U1 (LAN / CLOUD)
   // ==========================================
-  const isCloudEnvironment = window.location.protocol === 'https:' || (
-    !['localhost', '127.0.0.1'].includes(window.location.hostname) &&
-    !window.location.hostname.startsWith('192.168.') &&
-    !window.location.hostname.startsWith('10.')
-  );
-  const isLocalEnvironment = !isCloudEnvironment;
+  const isLocalEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isCloudEnvironment = !isLocalEnvironment;
 
   const btnOpenSyncModal = document.getElementById("btnOpenSyncModal");
   const syncPrinterModal = document.getElementById("syncPrinterModal");
@@ -2293,7 +2289,13 @@ document.addEventListener("DOMContentLoaded", () => {
   safeAddListener(btnOpenSyncModal, "click", openSyncModal);
   safeAddListener(btnCloseSyncModal, "click", closeSyncModal);
   safeAddListener(btnCancelSyncModalCloud, "click", closeSyncModal);
-  safeAddListener(btnContinueWithPalette, "click", closeSyncModal);
+  safeAddListener(btnContinueWithPalette, "click", () => {
+    closeSyncModal();
+    const paletteGrid = document.querySelector(".palette-grid");
+    if (paletteGrid) {
+      paletteGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
   safeAddListener(btnCancelSyncModalLocal, "click", closeSyncModal);
 
   // Gestione Upload / Export Setup JSON (Cloud & Locale)
@@ -2511,7 +2513,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     btnExecuteSync.disabled = true;
     btnExecuteSync.classList.add("loading");
-    btnExecuteSync.innerHTML = `<span class="spinner"></span> Scansione U1 in corso...`;
+    btnExecuteSync.innerHTML = `<span class="spinner"></span> Rilevamento in corso...`;
 
     if (syncResultStatus) {
       syncResultStatus.style.display = "block";
@@ -2584,7 +2586,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     btnExecuteSync.disabled = false;
     btnExecuteSync.classList.remove("loading");
-    btnExecuteSync.innerHTML = `<span>⚡ AVVIA SCANSIONE & LEGGI TAG RFID</span>`;
+    btnExecuteSync.innerHTML = `<span>⚡ Rileva Colori RFID</span>`;
 
     if (printerData) {
       const parsed = printerData.colors ? printerData : parseSnapmakerPaletteClient(printerData);
