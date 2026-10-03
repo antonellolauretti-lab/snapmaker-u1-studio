@@ -21,7 +21,7 @@ class Snapmaker3MFPackager:
         self,
         project_name: str = "Snapmaker_Model",
         machine_name: str = "Snapmaker U1 (0.4 nozzle)",
-        process_name: str = "0.20 Standard @Snapmaker U1 (0.4 nozzle)",
+        process_name: Optional[str] = None,
         bed_type: str = "Textured PEI Plate",
         filament_colors: Optional[List[str]] = None,
         filament_types: Optional[List[str]] = None,
@@ -199,28 +199,29 @@ class Snapmaker3MFPackager:
             except Exception:
                 pass
 
+        canonical_preset_name = self.process_name or f"{self.project_name}({self.project_name}.3mf)"
+
         project_cfg["printer_settings_id"] = self.machine_name
-        project_cfg["print_settings_id"] = self.process_name
+        project_cfg["print_settings_id"] = canonical_preset_name
         project_cfg["curr_bed_type"] = self.bed_type
         project_cfg["filament_colour"] = self.filament_colors
         project_cfg["default_filament_colour"] = self.filament_colors
         project_cfg["filament_type"] = self.filament_types
         project_cfg["filament_vendor"] = self.filament_vendors
-        project_cfg["filament_settings_id"] = [f"PLA SnapSpeed @Snapmaker U1" for _ in range(4)]
+        project_cfg["filament_settings_id"] = ["Snapmaker PLA SnapSpeed @U1" for _ in range(4)]
 
         # --- FORZATURA TOTALE PRIME TOWER & WIPE TOWER (Zero Tower per U1 IDEX/Toolhead) ---
         prime_val_str = "1" if self.enable_prime_tower else "0"
-        prime_val_int = 1 if self.enable_prime_tower else 0
-        tower_w_str = "25"
-        tower_w_int = 25
+        tower_w_str = "30"
+        tower_brim_str = "3" if self.enable_prime_tower else "0"
 
         project_cfg["enable_prime_tower"] = prime_val_str
         project_cfg["prime_tower_width"] = tower_w_str
-        project_cfg["prime_tower_brim_width"] = "3" if self.enable_prime_tower else "0"
+        project_cfg["prime_tower_brim_width"] = tower_brim_str
         project_cfg["purge_in_prime_tower"] = "0"
         project_cfg["wipe_tower_filament"] = 0
-        project_cfg["wipe_tower_x"] = ["218"] if self.enable_prime_tower else ["0"]
-        project_cfg["wipe_tower_y"] = ["190"] if self.enable_prime_tower else ["0"]
+        project_cfg["wipe_tower_x"] = ["218"]
+        project_cfg["wipe_tower_y"] = ["190"]
         project_cfg["wipe_tower_no_sparse_layers"] = 0
         project_cfg["wipe_tower_cone_angle"] = 0
         project_cfg["wipe_tower_extra_spacing"] = 0
@@ -234,18 +235,25 @@ class Snapmaker3MFPackager:
         project_cfg["skirt_loops"] = "0"
         project_cfg["skirt_distance"] = "0"
 
-        # Sincronizza anche process_settings_1.config se presente
+        # Sincronizza anche process_settings_1.config:
+        # In OrcaSlicer, il profilo di processo incorporato DEVE avere name e print_settings_id
+        # identici a quelli del progetto, e valori rigorosamente in formato stringa.
         if process_cfg:
-            process_cfg["enable_prime_tower"] = prime_val_int
-            process_cfg["prime_tower_width"] = tower_w_int
-            process_cfg["prime_tower_brim_width"] = 3 if self.enable_prime_tower else 0
-            process_cfg["purge_in_prime_tower"] = 0
-            process_cfg["wipe_tower_filament"] = 0
+            process_cfg["name"] = canonical_preset_name
+            process_cfg["print_settings_id"] = canonical_preset_name
+            process_cfg["inherits"] = ""
+            process_cfg["enable_prime_tower"] = prime_val_str
+            process_cfg["prime_tower_width"] = tower_w_str
+            process_cfg["prime_tower_brim_width"] = tower_brim_str
+            process_cfg["purge_in_prime_tower"] = "0"
+            process_cfg["wipe_tower_filament"] = "0"
+            process_cfg["wipe_tower_no_sparse_layers"] = "0"
+            process_cfg["wipe_tower_cone_angle"] = "15"
             process_cfg["brim_type"] = brim_str
-            process_cfg["brim_width"] = 5 if self.enable_brim else 0
-            process_cfg["skirt_loops"] = 0
-            process_cfg["skirt_distance"] = 0
-            process_cfg["enable_support"] = 1 if self.enable_support else 0
+            process_cfg["brim_width"] = brim_w_str
+            process_cfg["skirt_loops"] = "0"
+            process_cfg["skirt_distance"] = "0"
+            process_cfg["enable_support"] = "1" if self.enable_support else "0"
 
         # 5. File di relazione e types
         content_types = """<?xml version="1.0" encoding="UTF-8"?>
