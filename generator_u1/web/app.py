@@ -2,8 +2,13 @@ import os
 import sys
 import tempfile
 import shutil
+import json
+import re
+import ipaddress
+import urllib.request
+import urllib.error
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Tuple
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
@@ -490,3 +495,240 @@ def generate_3mf(params: Dict[str, Any]):
         media_type="application/vnd.ms-package.3dmanufacturing-3dmodel+xml",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+
+# ==============================================================================
+# SINCRONIZZAZIONE PALETTE DA SNAPMAKER U1 LOCALE (RFID / COLORI REALI)
+# ==============================================================================
+
+NAMED_COLORS_MAP = {
+    "black": "#161616", "nero": "#161616",
+    "white": "#ffffff", "bianco": "#ffffff",
+    "red": "#e31b23", "rosso": "#e31b23",
+    "yellow": "#ffd400", "giallo": "#ffd400",
+    "blue": "#0070ba", "blu": "#0070ba",
+    "green": "#2ecc71", "verde": "#2ecc71",
+    "orange": "#e67e22", "arancione": "#e67e22",
+    "grey": "#7f8c8d", "gray": "#7f8c8d", "grigio": "#7f8c8d",
+    "silver": "#bdc3c7", "argento": "#bdc3c7",
+    "gold": "#d4af37", "oro": "#d4af37",
+    "purple": "#8e44ad", "viola": "#8e44ad",
+    "pink": "#ff69b4", "rosa": "#ff69b4",
+    "cyan": "#00e5ff", "ciano": "#00e5ff",
+}
+
+def _parse_snapmaker_palette_data(data: Any) -> Tuple[List[str], List[str]]:
+    """
+    Estrae fino a 4 colori esadecimali e nomi materiale da un payload Snapmaker/Moonraker.
+    """
+    default_colors = ["#161616", "#ffffff", "#e31b23", "#ffd400"]
+    default_materials = ["PLA Slot 1", "PLA Slot 2", "PLA Slot 3", "PLA Slot 4"]
+    found_colors: List[str] = []
+    found_materials: List[str] = []
+
+    def normalize_color(val: Any) -> Optional[str]:
+        if not val:
+            return None
+        s = str(val).strip()
+        if s.lower() in NAMED_COLORS_MAP:
+            return NAMED_COLORS_MAP[s.lower()]
+        s_clean = s.lstrip('#')
+        if len(s_clean) == 8:
+            s_clean = s_clean[:6]
+        if len(s_clean) == 6 and all(c in '0123456789abcdefABCDEF' for c in s_clean):
+            return f"#{s_clean.lower()}"
+        return None
+
+    # 1. Ricerca strutturata in array comuni (filaments, slots, spools, trays, extruders)
+    candidates = []
+    if isinstance(data, dict):
+        for key in ["filaments", "filament_info", "slots", "trays", "spools", "materials", "tools"]:
+            if key in data and isinstance(data[key], list):
+                candidates = data[key]
+                break
+        if not candidates and "data" in data and isinstance(data["data"], dict):
+            for key in ["filaments", "filament_info", "slots", "trays", "spools"]:
+                if key in data["data"] and isinstance(data["data"][key], list):
+                    candidates = data["data"][key]
+                    break
+        if not candidates and "result" in data and isinstance(data["result"], dict):
+            status = data["result"].get("status", {})
+            for key in ["filaments", "slots", "spools"]:
+                if key in status and isinstance(status[key], list):
+                    candidates = status[key]
+                    break
+
+    if candidates and isinstance(candidates, list):
+        for item in candidates[:4]:
+            col = None
+            mat = None
+            if isinstance(item, dict):
+                for col_key in ["color", "tray_color", "filament_color", "hex"]:
+                    if col_key in item:
+                        col = normalize_color(item[col_key])
+                        if col:
+                            break
+                for mat_key in ["material", "name", "type", "filament_type"]:
+                    if mat_key in item and item[mat_key]:
+                        mat = str(item[mat_key]).strip()
+                        break
+            elif isinstance(item, str):
+                col = normalize_color(item)
+
+            if col:
+                found_colors.append(col)
+                found_materials.append(mat or f"Slot {len(found_colors)}")
+
+    # 2. Se non abbiamo trovato abbastanza colori, scansiona ricorsivamente
+    if len(found_colors) < 4:
+        def scan_for_colors(obj):
+            if isinstance(obj, dict):
+                for v in obj.values():
+                    scan_for_colors(v)
+            elif isinstance(obj, list):
+                for v in obj:
+                    scan_for_colors(v)
+            elif isinstance(obj, str):
+                c = normalize_color(obj)
+                if c and c not in found_colors and len(found_colors) < 4:
+                    found_colors.append(c)
+                    found_materials.append(f"Slot {len(found_colors)}")
+
+        scan_for_colors(data)
+
+    # 3. Completa fino a 4 slot con i colori e materiali standard U1
+    final_colors = []
+    final_materials = []
+    for i in range(4):
+        if i < len(found_colors):
+            final_colors.append(found_colors[i])
+            final_materials.append(found_materials[i] if i < len(found_materials) else default_materials[i])
+        else:
+            final_colors.append(default_colors[i])
+            final_materials.append(default_materials[i])
+
+    return final_colors, final_materials
+
+
+@app.post("/api/printer/sync")
+def sync_printer_palette(payload: Dict[str, Any]):
+    """
+    Interroga la Snapmaker U1 locale sulla rete LAN (tramite Moonraker / Snapmaker Luban / RFID)
+    per recuperare in tempo reale i colori dei filamenti e materiali correntemente caricati nei 4 estrusori.
+    """
+    raw_ip = payload.get("ip", "").strip()
+    try:
+        port = int(payload.get("port") or 8080)
+    except (ValueError, TypeError):
+        port = 8080
+    token = payload.get("token", "").strip() or None
+
+    if not raw_ip:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "detail": "Inserisci un indirizzo IP valido per la Snapmaker U1."}
+        )
+
+    # Pulisci prefissi protocollo ed eventuali porte annidate
+    clean_ip = raw_ip.replace("http://", "").replace("https://", "").strip().rstrip("/")
+    if ":" in clean_ip:
+        parts = clean_ip.split(":")
+        clean_ip = parts[0]
+        try:
+            port = int(parts[1])
+        except (ValueError, IndexError):
+            pass
+
+    try:
+        ip_obj = ipaddress.ip_address(clean_ip)
+    except ValueError:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "detail": f"L'indirizzo IP '{clean_ip}' non è valido."}
+        )
+
+    # Rilevamento ambiente cloud (Render, Vercel, Railway) vs locale
+    is_cloud_env = bool(os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("VERCEL"))
+    if is_cloud_env and ip_obj.is_private:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "warning",
+                "is_private_network": True,
+                "detail": (
+                    f"La Snapmaker U1 si trova su un IP privato della tua rete Wi-Fi ({clean_ip}). "
+                    "Il server Cloud (Render) non può accedere direttamente alla tua LAN domestica."
+                ),
+                "suggestion": (
+                    "Per sincronizzare direttamente via RFID, esegui l'app in locale sul tuo PC "
+                    "tramite 'python run_web.py' (http://localhost:8000)."
+                )
+            }
+        )
+
+    # Sequenza di porte ed endpoint da interrogare
+    ports_to_try = [port]
+    for fallback_p in [8080, 80, 7125]:
+        if fallback_p not in ports_to_try:
+            ports_to_try.append(fallback_p)
+
+    headers = {
+        "User-Agent": "Snapmaker-U1-Parametric-Studio/4.5",
+        "Accept": "application/json"
+    }
+    if token:
+        headers["Snapmaker-Token"] = token
+        headers["Authorization"] = f"Bearer {token}"
+
+    endpoints = [
+        "/filament/data",
+        "/filament/status",
+        "/api/v1/filament",
+        "/api/v1/status",
+        "/printer/objects/query?toolhead&extruder&extruder1&extruder2&extruder3&save_variables",
+        "/server/spoolman/spool_id",
+        "/api/printer"
+    ]
+
+    last_error = None
+    printer_data = None
+
+    for p in ports_to_try:
+        for ep in endpoints:
+            url = f"http://{clean_ip}:{p}{ep}"
+            req = urllib.request.Request(url, headers=headers)
+            try:
+                with urllib.request.urlopen(req, timeout=2.2) as resp:
+                    if resp.status == 200:
+                        raw_body = resp.read().decode("utf-8", errors="ignore")
+                        try:
+                            printer_data = json.loads(raw_body)
+                            break
+                        except Exception:
+                            continue
+            except (urllib.error.URLError, TimeoutError, OSError) as err:
+                last_error = str(err)
+                continue
+        if printer_data:
+            break
+
+    if not printer_data:
+        err_msg = last_error or "Nessuna risposta ricevuta dalla macchina"
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "error",
+                "detail": f"Impossibile raggiungere la Snapmaker U1 all'indirizzo {clean_ip}. Verifica che la macchina sia accesa e collegata alla rete Wi-Fi. (Dettaglio: {err_msg})"
+            }
+        )
+
+    colors, materials = _parse_snapmaker_palette_data(printer_data)
+
+    return {
+        "status": "success",
+        "ip": clean_ip,
+        "colors": colors,
+        "materials": materials,
+        "message": f"Sincronizzati con successo i 4 estrusori dalla Snapmaker U1 ({clean_ip})"
+    }
+

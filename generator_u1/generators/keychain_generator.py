@@ -284,7 +284,25 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     outer_radius = hole_radius + hole_wall
 
     if base_style == "contour":
-        base_contour = foreground_union.buffer(padding_y, resolution=16)
+        # Rinforzo strutturale anti-rottura: garantisce almeno 8-10 mm di spessore continuo tra parole e simboli
+        font_h = fg_maxy - fg_miny
+        min_structural_h = max(8.5, min(10.5, font_h * 0.70))
+
+        # 1. Morphological closing per colmare gole profonde e insenature tra lettere/parole
+        close_r = max(4.0, font_size * 0.30)
+        closed_fg = foreground_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
+
+        # 2. Ponte strutturale centrale lungo l'asse X che collega l'intero corpo del portachiavi
+        spine_y0 = fg_mid_y - (min_structural_h / 2.0)
+        spine_y1 = fg_mid_y + (min_structural_h / 2.0)
+        spine_box = sg.box(fg_minx + padding_y, spine_y0, fg_maxx - padding_y, spine_y1)
+
+        # Unione base con ponte strutturale e arrotondamento smussato
+        base_contour = unary_union([
+            closed_fg.buffer(padding_y, resolution=16),
+            spine_box
+        ]).buffer(0)
+        base_contour = base_contour.buffer(0.8, resolution=16).buffer(-0.8, resolution=16)
         if hole_enabled:
             if hole_position == "left":
                 hx = fg_minx - hole_radius - (hole_wall * 0.2)

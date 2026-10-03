@@ -1285,6 +1285,193 @@ document.addEventListener("DOMContentLoaded", () => {
   safeAddListener(colorT3, "input", onPaletteChange);
 
   // ==========================================
+  // 3.1 SINCRONIZZAZIONE SNAPMAKER U1 (RFID)
+  // ==========================================
+  const btnOpenSyncModal = document.getElementById("btnOpenSyncModal");
+  const syncPrinterModal = document.getElementById("syncPrinterModal");
+  const btnCloseSyncModal = document.getElementById("btnCloseSyncModal");
+  const btnCancelSyncModal = document.getElementById("btnCancelSyncModal");
+  const btnExecuteSync = document.getElementById("btnExecuteSync");
+  const printerIpInput = document.getElementById("printerIpInput");
+  const printerPortInput = document.getElementById("printerPortInput");
+  const printerTokenInput = document.getElementById("printerTokenInput");
+  const syncResultStatus = document.getElementById("syncResultStatus");
+
+  // Ripristina impostazioni salvate da localStorage
+  try {
+    if (printerIpInput) {
+      printerIpInput.value = localStorage.getItem("snapmaker_u1_ip") || "";
+    }
+    if (printerPortInput) {
+      printerPortInput.value = localStorage.getItem("snapmaker_u1_port") || "8080";
+    }
+    if (printerTokenInput) {
+      printerTokenInput.value = localStorage.getItem("snapmaker_u1_token") || "";
+    }
+  } catch (e) {
+    console.warn("Accesso a localStorage non disponibile:", e);
+  }
+
+  function openSyncModal() {
+    if (!syncPrinterModal) return;
+    syncPrinterModal.style.display = "flex";
+    if (syncResultStatus) {
+      syncResultStatus.style.display = "none";
+      syncResultStatus.innerHTML = "";
+    }
+    if (printerIpInput && !printerIpInput.value) {
+      printerIpInput.focus();
+    }
+  }
+
+  function closeSyncModal() {
+    if (!syncPrinterModal) return;
+    syncPrinterModal.style.display = "none";
+  }
+
+  safeAddListener(btnOpenSyncModal, "click", openSyncModal);
+  safeAddListener(btnCloseSyncModal, "click", closeSyncModal);
+  safeAddListener(btnCancelSyncModal, "click", closeSyncModal);
+
+  if (syncPrinterModal) {
+    syncPrinterModal.addEventListener("click", (e) => {
+      if (e.target === syncPrinterModal) closeSyncModal();
+    });
+  }
+
+  safeAddListener(btnExecuteSync, "click", async () => {
+    const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
+    const port = printerPortInput ? parseInt(printerPortInput.value.trim()) || 8080 : 8080;
+    const token = printerTokenInput ? printerTokenInput.value.trim() : "";
+
+    if (!rawIp) {
+      if (syncResultStatus) {
+        syncResultStatus.style.display = "block";
+        syncResultStatus.style.background = "rgba(255, 71, 87, 0.15)";
+        syncResultStatus.style.border = "1px solid #ff4757";
+        syncResultStatus.style.color = "#ff6b81";
+        syncResultStatus.textContent = "Inserisci l'indirizzo IP della tua Snapmaker U1 (es. 192.168.1.150).";
+      }
+      return;
+    }
+
+    // Salva impostazioni in localStorage
+    try {
+      localStorage.setItem("snapmaker_u1_ip", rawIp);
+      localStorage.setItem("snapmaker_u1_port", port.toString());
+      localStorage.setItem("snapmaker_u1_token", token);
+    } catch (e) {
+      console.warn("Impossibile salvare su localStorage:", e);
+    }
+
+    // Stato di caricamento
+    btnExecuteSync.disabled = true;
+    btnExecuteSync.classList.add("loading");
+    btnExecuteSync.innerHTML = `<span class="spinner"></span> Connessione in corso...`;
+
+    if (syncResultStatus) {
+      syncResultStatus.style.display = "block";
+      syncResultStatus.style.background = "rgba(255, 255, 255, 0.05)";
+      syncResultStatus.style.border = "1px solid var(--border-subtle)";
+      syncResultStatus.style.color = "var(--text-main)";
+      syncResultStatus.innerHTML = `Interrogazione Snapmaker U1 su <code>${rawIp}:${port}</code> in corso...`;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/printer/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip: rawIp, port, token }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "warning" && data.is_private_network) {
+        if (syncResultStatus) {
+          syncResultStatus.style.display = "block";
+          syncResultStatus.style.background = "rgba(255, 165, 2, 0.15)";
+          syncResultStatus.style.border = "1px solid #ffa502";
+          syncResultStatus.style.color = "#ffbe76";
+          syncResultStatus.innerHTML = `
+            <strong>⚠️ Rete Privata Rilevata:</strong> ${data.detail}<br>
+            <span style="font-size: 11px; margin-top: 6px; display: block; color: var(--text-muted);">${data.suggestion}</span>
+          `;
+        }
+        ToastManager.show({
+          type: "warning",
+          title: "Snapmaker U1 su Rete Locale",
+          message: "Il backend cloud non può accedere a IP privati della tua rete domestica. Avvia 'python run_web.py' per connetterti direttamente.",
+          duration: 9000,
+        });
+        return;
+      }
+
+      if (data.status !== "success" || !data.colors) {
+        throw new Error(data.detail || "Impossibile recuperare i dati dalla stampante.");
+      }
+
+      // Applica i colori agli slot
+      if (colorT0 && data.colors[0]) colorT0.value = data.colors[0];
+      if (colorT1 && data.colors[1]) colorT1.value = data.colors[1];
+      if (colorT2 && data.colors[2]) colorT2.value = data.colors[2];
+      if (colorT3 && data.colors[3]) colorT3.value = data.colors[3];
+
+      onPaletteChange();
+      triggerPreview(true);
+
+      const matSummary = (data.materials || ["Slot 1", "Slot 2", "Slot 3", "Slot 4"]).join(", ");
+
+      if (syncResultStatus) {
+        syncResultStatus.style.display = "block";
+        syncResultStatus.style.background = "rgba(46, 213, 115, 0.15)";
+        syncResultStatus.style.border = "1px solid #2ed573";
+        syncResultStatus.style.color = "#2ed573";
+        syncResultStatus.innerHTML = `
+          <strong>✓ Sincronizzazione Riuscita!</strong><br>
+          Colori RFID: ${data.colors.join(" | ")}<br>
+          <span style="font-size: 10.5px;">${matSummary}</span>
+        `;
+      }
+
+      ToastManager.show({
+        type: "success",
+        title: "Palette Sincronizzata (Snapmaker U1)",
+        message: `4 Slot aggiornati con successo da RFID: ${matSummary}`,
+        duration: 6000,
+      });
+
+      setTimeout(() => {
+        closeSyncModal();
+      }, 1500);
+
+    } catch (err) {
+      console.error("Errore sincronizzazione stampante:", err);
+      if (syncResultStatus) {
+        syncResultStatus.style.display = "block";
+        syncResultStatus.style.background = "rgba(255, 71, 87, 0.15)";
+        syncResultStatus.style.border = "1px solid #ff4757";
+        syncResultStatus.style.color = "#ff6b81";
+        syncResultStatus.innerHTML = `
+          <strong>Errore di Connessione:</strong> ${err.message}<br>
+          <span style="font-size: 10.5px; margin-top: 4px; display: block;">
+            Verifica che l'indirizzo IP sia corretto, che la porta sia accessibile (default 8080 o 80) e che la Snapmaker U1 sia accesa.
+          </span>
+        `;
+      }
+      ToastManager.show({
+        type: "error",
+        title: "Errore Connessione U1",
+        message: err.message,
+        duration: 7000,
+      });
+    } finally {
+      btnExecuteSync.disabled = false;
+      btnExecuteSync.classList.remove("loading");
+      btnExecuteSync.innerHTML = `<span>⚡ Connetti & Sincronizza</span>`;
+    }
+  });
+
+  // ==========================================
   // 4. EVENT LISTENERS DINAMICI
   // ==========================================
   // Portachiavi Icone

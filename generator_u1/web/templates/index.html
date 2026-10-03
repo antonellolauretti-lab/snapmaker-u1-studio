@@ -135,10 +135,10 @@
               <label class="form-label" for="extruderIconSelect">Estrusore Icona (Supporto 3° Colore U1)</label>
               <select id="extruderIconSelect" class="tool-select">
                 <option value="-1" selected>Uguale al Testo</option>
-                <option value="0">Slot T0</option>
-                <option value="1">Slot T1</option>
-                <option value="2">Slot T2</option>
-                <option value="3">Slot T3</option>
+                <option value="0">Estrusore 1 (Slot 1)</option>
+                <option value="1">Estrusore 2 (Slot 2)</option>
+                <option value="2">Estrusore 3 (Slot 3)</option>
+                <option value="3">Estrusore 4 (Slot 4)</option>
               </select>
             </div>
           </div>
@@ -369,10 +369,10 @@
           <div class="form-group">
             <label class="form-label" for="dsExtruderLine1Select">Estrusore Riga 1</label>
             <select id="dsExtruderLine1Select" class="tool-select">
-              <option value="0">Slot T0</option>
-              <option value="1" selected>Slot T1</option>
-              <option value="2">Slot T2</option>
-              <option value="3">Slot T3</option>
+              <option value="0">Estrusore 1 (Slot 1)</option>
+              <option value="1" selected>Estrusore 2 (Slot 2)</option>
+              <option value="2">Estrusore 3 (Slot 3)</option>
+              <option value="3">Estrusore 4 (Slot 4)</option>
             </select>
           </div>
         </div>
@@ -428,10 +428,10 @@
             <div class="form-group">
               <label class="form-label" for="dsExtruderLine2Select">Estrusore Riga 2</label>
               <select id="dsExtruderLine2Select" class="tool-select">
-                <option value="0">Slot T0</option>
-                <option value="1">Slot T1</option>
-                <option value="2" selected>Slot T2</option>
-                <option value="3">Slot T3</option>
+                <option value="0">Estrusore 1 (Slot 1)</option>
+                <option value="1">Estrusore 2 (Slot 2)</option>
+                <option value="2" selected>Estrusore 3 (Slot 3)</option>
+                <option value="3">Estrusore 4 (Slot 4)</option>
               </select>
             </div>
           </div>
@@ -495,10 +495,10 @@
             <div class="form-group">
               <label class="form-label" for="dsExtruderBorderSelect">Estrusore Cornice Decorativa</label>
               <select id="dsExtruderBorderSelect" class="tool-select">
-                <option value="0">Slot T0</option>
-                <option value="1">Slot T1</option>
-                <option value="2">Slot T2</option>
-                <option value="3" selected>Slot T3</option>
+                <option value="0">Estrusore 1 (Slot 1)</option>
+                <option value="1">Estrusore 2 (Slot 2)</option>
+                <option value="2">Estrusore 3 (Slot 3)</option>
+                <option value="3" selected>Estrusore 4 (Slot 4)</option>
               </select>
             </div>
           </div>
@@ -539,19 +539,19 @@
             <div class="form-group">
               <label class="form-label" for="extruderBaseSelect">Estrusore Base</label>
               <select id="extruderBaseSelect" class="tool-select">
-                <option value="0" selected>Slot T0</option>
-                <option value="1">Slot T1</option>
-                <option value="2">Slot T2</option>
-                <option value="3">Slot T3</option>
+                <option value="0" selected>Estrusore 1 (Slot 1)</option>
+                <option value="1">Estrusore 2 (Slot 2)</option>
+                <option value="2">Estrusore 3 (Slot 3)</option>
+                <option value="3">Estrusore 4 (Slot 4)</option>
               </select>
             </div>
             <div class="form-group only-keychain" id="extruderTextWrap">
               <label class="form-label" for="extruderTextSelect">Estrusore Testo</label>
               <select id="extruderTextSelect" class="tool-select">
-                <option value="0">Slot T0</option>
-                <option value="1" selected>Slot T1</option>
-                <option value="2">Slot T2</option>
-                <option value="3">Slot T3</option>
+                <option value="0">Estrusore 1 (Slot 1)</option>
+                <option value="1" selected>Estrusore 2 (Slot 2)</option>
+                <option value="2">Estrusore 3 (Slot 3)</option>
+                <option value="3">Estrusore 4 (Slot 4)</option>
               </select>
             </div>
           </div>
@@ -559,30 +559,38 @@
           <label class="form-label" style="margin-top: 6px;">Colori Assegnati ai 4 Slot U1</label>
           <div class="palette-grid">
             <div class="tool-slot">
-              <span class="tool-badge">T0</span>
+              <span class="tool-badge">Slot 1</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT0" value="#161616">
+                <input type="color" id="colorT0" value="#161616" title="Estrusore 1 (Slot 1)">
               </div>
             </div>
             <div class="tool-slot">
-              <span class="tool-badge">T1</span>
+              <span class="tool-badge">Slot 2</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT1" value="#ffffff">
+                <input type="color" id="colorT1" value="#ffffff" title="Estrusore 2 (Slot 2)">
               </div>
             </div>
             <div class="tool-slot">
-              <span class="tool-badge">T2</span>
+              <span class="tool-badge">Slot 3</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT2" value="#e31b23">
+                <input type="color" id="colorT2" value="#e31b23" title="Estrusore 3 (Slot 3)">
               </div>
             </div>
             <div class="tool-slot">
-              <span class="tool-badge">T3</span>
+              <span class="tool-badge">Slot 4</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT3" value="#ffd400">
+                <input type="color" id="colorT3" value="#ffd400" title="Estrusore 4 (Slot 4)">
               </div>
             </div>
           </div>
+
+          <!-- Pulsante Sincronizzazione Snapmaker U1 Locale (RFID) -->
+          <button type="button" id="btnOpenSyncModal" class="btn-sync-u1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>🔄 Sincronizza da Snapmaker locale (RFID)</span>
+          </button>
         </div>
 
       </div>
@@ -626,6 +634,63 @@
     </div>
 
   </main>
+
+  <!-- Modal Sincronizzazione Snapmaker U1 -->
+  <div id="syncPrinterModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">🔄</span>
+          <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Sincronizza Palette da Snapmaker U1</h3>
+        </div>
+        <button type="button" class="modal-close" id="btnCloseSyncModal" aria-label="Chiudi">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+          Interroga la tua Snapmaker U1 sulla rete locale Wi-Fi per rilevare in tempo reale i colori (tag RFID) e i materiali caricati nei 4 estrusori.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" for="printerIpInput">
+            <span>Indirizzo IP Stampante (Wi-Fi)</span>
+            <span style="color: var(--accent-snapmaker);">*</span>
+          </label>
+          <input type="text" id="printerIpInput" placeholder="Es. 192.168.1.150" value="">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="printerPortInput">Porta</label>
+            <input type="text" id="printerPortInput" placeholder="8080" value="8080">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="printerTokenInput">Token API (opzionale)</label>
+            <input type="text" id="printerTokenInput" placeholder="Opzionale / vuoto">
+          </div>
+        </div>
+
+        <!-- Guida Touchscreen U1 -->
+        <div class="modal-guide-box">
+          <strong style="color: #fff; display: block; margin-bottom: 4px;">💡 Come trovare l'IP sulla Snapmaker U1:</strong>
+          1. Sul touchscreen tocca l'icona <strong>Impostazioni (⚙️)</strong>.<br>
+          2. Tocca <strong>Wi-Fi</strong> e seleziona la rete connessa per aprire i dettagli.<br>
+          3. Leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).<br>
+          <span style="font-size: 10.5px; color: var(--text-dim); display: block; margin-top: 4px;">
+            Nota: Il dispositivo da cui usi l'app deve essere connesso alla stessa rete Wi-Fi della macchina.
+          </span>
+        </div>
+
+        <!-- Sezione Risultato Rilevamento Slot -->
+        <div id="syncResultStatus" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 11.5px; margin-bottom: 12px; line-height: 1.4;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" id="btnCancelSyncModal">Annulla</button>
+        <button type="button" class="btn-modal-action" id="btnExecuteSync">
+          <span>⚡ Connetti & Sincronizza</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Container per Notifiche Toast & Cold-Start Alerts -->
   <div id="studioToastContainer" class="studio-toast-container"></div>
