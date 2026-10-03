@@ -2,8 +2,11 @@ import os
 import json
 import zipfile
 import uuid
+import base64
+import io
 from dataclasses import dataclass
 from typing import List, Optional
+import numpy as np
 import trimesh
 
 @dataclass
@@ -61,9 +64,75 @@ class Snapmaker3MFPackager:
    </mesh>
   </object>"""
 
-    def export(self, parts: List[PartItem], output_path: str, reference_config_path: Optional[str] = None):
+    def _generate_fallback_thumbnail(self, parts: List[PartItem]) -> bytes:
         """
-        Compila l'archivio .3MF unificando tutte le parti in un singolo oggetto multi-volume.
+        Genera un'immagine PNG di fallback a colori con sfondo scuro
+        proiettando ortograficamente le geometrie 3D dei componenti.
+        Garantisce che il pacchetto 3MF abbia SEMPRE un'anteprima valida
+        visibile in Windows Explorer e negli slicer.
+        """
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.collections import PolyCollection
+
+        fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
+        fig.patch.set_facecolor("#0E1014")
+        ax.set_facecolor("#16181D")
+
+        all_pts = []
+        # Ordina per z minimo in modo che i rilievi (testo, icone) vengano disegnati sopra la base
+        sorted_parts = sorted(
+            parts,
+            key=lambda p: float(p.mesh.vertices[:, 2].mean() if len(p.mesh.vertices) else 0)
+        )
+
+        for part in sorted_parts:
+            if len(part.mesh.vertices) == 0 or len(part.mesh.faces) == 0:
+                continue
+            v2d = part.mesh.vertices[:, :2]
+            all_pts.append(v2d)
+            triangles = v2d[part.mesh.faces]
+            color_idx = part.extruder % len(self.filament_colors)
+            col = self.filament_colors[color_idx]
+            poly = PolyCollection(triangles, facecolors=col, edgecolors="none", alpha=0.98)
+            ax.add_collection(poly)
+
+        if all_pts:
+            stacked = np.vstack(all_pts)
+            min_xy = stacked.min(axis=0)
+            max_xy = stacked.max(axis=0)
+            w = max_xy[0] - min_xy[0]
+            h = max_xy[1] - min_xy[1]
+            pad = max(w, h) * 0.12 or 5.0
+            cx = (min_xy[0] + max_xy[0]) / 2.0
+            cy = (min_xy[1] + max_xy[1]) / 2.0
+            span = max(w, h) / 2.0 + pad
+            ax.set_xlim(cx - span, cx + span)
+            ax.set_ylim(cy - span, cy + span)
+        else:
+            ax.set_xlim(-50, 50)
+            ax.set_ylim(-50, 50)
+
+        ax.set_aspect("equal", adjustable="box")
+        ax.axis("off")
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0.08, facecolor=fig.get_facecolor(), edgecolor="none")
+        plt.close(fig)
+        return buf.getvalue()
+
+    def export(
+        self,
+        parts: List[PartItem],
+        output_path: str,
+        reference_config_path: Optional[str] = None,
+        thumbnail_base64: Optional[str] = None,
+        thumbnail_bytes: Optional[bytes] = None,
+    ):
+        """
+        Compila l'archivio .3MF unificando tutte le parti in un singolo oggetto multi-volume
+        e incorporando sistematicamente la thumbnail sia per Windows Explorer che per OrcaSlicer.
         """
         container_obj_id = len(parts) + 1
         model_uuid = str(uuid.uuid4())
@@ -255,18 +324,44 @@ class Snapmaker3MFPackager:
             process_cfg["skirt_distance"] = "0"
             process_cfg["enable_support"] = "1" if self.enable_support else "0"
 
-        # 5. File di relazione e types
+        # 5. Gestione Thumbnail (Immagine Anteprima 3MF per Windows Explorer, 3D Viewer e OrcaSlicer)
+        png_bytes = None
+        if thumbnail_bytes and len(thumbnail_bytes) > 8 and thumbnail_bytes[:8] == b"\x89PNG\r\n\x1a\n":
+            png_bytes = thumbnail_bytes
+        elif thumbnail_base64 and isinstance(thumbnail_base64, str):
+            try:
+                b64_str = thumbnail_base64
+                if "," in b64_str:
+                    b64_str = b64_str.split(",", 1)[1]
+                decoded = base64.b64decode(b64_str)
+                if len(decoded) > 8 and decoded[:8] == b"\x89PNG\r\n\x1a\n":
+                    png_bytes = decoded
+            except Exception as e:
+                print(f"Warning: decodifica thumbnail base64 fallita ({e}), uso fallback server.")
+
+        if png_bytes is None:
+            try:
+                png_bytes = self._generate_fallback_thumbnail(parts)
+            except Exception as e:
+                print(f"Warning: generazione fallback thumbnail fallita ({e}).")
+
+        # 6. File di relazione e types
         content_types = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
  <Default Extension="config" ContentType="application/xml"/>
  <Default Extension="json" ContentType="application/json"/>
+ <Default Extension="png" ContentType="image/png"/>
 </Types>"""
 
         root_rels = """<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
  <Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+ <Relationship Target="/Metadata/thumbnail.png" Id="rel-2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"/>
+ <Relationship Target="/Metadata/plate_1.png" Id="rel-3" Type="http://schemas.bambulab.com/package/2021/cover-thumbnail-middle"/>
+ <Relationship Target="/Metadata/plate_1_small.png" Id="rel-4" Type="http://schemas.bambulab.com/package/2021/cover-thumbnail-small"/>
+ <Relationship Target="/Auxiliaries/.thumbnails/thumbnail_3mf.png" Id="rel-5" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"/>
 </Relationships>"""
 
         d3model_rels = """<?xml version="1.0" encoding="UTF-8"?>
@@ -282,7 +377,7 @@ class Snapmaker3MFPackager:
   </header>
 </config>"""
 
-        # 6. Scrittura archivio compresso ZIP
+        # 7. Scrittura archivio compresso ZIP
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
         with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
             z.writestr("[Content_Types].xml", content_types)
@@ -295,5 +390,12 @@ class Snapmaker3MFPackager:
             if process_cfg:
                 z.writestr("Metadata/process_settings_1.config", json.dumps(process_cfg, indent=4))
             z.writestr("Metadata/slice_info.config", slice_info)
+            if png_bytes:
+                z.writestr("Metadata/thumbnail.png", png_bytes)
+                z.writestr("Metadata/plate_1.png", png_bytes)
+                z.writestr("Metadata/plate_1_small.png", png_bytes)
+                z.writestr("Auxiliaries/.thumbnails/thumbnail_3mf.png", png_bytes)
+                z.writestr("Auxiliaries/.thumbnails/thumbnail_middle.png", png_bytes)
+                z.writestr("Auxiliaries/.thumbnails/thumbnail_small.png", png_bytes)
 
         return output_path

@@ -3215,7 +3215,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   if (btnGenerate) {
     btnGenerate.addEventListener("click", async () => {
+      // 1. Cattura sincrona e obbligatoria della miniatura 3D per Windows Explorer & OrcaSlicer
+      let thumbnailDataUrl = null;
+      try {
+        if (viewer && typeof viewer.captureThumbnail === "function") {
+          thumbnailDataUrl = viewer.captureThumbnail();
+        }
+      } catch (err) {
+        console.warn("Errore cattura thumbnail Three.js:", err);
+      }
+
       const params = getParams();
+      if (thumbnailDataUrl) {
+        params.thumbnail_base64 = thumbnailDataUrl;
+      }
 
       // Disabilita pulsante e attiva spinner
       btnGenerate.disabled = true;

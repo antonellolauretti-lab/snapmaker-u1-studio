@@ -28,7 +28,11 @@ class ModelViewer {
     this.camera.position.set(0, -110, 95);
 
     // 3. Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance",
+      preserveDrawingBuffer: true,
+    });
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
@@ -224,5 +228,26 @@ class ModelViewer {
       m.material.wireframe = this.wireframeMode;
     });
     return this.wireframeMode;
+  }
+
+  /**
+   * Cattura sincrona e affidabile dell'immagine 3D corrente per la thumbnail del 3MF.
+   * Restituisce una Data URL in formato image/png (base64).
+   */
+  captureThumbnail() {
+    try {
+      if (!this.renderer || !this.scene || !this.camera) return null;
+      if (this.controls) this.controls.update();
+      // Forza il rendering sincrono della scena nello stato esatto attuale
+      this.renderer.render(this.scene, this.camera);
+      const dataUrl = this.renderer.domElement.toDataURL("image/png");
+      if (dataUrl && dataUrl.startsWith("data:image/png;base64,")) {
+        return dataUrl;
+      }
+      return null;
+    } catch (err) {
+      console.warn("Impossibile catturare thumbnail Three.js:", err);
+      return null;
+    }
   }
 }
