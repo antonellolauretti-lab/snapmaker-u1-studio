@@ -2211,12 +2211,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCloseSyncModal = document.getElementById("btnCloseSyncModal");
   const btnCancelSyncModal = document.getElementById("btnCancelSyncModal");
   const btnExecuteSync = document.getElementById("btnExecuteSync");
-  const btnOnlineOk = document.getElementById("btnOnlineOk");
   const btnToggleAdvancedIpOnline = document.getElementById("btnToggleAdvancedIpOnline");
-  const syncModalOnlineView = document.getElementById("syncModalOnlineView");
-  const syncModalLocalView = document.getElementById("syncModalLocalView");
-  const syncFooterOnline = document.getElementById("syncFooterOnline");
-  const syncFooterLocal = document.getElementById("syncFooterLocal");
+  const syncModalCloudNotice = document.getElementById("syncModalCloudNotice");
+  const syncIpFormSection = document.getElementById("syncIpFormSection");
   const syncModalTitle = document.getElementById("syncModalTitle");
 
   const printerIpInput = document.getElementById("printerIpInput");
@@ -2224,21 +2221,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const printerTokenInput = document.getElementById("printerTokenInput");
   const syncResultStatus = document.getElementById("syncResultStatus");
 
-  // Adatta l'etichetta del pulsante palette all'ambiente
+  // Etichetta pulsante nella barra laterale chiara e unificata
   if (btnOpenSyncModal) {
-    if (isLocalEnvironment) {
-      btnOpenSyncModal.innerHTML = `<span>🔄 Rileva RFID (LAN)</span>`;
-      btnOpenSyncModal.title = "Rileva in tempo reale via Wi-Fi i colori RFID della Snapmaker U1";
-    } else {
-      btnOpenSyncModal.innerHTML = `<span>💡 Info Sync U1</span>`;
-      btnOpenSyncModal.title = "Informazioni sulla connessione locale con la Snapmaker U1";
-    }
+    btnOpenSyncModal.innerHTML = `<span>📡 Connetti Stampante U1</span>`;
+    btnOpenSyncModal.title = "Connetti la stampante Snapmaker U1 per rilevare in tempo reale i 4 colori RFID";
   }
 
   // Ripristina impostazioni salvate da localStorage
   try {
     if (printerIpInput) {
-      printerIpInput.value = localStorage.getItem("snapmaker_u1_ip") || "";
+      printerIpInput.value = localStorage.getItem("snapmaker_u1_ip") || "192.168.1.150";
     }
     if (printerPortInput) {
       printerPortInput.value = localStorage.getItem("snapmaker_u1_port") || "8080";
@@ -2250,7 +2242,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Accesso a localStorage non disponibile:", e);
   }
 
-  function openSyncModal(forceLocalMode = false) {
+  function openSyncModal(forceExpandIp = false) {
     if (!syncPrinterModal) return;
     syncPrinterModal.style.display = "flex";
 
@@ -2259,23 +2251,35 @@ document.addEventListener("DOMContentLoaded", () => {
       syncResultStatus.innerHTML = "";
     }
 
-    const showLocal = isLocalEnvironment || forceLocalMode;
+    if (printerIpInput && !printerIpInput.value) {
+      printerIpInput.value = localStorage.getItem("snapmaker_u1_ip") || "192.168.1.150";
+    }
+    if (printerPortInput && !printerPortInput.value) {
+      printerPortInput.value = localStorage.getItem("snapmaker_u1_port") || "8080";
+    }
 
-    if (showLocal) {
-      if (syncModalTitle) syncModalTitle.textContent = "Sincronizza da Snapmaker U1 (Wi-Fi)";
-      if (syncModalOnlineView) syncModalOnlineView.style.display = "none";
-      if (syncModalLocalView) syncModalLocalView.style.display = "block";
-      if (syncFooterOnline) syncFooterOnline.style.display = "none";
-      if (syncFooterLocal) syncFooterLocal.style.display = "flex";
-      if (printerIpInput && !printerIpInput.value) {
+    if (isLocalEnvironment) {
+      if (syncModalTitle) syncModalTitle.textContent = "Connessione Snapmaker U1 (Wi-Fi LAN)";
+      if (syncModalCloudNotice) syncModalCloudNotice.style.display = "none";
+      if (syncIpFormSection) syncIpFormSection.style.display = "flex";
+      if (printerIpInput) {
         printerIpInput.focus();
+        printerIpInput.select();
       }
     } else {
       if (syncModalTitle) syncModalTitle.textContent = "Connessione Snapmaker U1";
-      if (syncModalOnlineView) syncModalOnlineView.style.display = "block";
-      if (syncModalLocalView) syncModalLocalView.style.display = "none";
-      if (syncFooterOnline) syncFooterOnline.style.display = "flex";
-      if (syncFooterLocal) syncFooterLocal.style.display = "none";
+      if (syncModalCloudNotice) syncModalCloudNotice.style.display = "block";
+      if (forceExpandIp) {
+        if (syncIpFormSection) syncIpFormSection.style.display = "flex";
+        if (btnToggleAdvancedIpOnline) btnToggleAdvancedIpOnline.style.display = "none";
+        if (printerIpInput) {
+          printerIpInput.focus();
+          printerIpInput.select();
+        }
+      } else {
+        if (syncIpFormSection) syncIpFormSection.style.display = "none";
+        if (btnToggleAdvancedIpOnline) btnToggleAdvancedIpOnline.style.display = "flex";
+      }
     }
   }
 
@@ -2287,8 +2291,16 @@ document.addEventListener("DOMContentLoaded", () => {
   safeAddListener(btnOpenSyncModal, "click", () => openSyncModal(false));
   safeAddListener(btnCloseSyncModal, "click", closeSyncModal);
   safeAddListener(btnCancelSyncModal, "click", closeSyncModal);
-  safeAddListener(btnOnlineOk, "click", closeSyncModal);
-  safeAddListener(btnToggleAdvancedIpOnline, "click", () => openSyncModal(true));
+
+  safeAddListener(btnToggleAdvancedIpOnline, "click", (e) => {
+    if (e) e.preventDefault();
+    if (syncIpFormSection) syncIpFormSection.style.display = "flex";
+    if (btnToggleAdvancedIpOnline) btnToggleAdvancedIpOnline.style.display = "none";
+    if (printerIpInput) {
+      printerIpInput.focus();
+      printerIpInput.select();
+    }
+  });
 
   if (syncPrinterModal) {
     syncPrinterModal.addEventListener("click", (e) => {
@@ -2406,10 +2418,10 @@ document.addEventListener("DOMContentLoaded", () => {
     triggerPreview(true);
   }
 
-  // Esecuzione sincronizzazione automatica LAN
+  // Esecuzione scansione e lettura RFID Snapmaker U1
   safeAddListener(btnExecuteSync, "click", async () => {
     const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
-    const port = printerPortInput ? parseInt(printerPortInput.value.trim()) || 8080 : 8080;
+    const port = printerPortInput ? parseInt(printerPortInput.value.trim(), 10) || 8080 : 8080;
     const token = printerTokenInput ? printerTokenInput.value.trim() : "";
 
     if (!rawIp) {
@@ -2433,7 +2445,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     btnExecuteSync.disabled = true;
     btnExecuteSync.classList.add("loading");
-    btnExecuteSync.innerHTML = `<span class="spinner"></span> Connessione LAN...`;
+    btnExecuteSync.innerHTML = `<span class="spinner"></span> Scansione U1 in corso...`;
 
     if (syncResultStatus) {
       syncResultStatus.style.display = "block";
@@ -2461,50 +2473,60 @@ document.addEventListener("DOMContentLoaded", () => {
       reqHeaders["Authorization"] = `Bearer ${token}`;
     }
 
-    for (const ep of endpoints) {
-      const url = `http://${rawIp}:${port}${ep}`;
-      try {
-        const resp = await fetch(url, {
-          method: "GET",
-          headers: reqHeaders,
-          signal: AbortSignal.timeout(2400),
-          mode: "cors"
-        });
-        if (resp.ok) {
-          printerData = await resp.json();
-          break;
-        }
-      } catch (err) {
-        fetchErrorDetail = err.message;
-        if (window.location.protocol === "https:") {
-          mixedContentBlocked = true;
+    const portsToTry = [...new Set([port, 8080, 80, 7125, 8888])];
+
+    for (const p of portsToTry) {
+      if (printerData) break;
+      for (const ep of endpoints) {
+        const url = `http://${rawIp}:${p}${ep}`;
+        try {
+          const fetchOpts = {
+            method: "GET",
+            headers: reqHeaders,
+            signal: AbortSignal.timeout(2400),
+            mode: "cors"
+          };
+          try {
+            fetchOpts.targetAddressSpace = "private";
+          } catch (_) {}
+
+          const resp = await fetch(url, fetchOpts);
+          if (resp.ok) {
+            printerData = await resp.json();
+            if (printerData) break;
+          }
+        } catch (err) {
+          fetchErrorDetail = err.message;
+          if (window.location.protocol === "https:") {
+            mixedContentBlocked = true;
+          }
         }
       }
     }
 
-    // Se la chiamata diretta dal browser fallisce, prova il backend
+    // Se la chiamata diretta dal browser fallisce, prova il backend proxy potenziato
     if (!printerData) {
       try {
         const beResp = await fetch(`${API_BASE_URL}/api/printer/sync`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ip: rawIp, port, token }),
-          signal: AbortSignal.timeout(4500)
+          signal: AbortSignal.timeout(5000)
         });
-        const beData = await beResp.json();
-        if (beData.status === "success" && beData.colors) {
-          printerData = beData;
-        } else if (beData.status === "warning" && beData.is_private_network) {
-          mixedContentBlocked = true;
+        if (beResp.ok) {
+          const beData = await beResp.json();
+          if (beData.status === "success" && beData.colors) {
+            printerData = beData;
+          }
         }
       } catch (beErr) {
-        // Backend non raggiungibile o in standby
+        console.warn("Backend sync proxy fallito:", beErr);
       }
     }
 
     btnExecuteSync.disabled = false;
     btnExecuteSync.classList.remove("loading");
-    btnExecuteSync.innerHTML = `<span>⚡ Rileva Colori RFID</span>`;
+    btnExecuteSync.innerHTML = `<span>⚡ AVVIA SCANSIONE & LEGGI TAG RFID</span>`;
 
     if (printerData) {
       const parsed = printerData.colors ? printerData : parseSnapmakerPaletteClient(printerData);
@@ -2517,18 +2539,18 @@ document.addEventListener("DOMContentLoaded", () => {
         syncResultStatus.style.border = "1px solid #2ed573";
         syncResultStatus.style.color = "#2ed573";
         syncResultStatus.innerHTML = `
-          <strong>✓ Sincronizzazione Riuscita!</strong><br>
-          Colori RFID: ${parsed.colors.join(" | ")}<br>
-          <span style="font-size: 10.5px;">${matSummary}</span>
+          <strong style="color: #2ed573; display: block; margin-bottom: 2px;">✓ Sincronizzazione Riuscita!</strong>
+          Colori RFID: <code>${parsed.colors.join(" | ")}</code><br>
+          <span style="font-size: 10.5px; opacity: 0.9;">${matSummary}</span>
         `;
       }
       ToastManager.show({
         type: "success",
-        title: "Palette Sincronizzata",
-        message: `4 Estrusori aggiornati con successo: ${matSummary}`,
+        title: "Snapmaker U1 Connessa",
+        message: "✅ 4 Colori sincronizzati con successo dalla Snapmaker U1",
         duration: 5000,
       });
-      setTimeout(() => closeSyncModal(), 1500);
+      setTimeout(() => closeSyncModal(), 1200);
       return;
     }
 
@@ -2547,7 +2569,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </span>
         `;
       } else {
-        const errDetail = fetchErrorDetail || "Nessuna risposta dalla macchina";
         syncResultStatus.innerHTML = `
           <strong style="color: #fff; display: block; margin-bottom: 2px;">Snapmaker U1 non raggiungibile</strong>
           Impossibile stabilire una connessione con <code>http://${rawIp}:${port}</code>.<br>

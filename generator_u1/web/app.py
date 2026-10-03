@@ -649,26 +649,10 @@ def sync_printer_palette(payload: Dict[str, Any]):
 
     # Rilevamento ambiente cloud (Render, Vercel, Railway) vs locale
     is_cloud_env = bool(os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("VERCEL"))
-    if is_cloud_env and ip_obj.is_private:
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "warning",
-                "is_private_network": True,
-                "detail": (
-                    f"La Snapmaker U1 si trova su un IP privato della tua rete Wi-Fi ({clean_ip}). "
-                    "Il server Cloud (Render) non può accedere direttamente alla tua LAN domestica."
-                ),
-                "suggestion": (
-                    "Per sincronizzare direttamente via RFID, esegui l'app in locale sul tuo PC "
-                    "tramite 'python run_web.py' (http://localhost:8000)."
-                )
-            }
-        )
 
     # Sequenza di porte ed endpoint da interrogare
     ports_to_try = [port]
-    for fallback_p in [8080, 80, 7125]:
+    for fallback_p in [8080, 80, 7125, 8888]:
         if fallback_p not in ports_to_try:
             ports_to_try.append(fallback_p)
 
