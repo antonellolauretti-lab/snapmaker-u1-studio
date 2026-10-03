@@ -135,10 +135,10 @@
               <label class="form-label" for="extruderIconSelect">Estrusore Icona (Supporto 3° Colore U1)</label>
               <select id="extruderIconSelect" class="tool-select">
                 <option value="-1" selected>Uguale al Testo</option>
-                <option value="0">Estrusore 1 (Slot 1)</option>
-                <option value="1">Estrusore 2 (Slot 2)</option>
-                <option value="2">Estrusore 3 (Slot 3)</option>
-                <option value="3">Estrusore 4 (Slot 4)</option>
+                <option value="0">Estrusore 1</option>
+                <option value="1">Estrusore 2</option>
+                <option value="2">Estrusore 3</option>
+                <option value="3">Estrusore 4</option>
               </select>
             </div>
           </div>
@@ -369,10 +369,10 @@
           <div class="form-group">
             <label class="form-label" for="dsExtruderLine1Select">Estrusore Riga 1</label>
             <select id="dsExtruderLine1Select" class="tool-select">
-              <option value="0">Estrusore 1 (Slot 1)</option>
-              <option value="1" selected>Estrusore 2 (Slot 2)</option>
-              <option value="2">Estrusore 3 (Slot 3)</option>
-              <option value="3">Estrusore 4 (Slot 4)</option>
+              <option value="0">Estrusore 1</option>
+              <option value="1" selected>Estrusore 2</option>
+              <option value="2">Estrusore 3</option>
+              <option value="3">Estrusore 4</option>
             </select>
           </div>
         </div>
@@ -428,10 +428,10 @@
             <div class="form-group">
               <label class="form-label" for="dsExtruderLine2Select">Estrusore Riga 2</label>
               <select id="dsExtruderLine2Select" class="tool-select">
-                <option value="0">Estrusore 1 (Slot 1)</option>
-                <option value="1">Estrusore 2 (Slot 2)</option>
-                <option value="2" selected>Estrusore 3 (Slot 3)</option>
-                <option value="3">Estrusore 4 (Slot 4)</option>
+                <option value="0">Estrusore 1</option>
+                <option value="1">Estrusore 2</option>
+                <option value="2" selected>Estrusore 3</option>
+                <option value="3">Estrusore 4</option>
               </select>
             </div>
           </div>
@@ -495,10 +495,10 @@
             <div class="form-group">
               <label class="form-label" for="dsExtruderBorderSelect">Estrusore Cornice Decorativa</label>
               <select id="dsExtruderBorderSelect" class="tool-select">
-                <option value="0">Estrusore 1 (Slot 1)</option>
-                <option value="1">Estrusore 2 (Slot 2)</option>
-                <option value="2">Estrusore 3 (Slot 3)</option>
-                <option value="3" selected>Estrusore 4 (Slot 4)</option>
+                <option value="0">Estrusore 1</option>
+                <option value="1">Estrusore 2</option>
+                <option value="2">Estrusore 3</option>
+                <option value="3" selected>Estrusore 4</option>
               </select>
             </div>
           </div>
@@ -512,9 +512,14 @@
             <span>Estrusori & Palette U1</span>
           </div>
 
-          <!-- Preset Rapidi Palette -->
+          <!-- Preset Rapidi Palette & Sincronizzazione LAN -->
           <div class="form-group">
-            <label class="form-label">Preset Rapidi Filamenti</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <label class="form-label" style="margin: 0;">Preset Rapidi Filamenti</label>
+              <button type="button" id="btnOpenSyncModal" class="btn-sync-u1-lan" title="Importa in tempo reale i colori dai 4 estrusori della Snapmaker U1 via LAN/RFID">
+                <span>🔄 Sincronizza da Stampante U1 (LAN)</span>
+              </button>
+            </div>
             <div class="presets-row">
               <button type="button" class="preset-btn" data-preset="snapmaker" title="Snapmaker Original">
                 <span class="swatch-strip" style="background: linear-gradient(90deg, #161616 25%, #ffffff 25% 50%, #e31b23 50% 75%, #ffd400 75%);"></span>
@@ -539,58 +544,50 @@
             <div class="form-group">
               <label class="form-label" for="extruderBaseSelect">Estrusore Base</label>
               <select id="extruderBaseSelect" class="tool-select">
-                <option value="0" selected>Estrusore 1 (Slot 1)</option>
-                <option value="1">Estrusore 2 (Slot 2)</option>
-                <option value="2">Estrusore 3 (Slot 3)</option>
-                <option value="3">Estrusore 4 (Slot 4)</option>
+                <option value="0" selected>Estrusore 1</option>
+                <option value="1">Estrusore 2</option>
+                <option value="2">Estrusore 3</option>
+                <option value="3">Estrusore 4</option>
               </select>
             </div>
             <div class="form-group only-keychain" id="extruderTextWrap">
               <label class="form-label" for="extruderTextSelect">Estrusore Testo</label>
               <select id="extruderTextSelect" class="tool-select">
-                <option value="0">Estrusore 1 (Slot 1)</option>
-                <option value="1" selected>Estrusore 2 (Slot 2)</option>
-                <option value="2">Estrusore 3 (Slot 3)</option>
-                <option value="3">Estrusore 4 (Slot 4)</option>
+                <option value="0">Estrusore 1</option>
+                <option value="1" selected>Estrusore 2</option>
+                <option value="2">Estrusore 3</option>
+                <option value="3">Estrusore 4</option>
               </select>
             </div>
           </div>
 
-          <label class="form-label" style="margin-top: 6px;">Colori Assegnati ai 4 Slot U1</label>
+          <label class="form-label" style="margin-top: 6px;">Colori Assegnati ai 4 Estrusori U1</label>
           <div class="palette-grid">
             <div class="tool-slot">
-              <span class="tool-badge">Slot 1</span>
+              <span class="tool-badge">Estrusore 1</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT0" value="#161616" title="Estrusore 1 (Slot 1)">
+                <input type="color" id="colorT0" value="#161616" title="Estrusore 1">
               </div>
             </div>
             <div class="tool-slot">
-              <span class="tool-badge">Slot 2</span>
+              <span class="tool-badge">Estrusore 2</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT1" value="#ffffff" title="Estrusore 2 (Slot 2)">
+                <input type="color" id="colorT1" value="#ffffff" title="Estrusore 2">
               </div>
             </div>
             <div class="tool-slot">
-              <span class="tool-badge">Slot 3</span>
+              <span class="tool-badge">Estrusore 3</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT2" value="#e31b23" title="Estrusore 3 (Slot 3)">
+                <input type="color" id="colorT2" value="#e31b23" title="Estrusore 3">
               </div>
             </div>
             <div class="tool-slot">
-              <span class="tool-badge">Slot 4</span>
+              <span class="tool-badge">Estrusore 4</span>
               <div class="color-input-wrap">
-                <input type="color" id="colorT3" value="#ffd400" title="Estrusore 4 (Slot 4)">
+                <input type="color" id="colorT3" value="#ffd400" title="Estrusore 4">
               </div>
             </div>
           </div>
-
-          <!-- Pulsante Sincronizzazione Snapmaker U1 Locale (RFID) -->
-          <button type="button" id="btnOpenSyncModal" class="btn-sync-u1">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-            </svg>
-            <span>🔄 Sincronizza da Snapmaker locale (RFID)</span>
-          </button>
         </div>
 
       </div>
