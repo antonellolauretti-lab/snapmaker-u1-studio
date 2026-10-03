@@ -757,66 +757,87 @@
         <button type="button" class="modal-close" id="btnCloseSyncModal" aria-label="Chiudi">&times;</button>
       </div>
 
-      <div class="modal-body" style="padding: 16px 20px;">
-        <!-- Banner Online (Vercel Cloud) -->
-        <div id="syncModalCloudNotice" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
-          <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px;">
-            <span style="font-size: 18px; line-height: 1.2;">🌐</span>
-            <div style="font-size: 11px; line-height: 1.4; color: var(--text-main);">
-              <strong style="color: #fff; font-size: 11.5px; display: block; margin-bottom: 2px;">Sei connesso in Cloud (HTTPS Vercel)</strong>
-              I browser moderni applicano restrizioni di sicurezza (Private Network Access) sulle chiamate dirette dal web verso la rete Wi-Fi locale.
-              <span style="display: block; color: var(--text-muted); font-size: 10px; margin-top: 3px;">
-                💡 Se non sei sulla stessa LAN della stampante, puoi usare gli <strong>Slot Rapidi</strong> della palette a 1-clic o salvare i tuoi preset con <strong>➕ Salva Setup</strong>.
-              </span>
+      <!-- VISTA CLOUD (Vercel HTTPS / iPhone / Dispositivi Remoti) -->
+      <div id="syncModalCloudSection" style="display: none; padding: 18px 20px;">
+        <!-- Card Informativa Singola ed Elegante -->
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <span style="font-size: 22px; line-height: 1;">🌐</span>
+            <div style="font-size: 12px; line-height: 1.5; color: var(--text-main);">
+              <strong style="color: #fff; font-size: 13px; display: block; margin-bottom: 4px;">Sincronizzazione RFID U1</strong>
+              La lettura automatica RFID diretta richiede la connessione locale. Per sincronizzare i 4 estrusori in 1 clic, usa lo studio locale su PC (<code>http://localhost:8000</code>) oppure seleziona i colori dai selettori rapidi della palette.
             </div>
           </div>
-          
-          <button type="button" id="btnToggleAdvancedIpOnline" class="btn-expand-ip" style="background: rgba(255, 51, 68, 0.12); border: 1px solid rgba(255, 51, 68, 0.45); color: #ff5263; border-radius: 6px; padding: 8px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
-            <span>🔗 Vuoi comunque testare la connessione con IP manuale?</span>
-          </button>
         </div>
 
-        <!-- Sezione Form IP e Scansione (Attiva o Espandibile) -->
-        <div id="syncIpFormSection" style="display: none; flex-direction: column; gap: 10px;">
-          <p style="font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.4;">
-            Inserisci l'indirizzo IP della tua Snapmaker U1 per rilevare via Wi-Fi i colori RFID caricati nei 4 estrusori:
-          </p>
+        <!-- Opzioni Rapide Senza Errori per Vercel -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+          <!-- Opzione A: Carica / Esporta Setup JSON -->
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btnUploadPrinterConfig" class="btn-modal-action" style="flex: 1; background: rgba(255, 212, 0, 0.12); border: 1px solid var(--accent-snapmaker); color: #ffd400; padding: 10px 12px; font-weight: 600; font-size: 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>📁 Carica Setup (.json)</span>
+            </button>
+            <input type="file" id="printerConfigFileInput" accept=".json" style="display: none;">
 
+            <button type="button" id="btnExportPrinterConfig" class="btn-modal-cancel" style="padding: 10px 12px; font-size: 12px; white-space: nowrap;" title="Esporta la combinazione attuale dei 4 estrusori in formato JSON">
+              <span>💾 Esporta Setup</span>
+            </button>
+          </div>
+
+          <!-- Opzione B: Apri Studio Locale su PC -->
+          <a href="http://localhost:8000" target="_blank" rel="noopener noreferrer" style="text-decoration: none; background: rgba(0, 168, 255, 0.1); border: 1px solid rgba(0, 168, 255, 0.35); color: #4cd3ff; padding: 10px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+            <span>💻 Apri Studio Locale (http://localhost:8000)</span>
+          </a>
+        </div>
+
+        <div class="modal-footer" style="padding: 0; margin-top: 10px; border: none; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn-modal-cancel" id="btnCancelSyncModalCloud">Chiudi</button>
+          <button type="button" class="btn-modal-action" id="btnContinueWithPalette">
+            <span>✓ Usa Slot Rapidi</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VISTA LOCALE (Localhost / LAN: Studio PC) -->
+      <div id="syncModalLocalSection" style="display: none; padding: 16px 20px;">
+        <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.4;">
+          Interroga in tempo reale la tua <strong>Snapmaker U1</strong> sulla rete locale Wi-Fi per rilevare i colori (tag RFID) caricati nei 4 estrusori:
+        </p>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label" for="printerIpInput">
+            <span>Indirizzo IP Snapmaker U1</span>
+            <span style="color: var(--accent-snapmaker);">*</span>
+          </label>
+          <input type="text" id="printerIpInput" placeholder="Es. 192.168.1.150" value="" style="font-family: monospace; font-size: 13px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
           <div class="form-group">
-            <label class="form-label" for="printerIpInput">
-              <span>Indirizzo IP Snapmaker U1</span>
-              <span style="color: var(--accent-snapmaker);">*</span>
-            </label>
-            <input type="text" id="printerIpInput" placeholder="Es. 192.168.1.150" value="" style="font-family: monospace; font-size: 13px;">
+            <label class="form-label" for="printerPortInput">Porta di Controllo</label>
+            <input type="text" id="printerPortInput" placeholder="8080" value="8080" style="font-family: monospace; font-size: 13px;">
           </div>
+          <div class="form-group">
+            <label class="form-label" for="printerTokenInput">Token API (opzionale)</label>
+            <input type="text" id="printerTokenInput" placeholder="Opzionale / vuoto" style="font-size: 12px;">
+          </div>
+        </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="form-group">
-              <label class="form-label" for="printerPortInput">Porta di Controllo</label>
-              <input type="text" id="printerPortInput" placeholder="8080" value="8080" style="font-family: monospace; font-size: 13px;">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="printerTokenInput">Token API (opzionale)</label>
-              <input type="text" id="printerTokenInput" placeholder="Opzionale / vuoto" style="font-size: 12px;">
-            </div>
-          </div>
-
-          <div class="modal-guide-box" style="margin: 0;">
-            <strong style="color: #fff; display: block; margin-bottom: 4px;">💡 Come trovare l'IP sul touchscreen U1:</strong>
-            1. Tocca l'icona <strong>Impostazioni (⚙️)</strong> ➔ <strong>Wi-Fi</strong>.<br>
-            2. Tocca la rete connessa e leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).
-          </div>
+        <div class="modal-guide-box" style="margin: 0 0 10px 0;">
+          <strong style="color: #fff; display: block; margin-bottom: 4px;">💡 Come trovare l'IP sul touchscreen U1:</strong>
+          1. Tocca l'icona <strong>Impostazioni (⚙️)</strong> ➔ <strong>Wi-Fi</strong>.<br>
+          2. Tocca la rete connessa e leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).
         </div>
 
         <!-- Risultato Scansione -->
-        <div id="syncResultStatus" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 11.5px; line-height: 1.4; margin-top: 10px;"></div>
-      </div>
+        <div id="syncResultStatus" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 11.5px; line-height: 1.4; margin-bottom: 10px;"></div>
 
-      <div class="modal-footer" style="padding: 12px 20px;">
-        <button type="button" class="btn-modal-cancel" id="btnCancelSyncModal">Chiudi</button>
-        <button type="button" class="btn-modal-action" id="btnExecuteSync" style="font-weight: 700; padding: 10px 16px;">
-          <span>⚡ AVVIA SCANSIONE & LEGGI TAG RFID</span>
-        </button>
+        <div class="modal-footer" style="padding: 10px 0 0 0; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn-modal-cancel" id="btnCancelSyncModalLocal">Chiudi</button>
+          <button type="button" class="btn-modal-action" id="btnExecuteSync" style="font-weight: 700; padding: 10px 16px;">
+            <span>⚡ AVVIA SCANSIONE & LEGGI TAG RFID</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -2204,22 +2204,34 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // 3.2 SINCRONIZZAZIONE SNAPMAKER U1 (LAN / CLOUD)
   // ==========================================
-  const isLocalEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isCloudEnvironment = window.location.protocol === 'https:' || (
+    !['localhost', '127.0.0.1'].includes(window.location.hostname) &&
+    !window.location.hostname.startsWith('192.168.') &&
+    !window.location.hostname.startsWith('10.')
+  );
+  const isLocalEnvironment = !isCloudEnvironment;
 
   const btnOpenSyncModal = document.getElementById("btnOpenSyncModal");
   const syncPrinterModal = document.getElementById("syncPrinterModal");
   const btnCloseSyncModal = document.getElementById("btnCloseSyncModal");
-  const btnCancelSyncModal = document.getElementById("btnCancelSyncModal");
-  const btnExecuteSync = document.getElementById("btnExecuteSync");
-  const btnToggleAdvancedIpOnline = document.getElementById("btnToggleAdvancedIpOnline");
-  const syncModalCloudNotice = document.getElementById("syncModalCloudNotice");
-  const syncIpFormSection = document.getElementById("syncIpFormSection");
   const syncModalTitle = document.getElementById("syncModalTitle");
 
+  // Sezione Cloud (Vercel)
+  const syncModalCloudSection = document.getElementById("syncModalCloudSection");
+  const btnUploadPrinterConfig = document.getElementById("btnUploadPrinterConfig");
+  const printerConfigFileInput = document.getElementById("printerConfigFileInput");
+  const btnExportPrinterConfig = document.getElementById("btnExportPrinterConfig");
+  const btnCancelSyncModalCloud = document.getElementById("btnCancelSyncModalCloud");
+  const btnContinueWithPalette = document.getElementById("btnContinueWithPalette");
+
+  // Sezione Locale (Localhost / LAN)
+  const syncModalLocalSection = document.getElementById("syncModalLocalSection");
   const printerIpInput = document.getElementById("printerIpInput");
   const printerPortInput = document.getElementById("printerPortInput");
   const printerTokenInput = document.getElementById("printerTokenInput");
   const syncResultStatus = document.getElementById("syncResultStatus");
+  const btnCancelSyncModalLocal = document.getElementById("btnCancelSyncModalLocal");
+  const btnExecuteSync = document.getElementById("btnExecuteSync");
 
   // Etichetta pulsante nella barra laterale chiara e unificata
   if (btnOpenSyncModal) {
@@ -2242,7 +2254,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Accesso a localStorage non disponibile:", e);
   }
 
-  function openSyncModal(forceExpandIp = false) {
+  function openSyncModal() {
     if (!syncPrinterModal) return;
     syncPrinterModal.style.display = "flex";
 
@@ -2251,35 +2263,25 @@ document.addEventListener("DOMContentLoaded", () => {
       syncResultStatus.innerHTML = "";
     }
 
-    if (printerIpInput && !printerIpInput.value) {
-      printerIpInput.value = localStorage.getItem("snapmaker_u1_ip") || "192.168.1.150";
-    }
-    if (printerPortInput && !printerPortInput.value) {
-      printerPortInput.value = localStorage.getItem("snapmaker_u1_port") || "8080";
-    }
-
     if (isLocalEnvironment) {
       if (syncModalTitle) syncModalTitle.textContent = "Connessione Snapmaker U1 (Wi-Fi LAN)";
-      if (syncModalCloudNotice) syncModalCloudNotice.style.display = "none";
-      if (syncIpFormSection) syncIpFormSection.style.display = "flex";
+      if (syncModalCloudSection) syncModalCloudSection.style.display = "none";
+      if (syncModalLocalSection) syncModalLocalSection.style.display = "block";
+
       if (printerIpInput) {
+        if (!printerIpInput.value) {
+          printerIpInput.value = localStorage.getItem("snapmaker_u1_ip") || "192.168.1.150";
+        }
         printerIpInput.focus();
         printerIpInput.select();
       }
+      if (printerPortInput && !printerPortInput.value) {
+        printerPortInput.value = localStorage.getItem("snapmaker_u1_port") || "8080";
+      }
     } else {
       if (syncModalTitle) syncModalTitle.textContent = "Connessione Snapmaker U1";
-      if (syncModalCloudNotice) syncModalCloudNotice.style.display = "block";
-      if (forceExpandIp) {
-        if (syncIpFormSection) syncIpFormSection.style.display = "flex";
-        if (btnToggleAdvancedIpOnline) btnToggleAdvancedIpOnline.style.display = "none";
-        if (printerIpInput) {
-          printerIpInput.focus();
-          printerIpInput.select();
-        }
-      } else {
-        if (syncIpFormSection) syncIpFormSection.style.display = "none";
-        if (btnToggleAdvancedIpOnline) btnToggleAdvancedIpOnline.style.display = "flex";
-      }
+      if (syncModalCloudSection) syncModalCloudSection.style.display = "block";
+      if (syncModalLocalSection) syncModalLocalSection.style.display = "none";
     }
   }
 
@@ -2288,18 +2290,79 @@ document.addEventListener("DOMContentLoaded", () => {
     syncPrinterModal.style.display = "none";
   }
 
-  safeAddListener(btnOpenSyncModal, "click", () => openSyncModal(false));
+  safeAddListener(btnOpenSyncModal, "click", openSyncModal);
   safeAddListener(btnCloseSyncModal, "click", closeSyncModal);
-  safeAddListener(btnCancelSyncModal, "click", closeSyncModal);
+  safeAddListener(btnCancelSyncModalCloud, "click", closeSyncModal);
+  safeAddListener(btnContinueWithPalette, "click", closeSyncModal);
+  safeAddListener(btnCancelSyncModalLocal, "click", closeSyncModal);
 
-  safeAddListener(btnToggleAdvancedIpOnline, "click", (e) => {
-    if (e) e.preventDefault();
-    if (syncIpFormSection) syncIpFormSection.style.display = "flex";
-    if (btnToggleAdvancedIpOnline) btnToggleAdvancedIpOnline.style.display = "none";
-    if (printerIpInput) {
-      printerIpInput.focus();
-      printerIpInput.select();
-    }
+  // Gestione Upload / Export Setup JSON (Cloud & Locale)
+  safeAddListener(btnUploadPrinterConfig, "click", () => {
+    if (printerConfigFileInput) printerConfigFileInput.click();
+  });
+
+  if (printerConfigFileInput) {
+    printerConfigFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target.result);
+          const parsed = parseSnapmakerPaletteClient(json);
+          applyPaletteColors(parsed.colors, parsed.materials);
+          ToastManager.show({
+            type: "success",
+            title: "Configurazione Caricata",
+            message: `✅ 4 Colori sincronizzati con successo dal file JSON: ${parsed.colors.join(" | ")}`,
+            duration: 5000
+          });
+          closeSyncModal();
+        } catch (err) {
+          ToastManager.show({
+            type: "error",
+            title: "Errore Lettura File",
+            message: "Il file JSON selezionato non contiene una configurazione colori valida.",
+            duration: 4000
+          });
+        }
+        printerConfigFileInput.value = "";
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  safeAddListener(btnExportPrinterConfig, "click", () => {
+    const c0 = colorT0 ? colorT0.value : "#161616";
+    const c1 = colorT1 ? colorT1.value : "#ffffff";
+    const c2 = colorT2 ? colorT2.value : "#e31b23";
+    const c3 = colorT3 ? colorT3.value : "#ffd400";
+    const exportData = {
+      printer: "Snapmaker U1",
+      exported_at: new Date().toISOString(),
+      filaments: [
+        { slot: 1, tool: "T0", color: c0, material: "Estrusore 1" },
+        { slot: 2, tool: "T1", color: c1, material: "Estrusore 2" },
+        { slot: 3, tool: "T2", color: c2, material: "Estrusore 3" },
+        { slot: 4, tool: "T3", color: c3, material: "Estrusore 4" }
+      ],
+      colors: [c0, c1, c2, c3]
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `snapmaker_u1_palette_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    ToastManager.show({
+      type: "success",
+      title: "Configurazione Esportata",
+      message: "File JSON scaricato. Puoi caricarlo in qualsiasi momento o su altri dispositivi!",
+      duration: 3500
+    });
   });
 
   if (syncPrinterModal) {
@@ -2339,6 +2402,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const keys = ["filaments", "filament_info", "slots", "trays", "spools", "materials", "tools"];
       for (const k of keys) {
         if (Array.isArray(data[k])) { candidates = data[k]; break; }
+      }
+      if (!candidates && Array.isArray(data.colors)) {
+        candidates = data.colors;
       }
       if (!candidates && data.data && typeof data.data === "object") {
         for (const k of keys) {
@@ -2418,7 +2484,7 @@ document.addEventListener("DOMContentLoaded", () => {
     triggerPreview(true);
   }
 
-  // Esecuzione scansione e lettura RFID Snapmaker U1
+  // Esecuzione scansione e lettura RFID Snapmaker U1 (Modalità Locale)
   safeAddListener(btnExecuteSync, "click", async () => {
     const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
     const port = printerPortInput ? parseInt(printerPortInput.value.trim(), 10) || 8080 : 8080;
@@ -2452,75 +2518,67 @@ document.addEventListener("DOMContentLoaded", () => {
       syncResultStatus.style.background = "rgba(255, 255, 255, 0.05)";
       syncResultStatus.style.border = "1px solid var(--border-subtle)";
       syncResultStatus.style.color = "var(--text-main)";
-      syncResultStatus.innerHTML = `Interrogazione verso Snapmaker U1 su <code>http://${rawIp}:${port}</code>...`;
+      syncResultStatus.innerHTML = `Interrogazione Snapmaker U1 su <code>http://${rawIp}:${port}</code>...`;
     }
 
     let printerData = null;
-    let mixedContentBlocked = false;
     let fetchErrorDetail = null;
 
-    const endpoints = [
-      "/filament/status",
-      "/filament/data",
-      "/api/v1/filament",
-      "/printer/objects/query?toolhead&extruder&extruder1&extruder2&extruder3&save_variables",
-      "/api/v1/status"
-    ];
-
-    const reqHeaders = { "Accept": "application/json" };
-    if (token) {
-      reqHeaders["Snapmaker-Token"] = token;
-      reqHeaders["Authorization"] = `Bearer ${token}`;
-    }
-
-    const portsToTry = [...new Set([port, 8080, 80, 7125, 8888])];
-
-    for (const p of portsToTry) {
-      if (printerData) break;
-      for (const ep of endpoints) {
-        const url = `http://${rawIp}:${p}${ep}`;
-        try {
-          const fetchOpts = {
-            method: "GET",
-            headers: reqHeaders,
-            signal: AbortSignal.timeout(2400),
-            mode: "cors"
-          };
-          try {
-            fetchOpts.targetAddressSpace = "private";
-          } catch (_) {}
-
-          const resp = await fetch(url, fetchOpts);
-          if (resp.ok) {
-            printerData = await resp.json();
-            if (printerData) break;
-          }
-        } catch (err) {
-          fetchErrorDetail = err.message;
-          if (window.location.protocol === "https:") {
-            mixedContentBlocked = true;
-          }
+    // 1. Prova prima tramite backend locale FastAPI (zero restrizioni browser)
+    try {
+      const beResp = await fetch(`${API_BASE_URL}/api/printer/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip: rawIp, port, token }),
+        signal: AbortSignal.timeout(6000)
+      });
+      if (beResp.ok) {
+        const beData = await beResp.json();
+        if (beData.status === "success" && beData.colors) {
+          printerData = beData;
+        } else if (beData.status === "error" && beData.detail) {
+          fetchErrorDetail = beData.detail;
         }
       }
+    } catch (beErr) {
+      fetchErrorDetail = beErr.message;
     }
 
-    // Se la chiamata diretta dal browser fallisce, prova il backend proxy potenziato
+    // 2. Se necessario, tenta fetch diretta dal browser verso la LAN
     if (!printerData) {
-      try {
-        const beResp = await fetch(`${API_BASE_URL}/api/printer/sync`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ip: rawIp, port, token }),
-          signal: AbortSignal.timeout(5000)
-        });
-        if (beResp.ok) {
-          const beData = await beResp.json();
-          if (beData.status === "success" && beData.colors) {
-            printerData = beData;
+      const endpoints = [
+        "/filament/status",
+        "/filament/data",
+        "/api/v1/filament",
+        "/printer/objects/query?toolhead&extruder&extruder1&extruder2&extruder3&save_variables",
+        "/api/v1/status"
+      ];
+      const reqHeaders = { "Accept": "application/json" };
+      if (token) {
+        reqHeaders["Snapmaker-Token"] = token;
+        reqHeaders["Authorization"] = `Bearer ${token}`;
+      }
+      const portsToTry = [...new Set([port, 8080, 80, 7125, 8888])];
+
+      for (const p of portsToTry) {
+        if (printerData) break;
+        for (const ep of endpoints) {
+          const url = `http://${rawIp}:${p}${ep}`;
+          try {
+            const resp = await fetch(url, {
+              method: "GET",
+              headers: reqHeaders,
+              signal: AbortSignal.timeout(2000),
+              mode: "cors"
+            });
+            if (resp.ok) {
+              printerData = await resp.json();
+              if (printerData) break;
+            }
+          } catch (err) {
+            fetchErrorDetail = err.message;
           }
         }
-      } catch (beErr) {
-        console.warn("Backend sync proxy fallito:", beErr);
       }
     }
 
@@ -2554,29 +2612,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Errore: visualizza UN SINGOLO messaggio pulito nel modale, senza alert duplicati né toast invasivi
+    // Errore
     if (syncResultStatus) {
       syncResultStatus.style.display = "block";
       syncResultStatus.style.background = "rgba(255, 71, 87, 0.15)";
       syncResultStatus.style.border = "1px solid #ff4757";
       syncResultStatus.style.color = "#ff6b81";
-      if (mixedContentBlocked) {
-        syncResultStatus.innerHTML = `
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">⚠️ Connessione Bloccata dal Browser (HTTPS ➔ LAN)</strong>
-          Da un sito online HTTPS non è permesso raggiungere direttamente indirizzi IP locali (<code>${rawIp}:${port}</code>).<br>
-          <span style="font-size: 10.5px; color: var(--text-main); margin-top: 4px; display: block;">
-            💡 Imposta i filamenti con gli <strong>Slot Rapidi</strong> della palette a 1 clic, o avvia lo studio in locale con <code>AVVIA_STUDIO_U1.bat</code>.
-          </span>
-        `;
-      } else {
-        syncResultStatus.innerHTML = `
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">Snapmaker U1 non raggiungibile</strong>
-          Impossibile stabilire una connessione con <code>http://${rawIp}:${port}</code>.<br>
-          <span style="font-size: 10.5px; color: var(--text-main); margin-top: 4px; display: block;">
-            Verifica che la macchina sia accesa, che l'IP sia corretto e che il tuo dispositivo sia sulla stessa rete Wi-Fi.
-          </span>
-        `;
-      }
+      const errDetail = fetchErrorDetail || "Nessuna risposta ricevuta dalla stampante";
+      syncResultStatus.innerHTML = `
+        <strong style="color: #fff; display: block; margin-bottom: 2px;">Snapmaker U1 non raggiungibile</strong>
+        Impossibile stabilire una connessione con <code>http://${rawIp}:${port}</code>.<br>
+        <span style="font-size: 10.5px; color: var(--text-main); margin-top: 4px; display: block;">
+          Verifica che la macchina sia accesa, che l'IP sia corretto e che il tuo computer sia connesso alla stessa rete Wi-Fi.<br>
+          <span style="opacity: 0.8; font-size: 9.5px; margin-top: 2px; display: block;">Dettaglio: ${errDetail}</span>
+        </span>
+      `;
     }
   });
 
