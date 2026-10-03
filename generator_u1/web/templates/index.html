@@ -752,22 +752,51 @@
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 16px;">🔄</span>
-          <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Sincronizza da Snapmaker U1</h3>
+          <h3 id="syncModalTitle" style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Connessione Snapmaker U1</h3>
         </div>
         <button type="button" class="modal-close" id="btnCloseSyncModal" aria-label="Chiudi">&times;</button>
       </div>
-      <div class="modal-body">
-        
-        <!-- Info Banner Dinamico: Cloud HTTPS vs Locale HTTP -->
-        <div id="syncModalCloudNotice" class="modal-guide-box" style="display: none; background: rgba(255, 165, 2, 0.08); border-color: rgba(255, 165, 2, 0.35);">
-          <strong style="color: #ffa502; display: block; margin-bottom: 4px;">🌐 Connessione Cloud (HTTPS Vercel)</strong>
-          Per politica di sicurezza del browser, da una connessione HTTPS non è consentito interrogare automaticamente indirizzi IP privati (LAN).
-          <div style="margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--text-main);">
-            • <strong>Uso Immediato:</strong> Usa i nuovi <strong>Slot Rapidi</strong> nella palette a 1 clic e salvali nei tuoi <strong>Preset Personali</strong>.<br>
-            • <strong>Rilevamento LAN Automatico:</strong> Per leggere in tempo reale i tag RFID dalla stampante, apri l'app in locale sul tuo computer (<code>AVVIA_STUDIO_U1.bat</code> o <code>http://localhost:8000</code>).
+
+      <!-- Vista Online (Vercel Cloud): Guida chiara senza campi bloccati né avvisi duplicati -->
+      <div id="syncModalOnlineView" class="modal-body" style="display: none;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">🌐</div>
+          <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #fff;">Studio Parametrico U1 in Cloud</h4>
+          <p style="margin: 0; font-size: 11.5px; color: var(--text-muted); line-height: 1.4;">
+            Sei connesso via <strong>HTTPS</strong>. Per policy di sicurezza dei browser moderni, da un sito cloud pubblico non è consentito interrogare direttamente la rete locale (LAN).
+          </p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 16px; line-height: 1.3;">🎨</span>
+            <div>
+              <strong style="color: #fff; font-size: 11.5px; display: block; margin-bottom: 2px;">Impostazione Rapida a 1-Clic:</strong>
+              <span style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                Usa i selettori <strong>Slot Rapidi</strong> nella palette per impostare subito i tuoi colori Snapmaker e salvali con <strong>➕ Salva Setup</strong> nei tuoi preset personali.
+              </span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 16px; line-height: 1.3;">💻</span>
+            <div>
+              <strong style="color: #fff; font-size: 11.5px; display: block; margin-bottom: 2px;">Sincronizzazione RFID Wi-Fi Automatica:</strong>
+              <span style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                Per rilevare in tempo reale i tag RFID dei 4 estrusori, avvia l'app in locale sul tuo PC con <code>AVVIA_STUDIO_U1.bat</code> (o collegati a <code>http://localhost:8000</code>).
+              </span>
+            </div>
           </div>
         </div>
 
+        <div style="text-align: center;">
+          <button type="button" id="btnToggleAdvancedIpOnline" class="btn-text-action" style="font-size: 11px;">
+            Vuoi comunque testare la connessione con IP manuale?
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista Locale (Localhost / LAN): Campi IP e rilevamento diretto -->
+      <div id="syncModalLocalView" class="modal-body" style="display: none;">
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
           Interroga la tua Snapmaker U1 sulla rete locale Wi-Fi per rilevare in tempo reale i colori (tag RFID) caricati nei 4 estrusori.
         </p>
@@ -791,7 +820,6 @@
           </div>
         </div>
 
-        <!-- Guida Touchscreen U1 -->
         <div class="modal-guide-box">
           <strong style="color: #fff; display: block; margin-bottom: 4px;">💡 Come trovare l'IP sulla Snapmaker U1:</strong>
           1. Sul touchscreen tocca l'icona <strong>Impostazioni (⚙️)</strong>.<br>
@@ -799,10 +827,18 @@
           3. Leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).
         </div>
 
-        <!-- Sezione Risultato Rilevamento Slot -->
         <div id="syncResultStatus" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 11.5px; margin-bottom: 12px; line-height: 1.4;"></div>
       </div>
-      <div class="modal-footer">
+
+      <!-- Footer Vista Online -->
+      <div id="syncFooterOnline" class="modal-footer" style="display: none;">
+        <button type="button" class="btn-modal-action" id="btnOnlineOk" style="width: 100%; justify-content: center;">
+          <span>✓ Usa Slot Rapidi & Preset</span>
+        </button>
+      </div>
+
+      <!-- Footer Vista Locale -->
+      <div id="syncFooterLocal" class="modal-footer" style="display: none;">
         <button type="button" class="btn-modal-cancel" id="btnCancelSyncModal">Chiudi</button>
         <button type="button" class="btn-modal-action" id="btnExecuteSync">
           <span>⚡ Rileva Colori RFID</span>

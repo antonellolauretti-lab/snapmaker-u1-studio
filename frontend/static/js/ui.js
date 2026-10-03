@@ -2202,18 +2202,38 @@ document.addEventListener("DOMContentLoaded", () => {
   renderUserPresets();
 
   // ==========================================
-  // 3.2 SINCRONIZZAZIONE SNAPMAKER U1 (LAN)
+  // 3.2 SINCRONIZZAZIONE SNAPMAKER U1 (LAN / CLOUD)
   // ==========================================
+  const isLocalEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
   const btnOpenSyncModal = document.getElementById("btnOpenSyncModal");
   const syncPrinterModal = document.getElementById("syncPrinterModal");
   const btnCloseSyncModal = document.getElementById("btnCloseSyncModal");
   const btnCancelSyncModal = document.getElementById("btnCancelSyncModal");
   const btnExecuteSync = document.getElementById("btnExecuteSync");
+  const btnOnlineOk = document.getElementById("btnOnlineOk");
+  const btnToggleAdvancedIpOnline = document.getElementById("btnToggleAdvancedIpOnline");
+  const syncModalOnlineView = document.getElementById("syncModalOnlineView");
+  const syncModalLocalView = document.getElementById("syncModalLocalView");
+  const syncFooterOnline = document.getElementById("syncFooterOnline");
+  const syncFooterLocal = document.getElementById("syncFooterLocal");
+  const syncModalTitle = document.getElementById("syncModalTitle");
+
   const printerIpInput = document.getElementById("printerIpInput");
   const printerPortInput = document.getElementById("printerPortInput");
   const printerTokenInput = document.getElementById("printerTokenInput");
   const syncResultStatus = document.getElementById("syncResultStatus");
-  const syncModalCloudNotice = document.getElementById("syncModalCloudNotice");
+
+  // Adatta l'etichetta del pulsante palette all'ambiente
+  if (btnOpenSyncModal) {
+    if (isLocalEnvironment) {
+      btnOpenSyncModal.innerHTML = `<span>🔄 Rileva RFID (LAN)</span>`;
+      btnOpenSyncModal.title = "Rileva in tempo reale via Wi-Fi i colori RFID della Snapmaker U1";
+    } else {
+      btnOpenSyncModal.innerHTML = `<span>💡 Info Sync U1</span>`;
+      btnOpenSyncModal.title = "Informazioni sulla connessione locale con la Snapmaker U1";
+    }
+  }
 
   // Ripristina impostazioni salvate da localStorage
   try {
@@ -2230,18 +2250,32 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Accesso a localStorage non disponibile:", e);
   }
 
-  function openSyncModal() {
+  function openSyncModal(forceLocalMode = false) {
     if (!syncPrinterModal) return;
     syncPrinterModal.style.display = "flex";
+
     if (syncResultStatus) {
       syncResultStatus.style.display = "none";
       syncResultStatus.innerHTML = "";
     }
-    if (syncModalCloudNotice) {
-      syncModalCloudNotice.style.display = window.location.protocol === "https:" ? "block" : "none";
-    }
-    if (printerIpInput && !printerIpInput.value) {
-      printerIpInput.focus();
+
+    const showLocal = isLocalEnvironment || forceLocalMode;
+
+    if (showLocal) {
+      if (syncModalTitle) syncModalTitle.textContent = "Sincronizza da Snapmaker U1 (Wi-Fi)";
+      if (syncModalOnlineView) syncModalOnlineView.style.display = "none";
+      if (syncModalLocalView) syncModalLocalView.style.display = "block";
+      if (syncFooterOnline) syncFooterOnline.style.display = "none";
+      if (syncFooterLocal) syncFooterLocal.style.display = "flex";
+      if (printerIpInput && !printerIpInput.value) {
+        printerIpInput.focus();
+      }
+    } else {
+      if (syncModalTitle) syncModalTitle.textContent = "Connessione Snapmaker U1";
+      if (syncModalOnlineView) syncModalOnlineView.style.display = "block";
+      if (syncModalLocalView) syncModalLocalView.style.display = "none";
+      if (syncFooterOnline) syncFooterOnline.style.display = "flex";
+      if (syncFooterLocal) syncFooterLocal.style.display = "none";
     }
   }
 
@@ -2250,9 +2284,11 @@ document.addEventListener("DOMContentLoaded", () => {
     syncPrinterModal.style.display = "none";
   }
 
-  safeAddListener(btnOpenSyncModal, "click", openSyncModal);
+  safeAddListener(btnOpenSyncModal, "click", () => openSyncModal(false));
   safeAddListener(btnCloseSyncModal, "click", closeSyncModal);
   safeAddListener(btnCancelSyncModal, "click", closeSyncModal);
+  safeAddListener(btnOnlineOk, "click", closeSyncModal);
+  safeAddListener(btnToggleAdvancedIpOnline, "click", () => openSyncModal(true));
 
   if (syncPrinterModal) {
     syncPrinterModal.addEventListener("click", (e) => {
@@ -2370,7 +2406,7 @@ document.addEventListener("DOMContentLoaded", () => {
     triggerPreview(true);
   }
 
-  // Esecuzione sincronizzazione automatica LAN (Client-Side con Fallback)
+  // Esecuzione sincronizzazione automatica LAN
   safeAddListener(btnExecuteSync, "click", async () => {
     const rawIp = printerIpInput ? printerIpInput.value.trim() : "";
     const port = printerPortInput ? parseInt(printerPortInput.value.trim()) || 8080 : 8080;
@@ -2496,48 +2532,30 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Se bloccato da Mixed Content (HTTPS -> HTTP LAN):
-    if (mixedContentBlocked) {
-      if (syncResultStatus) {
-        syncResultStatus.style.display = "block";
-        syncResultStatus.style.background = "rgba(255, 165, 2, 0.15)";
-        syncResultStatus.style.border = "1px solid #ffa502";
-        syncResultStatus.style.color = "#ffd8a8";
+    // Errore: visualizza UN SINGOLO messaggio pulito nel modale, senza alert duplicati né toast invasivi
+    if (syncResultStatus) {
+      syncResultStatus.style.display = "block";
+      syncResultStatus.style.background = "rgba(255, 71, 87, 0.15)";
+      syncResultStatus.style.border = "1px solid #ff4757";
+      syncResultStatus.style.color = "#ff6b81";
+      if (mixedContentBlocked) {
         syncResultStatus.innerHTML = `
-          <strong style="color: #fff; display: block; margin-bottom: 4px;">⚠️ Protezione Browser Cloud Attiva (HTTPS ➔ LAN)</strong>
-          Sul sito online HTTPS (Vercel), i browser bloccano le chiamate dirette verso indirizzi IP privati (<code>http://${rawIp}:${port}</code>).<br>
-          <div style="font-size: 11px; margin-top: 6px; line-height: 1.4;">
-            💡 <strong>Esperienza Immediata a 1 Clic:</strong> Usa i nuovi <strong>Slot Rapidi</strong> della palette a sinistra o richiama i tuoi <strong>Preset Personali</strong>.<br>
-            Per la sincronizzazione LAN continua automatica, avvia l'app in locale sul tuo PC con <code>AVVIA_STUDIO_U1.bat</code>.
-          </div>
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">⚠️ Connessione Bloccata dal Browser (HTTPS ➔ LAN)</strong>
+          Da un sito online HTTPS non è permesso raggiungere direttamente indirizzi IP locali (<code>${rawIp}:${port}</code>).<br>
+          <span style="font-size: 10.5px; color: var(--text-main); margin-top: 4px; display: block;">
+            💡 Imposta i filamenti con gli <strong>Slot Rapidi</strong> della palette a 1 clic, o avvia lo studio in locale con <code>AVVIA_STUDIO_U1.bat</code>.
+          </span>
         `;
-      }
-      ToastManager.show({
-        type: "warning",
-        title: "Blocco Sicurezza HTTPS del Browser",
-        message: "Per la lettura diretta LAN avvia l'app in locale, oppure imposta i filamenti con gli Slot Rapidi a 1 clic.",
-        duration: 7000
-      });
-    } else {
-      const errDetail = fetchErrorDetail || "Nessuna risposta dalla macchina";
-      if (syncResultStatus) {
-        syncResultStatus.style.display = "block";
-        syncResultStatus.style.background = "rgba(255, 71, 87, 0.15)";
-        syncResultStatus.style.border = "1px solid #ff4757";
-        syncResultStatus.style.color = "#ff6b81";
+      } else {
+        const errDetail = fetchErrorDetail || "Nessuna risposta dalla macchina";
         syncResultStatus.innerHTML = `
-          <strong>Errore di Connessione:</strong> Impossibile raggiungere ${rawIp}:${port}.<br>
-          <span style="font-size: 10.5px; margin-top: 4px; display: block;">
-            Dettaglio: ${errDetail}. Verifica che il tuo dispositivo sia sulla stessa rete Wi-Fi della Snapmaker U1.
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">Snapmaker U1 non raggiungibile</strong>
+          Impossibile stabilire una connessione con <code>http://${rawIp}:${port}</code>.<br>
+          <span style="font-size: 10.5px; color: var(--text-main); margin-top: 4px; display: block;">
+            Verifica che la macchina sia accesa, che l'IP sia corretto e che il tuo dispositivo sia sulla stessa rete Wi-Fi.
           </span>
         `;
       }
-      ToastManager.show({
-        type: "error",
-        title: "Snapmaker U1 non Raggiungibile",
-        message: `Verifica l'indirizzo IP ${rawIp} e che la macchina sia accesa.`,
-        duration: 7000
-      });
     }
   });
 
