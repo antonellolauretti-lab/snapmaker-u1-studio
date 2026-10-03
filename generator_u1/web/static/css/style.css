@@ -1603,6 +1603,35 @@ body.mode-desksign .only-desksign {
   opacity: 0.8;
 }
 
+/* Template Predefinito Buttons */
+.btn-save-template {
+  background: rgba(255, 212, 0, 0.08);
+  border: 1px solid rgba(255, 212, 0, 0.35);
+  color: #ffd400;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  transition: all var(--transition-speed);
+}
+
+.btn-save-template:hover {
+  background: rgba(255, 212, 0, 0.16);
+  border-color: #ffd400;
+  box-shadow: 0 0 12px rgba(255, 212, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-save-template:active {
+  transform: translateY(0);
+}
+
 /* Reset Defaults Button in Sidebar Footer */
 .btn-reset-link {
   background: transparent;
