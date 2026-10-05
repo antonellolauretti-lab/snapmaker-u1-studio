@@ -78,16 +78,23 @@ def _get_access_token() -> str:
         logger.error(f"PayPal OAuth Unexpected Exception: {str(e)}")
         raise
 
-def create_paypal_order(items: List[Dict[str, Any]], customer_info: Dict[str, Any]) -> Dict[str, Any]:
+def create_paypal_order(
+    items: List[Dict[str, Any]],
+    customer_info: Dict[str, Any],
+    coupon_code: Optional[str] = None,
+    delivery_method: str = "shipping"
+) -> Dict[str, Any]:
     """
     Crea l'ordine PayPal lato server con la composizione esatta:
     - Subtotale articoli
-    - Sconto Promo 3x2 (discount, solo se > 0)
-    - Spedizione fissa Corriere BRT/SDA
+    - Sconto Promo 3x2 e/o Coupon sconto (discount, solo se > 0)
+    - Spedizione (0,00 € se ritiro a mano o fissa Corriere BRT/SDA)
     - Destinatario: antonello.lauretti@gmail.com
     Formattazione rigorosa a 2 decimali come stringa (es. '7.80').
     """
-    totals = calculate_cart_totals(items)
+    c_code = coupon_code or customer_info.get("coupon_code") or customer_info.get("coupon")
+    d_method = delivery_method or customer_info.get("delivery_method") or customer_info.get("deliveryMethod") or "shipping"
+    totals = calculate_cart_totals(items, coupon_code=c_code, delivery_method=d_method)
     
     subtotal_str = f"{totals['subtotal']:.2f}"
     discount_val = totals['discount_amount']
@@ -151,7 +158,10 @@ def create_paypal_order(items: List[Dict[str, Any]], customer_info: Dict[str, An
     shipping_zip = str(customer_info.get("shipping_zip") or "").strip()
     cust_name = (customer_info.get("customer_name") or "Cliente").strip()
 
-    if shipping_addr and shipping_city and shipping_zip:
+    is_pickup = str(d_method).lower() == "pickup"
+    if is_pickup:
+        shipping_pref = "NO_SHIPPING"
+    elif shipping_addr and shipping_city and shipping_zip:
         purchase_unit["shipping"] = {
             "name": {
                 "full_name": cust_name

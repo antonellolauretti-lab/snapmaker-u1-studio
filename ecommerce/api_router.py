@@ -5,6 +5,7 @@ Collega:
 - PayPal REST API v2 per ordini e pagamenti
 - Resend per notifiche email automatiche
 - Snapmaker3MFPackager per il download istantaneo del 3MF nativo (zero prime tower)
+- Motore Coupon Sconto e Ritiro a Mano / Contanti
 """
 import os
 import sys
@@ -13,6 +14,7 @@ import datetime
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Depends, Header, Response, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -27,7 +29,12 @@ try:
 except ImportError:
     pass
 
-from ecommerce.cart_engine import calculate_cart_totals
+from ecommerce.cart_engine import (
+    calculate_cart_totals,
+    get_coupons,
+    save_coupons,
+    validate_coupon_code
+)
 from ecommerce.services.paypal_service import create_paypal_order, capture_paypal_order, get_paypal_config
 from ecommerce.services.notification_service import (
     send_customer_order_confirmation,
@@ -165,7 +172,7 @@ def _save_pricing_settings(settings: dict):
         print(f"[WARN] Impossibile salvare {pricing_file}: {e}")
 
 # ==============================================================================
-# 1. STOREFRONT PUBBLICO (FILAMENTI, LISTINO & CARRELLO)
+# 1. STOREFRONT PUBBLICO (FILAMENTI, LISTINO, CARRELLO & COUPON)
 # ==============================================================================
 
 @router.get("/store/filaments")
@@ -182,45 +189,58 @@ def get_store_pricing():
     settings["paypal_mode"] = paypal_cfg["mode"]
     return settings
 
-@router.get("/admin/pricing")
-def get_admin_pricing(auth: bool = Depends(verify_admin_auth)):
-    """Restituisce il listino prezzi e promozioni per il pannello Admin."""
-    return _load_pricing_settings()
-
-@router.post("/admin/pricing")
-def update_admin_pricing(payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
-    """Salva le nuove impostazioni del listino prezzi e promozioni."""
-    current = _load_pricing_settings()
-    for k, v in payload.items():
-        if k in current:
-            if k == "promo_3x2_enabled":
-                current[k] = bool(v)
-            else:
-                try:
-                    current[k] = round(float(v), 2)
-                except (ValueError, TypeError):
-                    pass
-    _save_pricing_settings(current)
-    return {"success": True, "settings": current}
-
 @router.post("/store/calculate-cart")
 def api_calculate_cart(payload: Dict[str, Any]):
-    """Calcola in modo deterministico il totale, promo 3x2 e spedizione 5,00 €."""
+    """Calcola in modo deterministico il totale, promo 3x2, coupon e spedizione/ritiro."""
     items = payload.get("items", [])
-    totals = calculate_cart_totals(items)
+    coupon_code = payload.get("coupon_code") or payload.get("coupon")
+    delivery_method = payload.get("delivery_method") or payload.get("deliveryMethod") or "shipping"
+    totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method=delivery_method)
     return {
         "item_count": totals["item_count"],
         "subtotal": float(totals["subtotal"]),
+        "promo_discount": float(totals["promo_discount"]),
+        "coupon_discount": float(totals["coupon_discount"]),
         "discount_amount": float(totals["discount_amount"]),
         "shipping_amount": float(totals["shipping_amount"]),
+        "shipping_label": totals["shipping_label"],
         "total_amount": float(totals["total_amount"]),
         "free_items_count": totals["free_items_count"],
         "promo_applied": totals["promo_applied"],
-        "promo_label": totals["promo_label"]
+        "promo_label": totals["promo_label"],
+        "coupon_applied": totals["coupon_applied"],
+        "coupon_code": totals["coupon_code"],
+        "coupon_label": totals["coupon_label"],
+        "delivery_method": totals["delivery_method"]
+    }
+
+@router.post("/store/validate-coupon")
+def api_validate_coupon(payload: Dict[str, Any]):
+    """Verifica e calcola lo sconto di un codice coupon inserito dal cliente."""
+    code = payload.get("code") or payload.get("coupon_code") or ""
+    subtotal_val = payload.get("subtotal", 0.0)
+    try:
+        subtotal = Decimal(str(subtotal_val))
+    except Exception:
+        subtotal = Decimal("0.0")
+
+    res = validate_coupon_code(code, subtotal)
+    if not res["valid"]:
+        return JSONResponse(status_code=400, content={"valid": False, "message": res["message"]})
+
+    coupon = res["coupon"]
+    return {
+        "valid": True,
+        "code": coupon["code"],
+        "type": coupon.get("type", "percentage"),
+        "value": float(coupon.get("value", 0.0)),
+        "min_spend": float(coupon.get("min_spend", 0.0)),
+        "discount_amount": float(res["discount_amount"]),
+        "message": res["message"]
     }
 
 # ==============================================================================
-# 2. CHECKOUT & INTEGRAZIONE PAYPAL SMART BUTTONS
+# 2. CHECKOUT & ORDINI (PAYPAL, CONTANTI AL RITIRO & TEST)
 # ==============================================================================
 
 @router.post("/store/orders/create-paypal")
@@ -230,21 +250,22 @@ def api_create_paypal_order(payload: Dict[str, Any]):
     """Crea un ordine PayPal sicuro con importi calcolati dal server e logging esplicito."""
     items = payload.get("items", [])
     customer_info = payload.get("customerInfo", {})
+    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
+    delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
 
     if not items:
         raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
 
     cfg = get_paypal_config()
-    print(f"[API] Richiesta creazione ordine PayPal | Mode: {cfg['mode']} | Articoli: {len(items)}")
+    print(f"[API] Richiesta creazione ordine PayPal | Mode: {cfg['mode']} | Articoli: {len(items)} | Delivery: {delivery_method} | Coupon: {coupon_code}")
 
-    # Se le credenziali PayPal non sono fornite o sono 'sb' senza secret, genera un ID mock di test
     if not cfg["client_id"] or not cfg["client_secret"] or cfg["client_id"] == "sb":
         mock_id = f"PAYPAL_MOCK_{uuid.uuid4().hex[:10].upper()}"
         print(f"[API] Credenziali PayPal non configurate o default 'sb', generato mock ID: {mock_id}")
         return {"id": mock_id, "status": "CREATED", "mode": "mock"}
 
     try:
-        order_res = create_paypal_order(items, customer_info)
+        order_res = create_paypal_order(items, customer_info, coupon_code=coupon_code, delivery_method=delivery_method)
         return order_res
     except Exception as e:
         print(f"[API] Errore creazione ordine PayPal: {str(e)}")
@@ -254,19 +275,22 @@ def api_create_paypal_order(payload: Dict[str, Any]):
 @router.post("/orders/capture-paypal-order")
 @router.post("/orders/capture-paypal")
 def api_capture_paypal_order(payload: Dict[str, Any]):
-    """Cattura il pagamento, salva l'ordine in DB e avvia le notifiche Resend."""
+    """Cattura il pagamento PayPal, salva l'ordine in DB e avvia le notifiche Resend."""
     paypal_order_id = payload.get("paypalOrderId") or payload.get("orderID") or payload.get("paypal_order_id")
     items = payload.get("items", [])
     customer_info = payload.get("customerInfo", {})
+    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
+    delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
+    is_pickup = delivery_method == "pickup"
 
     if not paypal_order_id or not items:
         raise HTTPException(status_code=400, detail="Dati ordine mancanti (paypalOrderId o items).")
 
     cfg = get_paypal_config()
-    print(f"[API] Richiesta cattura ordine PayPal ID: {paypal_order_id}")
+    print(f"[API] Richiesta cattura ordine PayPal ID: {paypal_order_id} | Delivery: {delivery_method} | Coupon: {coupon_code}")
 
     # Calcolo totale verificato
-    totals = calculate_cart_totals(items)
+    totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method=delivery_method)
     
     # Genera codice ordine
     now = datetime.datetime.now()
@@ -288,11 +312,16 @@ def api_capture_paypal_order(payload: Dict[str, Any]):
         "customer_name": customer_info.get("customer_name", "Cliente"),
         "customer_email": customer_info.get("customer_email", ""),
         "customer_phone": customer_info.get("customer_phone", ""),
-        "shipping_address": customer_info.get("shipping_address", ""),
-        "shipping_city": customer_info.get("shipping_city", ""),
-        "shipping_zip": customer_info.get("shipping_zip", ""),
-        "shipping_province": customer_info.get("shipping_province", ""),
+        "shipping_address": customer_info.get("shipping_address", "Ritiro a mano" if is_pickup else ""),
+        "shipping_city": customer_info.get("shipping_city", "Laboratorio" if is_pickup else ""),
+        "shipping_zip": customer_info.get("shipping_zip", "00000" if is_pickup else ""),
+        "shipping_province": customer_info.get("shipping_province", "RM" if is_pickup else ""),
         "order_notes": customer_info.get("order_notes", ""),
+        "delivery_method": "pickup" if is_pickup else "shipping",
+        "payment_method": "paypal",
+        "coupon_code": totals.get("coupon_code"),
+        "coupon_discount": float(totals.get("coupon_discount", 0.0)),
+        "promo_discount": float(totals.get("promo_discount", 0.0)),
         "subtotal_amount": float(totals["subtotal"]),
         "discount_amount": float(totals["discount_amount"]),
         "shipping_amount": float(totals["shipping_amount"]),
@@ -301,7 +330,7 @@ def api_capture_paypal_order(payload: Dict[str, Any]):
         "paypal_capture_id": capture_id,
         "payment_status": "paid",
         "order_status": "da_stampare",
-        "courier": "BRT / SDA",
+        "courier": "Ritiro a mano di persona" if is_pickup else "BRT / SDA",
         "created_at": now.isoformat()
     }
 
@@ -339,7 +368,7 @@ def api_capture_paypal_order(payload: Dict[str, Any]):
 
     _save_local_db()
 
-    # 3. Notifiche email via Resend
+    # Notifiche email via Resend
     try:
         send_customer_order_confirmation(order_record, saved_items)
         send_admin_new_order_alert(order_record, saved_items)
@@ -350,7 +379,115 @@ def api_capture_paypal_order(payload: Dict[str, Any]):
         "status": "success",
         "order_number": order_number,
         "customer_email": order_record["customer_email"],
-        "total": order_record["total_amount"]
+        "total": order_record["total_amount"],
+        "delivery_method": order_record["delivery_method"],
+        "payment_method": "paypal"
+    }
+
+@router.post("/store/orders/create-pickup-cash")
+@router.post("/orders/create-pickup-cash")
+def api_create_pickup_cash_order(payload: Dict[str, Any]):
+    """
+    Registra un ordine con consegna 'Ritiro a Mano' e pagamento 'Contanti al Ritiro'.
+    Salta PayPal, assegna stato 'da_stampare' e payment_status 'in_attesa_al_ritiro',
+    invia le notifiche email al cliente e all'amministratore.
+    """
+    items = payload.get("items", [])
+    customer_info = payload.get("customerInfo", {})
+    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
+    
+    if not items:
+        raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
+
+    cust_name = (customer_info.get("customer_name") or "").strip()
+    cust_email = (customer_info.get("customer_email") or "").strip()
+    cust_phone = (customer_info.get("customer_phone") or "").strip()
+
+    if not cust_name or not cust_email or not cust_phone:
+        raise HTTPException(status_code=400, detail="Nome, Email e Cellulare sono obbligatori per il ritiro a mano.")
+
+    # Calcolo totale verificato con delivery_method='pickup'
+    totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method="pickup")
+
+    now = datetime.datetime.now()
+    order_number = f"U1-RIT-{now.strftime('%Y%m%d')}-{len(_LOCAL_ORDERS_DB) + 1:04d}"
+    order_id = str(uuid.uuid4())
+
+    order_record = {
+        "id": order_id,
+        "order_number": order_number,
+        "customer_name": cust_name,
+        "customer_email": cust_email,
+        "customer_phone": cust_phone,
+        "shipping_address": customer_info.get("shipping_address") or "Ritiro a mano di persona",
+        "shipping_city": customer_info.get("shipping_city") or "Laboratorio",
+        "shipping_zip": customer_info.get("shipping_zip") or "00000",
+        "shipping_province": customer_info.get("shipping_province") or "RM",
+        "order_notes": customer_info.get("order_notes", ""),
+        "delivery_method": "pickup",
+        "payment_method": "cash_on_pickup",
+        "coupon_code": totals.get("coupon_code"),
+        "coupon_discount": float(totals.get("coupon_discount", 0.0)),
+        "promo_discount": float(totals.get("promo_discount", 0.0)),
+        "subtotal_amount": float(totals["subtotal"]),
+        "discount_amount": float(totals["discount_amount"]),
+        "shipping_amount": 0.0,
+        "total_amount": float(totals["total_amount"]),
+        "paypal_order_id": None,
+        "paypal_capture_id": None,
+        "payment_status": "in_attesa_al_ritiro",
+        "order_status": "da_stampare",
+        "courier": "Ritiro a mano (Contanti)",
+        "created_at": now.isoformat()
+    }
+
+    _LOCAL_ORDERS_DB.insert(0, order_record)
+
+    saved_items = []
+    for it in totals["items"]:
+        raw = it["raw"]
+        item_id = str(uuid.uuid4())
+        item_record = {
+            "id": item_id,
+            "order_id": order_id,
+            "product_type": raw.get("productType") or raw.get("product_type") or "keychain",
+            "product_title": raw.get("productTitle") or raw.get("product_title") or "Portachiavi",
+            "unit_price": float(it["unit_price"]),
+            "is_free_promo": it["is_free_promo"],
+            "custom_text_line1": raw.get("customTextLine1") or raw.get("custom_text_line1") or "TEST",
+            "custom_text_line2": raw.get("customTextLine2") or raw.get("custom_text_line2"),
+            "font_id": raw.get("fontId") or raw.get("font_id") or "Montserrat",
+            "icon_id": raw.get("iconId") or raw.get("icon_id") or raw.get("icon_name"),
+            "icon_position": raw.get("iconPosition") or raw.get("icon_position") or "right",
+            "icon_color_hex": raw.get("iconColorHex") or raw.get("icon_color_hex"),
+            "has_custom_icon_color": raw.get("hasCustomIconColor") or raw.get("has_custom_icon_color") or False,
+            "base_style": raw.get("baseStyle") or raw.get("base_style") or "rectangle",
+            "hole_position": raw.get("holePosition") or raw.get("hole_position") or "left",
+            "base_color_name": raw.get("baseColorName") or raw.get("base_color_name") or "Black",
+            "base_color_hex": raw.get("baseColorHex") or raw.get("base_color_hex") or "#080A0D",
+            "text_color_name": raw.get("textColorName") or raw.get("text_color_name") or "Cool White",
+            "text_color_hex": raw.get("textColorHex") or raw.get("text_color_hex") or "#D9DFE5",
+            "generator_params": raw.get("generatorParams") or raw.get("generator_params") or {}
+        }
+        _LOCAL_ORDER_ITEMS_DB.append(item_record)
+        saved_items.append(item_record)
+
+    _save_local_db()
+
+    # Notifiche email via Resend
+    try:
+        send_customer_order_confirmation(order_record, saved_items)
+        send_admin_new_order_alert(order_record, saved_items)
+    except Exception as e:
+        print(f"[WARN] Invio email non riuscito: {e}")
+
+    return {
+        "status": "success",
+        "order_number": order_number,
+        "customer_email": order_record["customer_email"],
+        "total": order_record["total_amount"],
+        "delivery_method": "pickup",
+        "payment_method": "cash_on_pickup"
     }
 
 @router.post("/store/orders/create-test")
@@ -358,16 +495,17 @@ def api_create_test_order(payload: Dict[str, Any]):
     """
     MODALITÀ TEST CHECKOUT:
     Crea e registra un ordine di test senza richiedere transazioni monetarie reali su PayPal.
-    L'ordine comparirà all'istante nel gestionale /admin con stato 'da_stampare'
-    e il pulsante 'Scarica 3MF per Snapmaker U1' funzionante.
     """
     items = payload.get("items", [])
     customer_info = payload.get("customerInfo", {})
+    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
+    delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
+    is_pickup = delivery_method == "pickup"
 
     if not items:
         raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
 
-    totals = calculate_cart_totals(items)
+    totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method=delivery_method)
     now = datetime.datetime.now()
     order_number = f"TEST-U1-{now.strftime('%Y%m%d')}-{len(_LOCAL_ORDERS_DB) + 1:04d}"
     order_id = str(uuid.uuid4())
@@ -378,11 +516,16 @@ def api_create_test_order(payload: Dict[str, Any]):
         "customer_name": customer_info.get("customer_name") or "Tester Sviluppatore",
         "customer_email": customer_info.get("customer_email") or "test@snapmaker-studio.it",
         "customer_phone": customer_info.get("customer_phone") or "340 0000000",
-        "shipping_address": customer_info.get("shipping_address") or "Via Laboratorio 3D, 1",
-        "shipping_city": customer_info.get("shipping_city") or "Roma",
-        "shipping_zip": customer_info.get("shipping_zip") or "00100",
+        "shipping_address": customer_info.get("shipping_address") or ("Ritiro a mano" if is_pickup else "Via Laboratorio 3D, 1"),
+        "shipping_city": customer_info.get("shipping_city") or ("Laboratorio" if is_pickup else "Roma"),
+        "shipping_zip": customer_info.get("shipping_zip") or ("00000" if is_pickup else "00100"),
         "shipping_province": customer_info.get("shipping_province") or "RM",
         "order_notes": customer_info.get("order_notes") or "Ordine di Prova (Test Senza Pagamento)",
+        "delivery_method": "pickup" if is_pickup else "shipping",
+        "payment_method": "test_simulation",
+        "coupon_code": totals.get("coupon_code"),
+        "coupon_discount": float(totals.get("coupon_discount", 0.0)),
+        "promo_discount": float(totals.get("promo_discount", 0.0)),
         "subtotal_amount": float(totals["subtotal"]),
         "discount_amount": float(totals["discount_amount"]),
         "shipping_amount": float(totals["shipping_amount"]),
@@ -392,7 +535,7 @@ def api_create_test_order(payload: Dict[str, Any]):
         "payment_provider": "test_simulation",
         "payment_status": "paid",
         "order_status": "da_stampare",
-        "courier": "BRT / SDA",
+        "courier": "Ritiro a mano di persona" if is_pickup else "BRT / SDA",
         "created_at": now.isoformat()
     }
 
@@ -463,6 +606,139 @@ def admin_toggle_filament(filament_id: str, auth: bool = Depends(verify_admin_au
             return {"status": "ok", "filament": fil}
     raise HTTPException(status_code=404, detail="Filamento non trovato.")
 
+@router.get("/admin/pricing")
+def get_admin_pricing(auth: bool = Depends(verify_admin_auth)):
+    """Restituisce il listino prezzi e promozioni per il pannello Admin."""
+    return _load_pricing_settings()
+
+@router.post("/admin/pricing")
+def update_admin_pricing(payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
+    """Salva le nuove impostazioni del listino prezzi e promozioni."""
+    current = _load_pricing_settings()
+    for k, v in payload.items():
+        if k in current:
+            if k == "promo_3x2_enabled":
+                current[k] = bool(v)
+            else:
+                try:
+                    current[k] = round(float(v), 2)
+                except (ValueError, TypeError):
+                    pass
+    _save_pricing_settings(current)
+    return {"success": True, "settings": current}
+
+# ----------------- GESTIONE COUPON ADMIN -----------------
+
+@router.get("/admin/coupons")
+def admin_list_coupons(auth: bool = Depends(verify_admin_auth)):
+    """Restituisce l'elenco di tutti i coupon sconto configurati."""
+    return get_coupons()
+
+@router.post("/admin/coupons")
+def admin_create_coupon(payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
+    """Crea un nuovo coupon sconto."""
+    code = str(payload.get("code", "")).strip().upper()
+    if not code:
+        raise HTTPException(status_code=400, detail="Il codice coupon è obbligatorio.")
+    
+    coupons = get_coupons()
+    if any(str(c.get("code", "")).strip().upper() == code for c in coupons):
+        raise HTTPException(status_code=400, detail=f"Un coupon con codice '{code}' esiste già.")
+    
+    c_type = str(payload.get("type", "percentage")).lower()
+    if c_type not in ["percentage", "fixed"]:
+        c_type = "percentage"
+        
+    try:
+        value = round(float(payload.get("value", 0.0)), 2)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Valore sconto non valido.")
+    
+    if value <= 0:
+        raise HTTPException(status_code=400, detail="Il valore dello sconto deve essere maggiore di zero.")
+        
+    try:
+        min_spend = max(0.0, round(float(payload.get("min_spend", 0.0)), 2))
+    except (ValueError, TypeError):
+        min_spend = 0.0
+
+    new_coupon = {
+        "id": f"coupon-{uuid.uuid4().hex[:8]}",
+        "code": code,
+        "type": c_type,
+        "value": value,
+        "active": bool(payload.get("active", True)),
+        "min_spend": min_spend
+    }
+    coupons.append(new_coupon)
+    save_coupons(coupons)
+    return {"status": "ok", "coupon": new_coupon}
+
+@router.put("/admin/coupons/{coupon_id}")
+def admin_update_coupon(coupon_id: str, payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
+    """Modifica un coupon esistente."""
+    coupons = get_coupons()
+    idx = next((i for i, c in enumerate(coupons) if str(c.get("id")) == coupon_id or str(c.get("code", "")).upper() == coupon_id.upper()), None)
+    if idx is None:
+        raise HTTPException(status_code=404, detail="Coupon non trovato.")
+    
+    current = coupons[idx]
+    if "code" in payload:
+        new_code = str(payload["code"]).strip().upper()
+        if new_code:
+            if any(str(c.get("code", "")).strip().upper() == new_code and i != idx for i, c in enumerate(coupons)):
+                raise HTTPException(status_code=400, detail=f"Un coupon con codice '{new_code}' esiste già.")
+            current["code"] = new_code
+    
+    if "type" in payload:
+        t = str(payload["type"]).lower()
+        if t in ["percentage", "fixed"]:
+            current["type"] = t
+            
+    if "value" in payload:
+        try:
+            val = round(float(payload["value"]), 2)
+            if val > 0:
+                current["value"] = val
+        except (ValueError, TypeError):
+            pass
+
+    if "min_spend" in payload:
+        try:
+            current["min_spend"] = max(0.0, round(float(payload["min_spend"]), 2))
+        except (ValueError, TypeError):
+            pass
+            
+    if "active" in payload:
+        current["active"] = bool(payload["active"])
+
+    coupons[idx] = current
+    save_coupons(coupons)
+    return {"status": "ok", "coupon": current}
+
+@router.post("/admin/coupons/{coupon_id}/toggle")
+def admin_toggle_coupon(coupon_id: str, auth: bool = Depends(verify_admin_auth)):
+    """Inverte lo stato del coupon [Attivo / Disattivato]."""
+    coupons = get_coupons()
+    for c in coupons:
+        if str(c.get("id")) == coupon_id or str(c.get("code", "")).upper() == coupon_id.upper():
+            c["active"] = not c.get("active", True)
+            save_coupons(coupons)
+            return {"status": "ok", "coupon": c}
+    raise HTTPException(status_code=404, detail="Coupon non trovato.")
+
+@router.delete("/admin/coupons/{coupon_id}")
+def admin_delete_coupon(coupon_id: str, auth: bool = Depends(verify_admin_auth)):
+    """Elimina definitivamente un coupon sconto."""
+    coupons = get_coupons()
+    new_list = [c for c in coupons if str(c.get("id")) != coupon_id and str(c.get("code", "")).upper() != coupon_id.upper()]
+    if len(new_list) == len(coupons):
+        raise HTTPException(status_code=404, detail="Coupon non trovato.")
+    save_coupons(new_list)
+    return {"status": "ok", "message": "Coupon eliminato con successo."}
+
+# ----------------- GESTIONE ORDINI ADMIN -----------------
+
 @router.get("/admin/orders")
 def admin_get_orders(auth: bool = Depends(verify_admin_auth)):
     """Restituisce tutti gli ordini registrati con gli articoli associati."""
@@ -490,7 +766,7 @@ def admin_update_order_status(order_id: str, payload: Dict[str, Any], auth: bool
             _save_local_db()
 
             # Se lo stato diventa 'spedito', invia l'email automatica al cliente
-            if new_status == "spedito" and old_status != "spedito":
+            if new_status in ["spedito", "pronto_ritiro"] and old_status != new_status:
                 try:
                     send_order_shipped_notification(ord_item)
                 except Exception as e:

@@ -1,0 +1,20 @@
+{
+  "coupons": [
+    {
+      "id": "coupon-benvenuto10",
+      "code": "BENVENUTO10",
+      "type": "percentage",
+      "value": 10.0,
+      "active": true,
+      "min_spend": 0.0
+    },
+    {
+      "id": "coupon-sconto2",
+      "code": "SCONTO2",
+      "type": "fixed",
+      "value": 2.0,
+      "active": true,
+      "min_spend": 5.0
+    }
+  ]
+}

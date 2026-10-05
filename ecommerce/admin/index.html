@@ -100,6 +100,7 @@
         <button type="button" class="tab-btn active" id="tabOrders">📦 Ordini Clienti</button>
         <button type="button" class="tab-btn" id="tabFilaments">🧵 Inventario Filamenti</button>
         <button type="button" class="tab-btn" id="tabPricing">🏷️ Listino & Promozioni</button>
+        <button type="button" class="tab-btn" id="tabCoupons">🎟️ Coupon Sconto</button>
       </div>
     </header>
 
@@ -217,6 +218,79 @@
         </form>
       </div>
     </section>
+ 
+    <!-- Sezione 4: Gestione Coupon Sconto -->
+    <section id="sectionCoupons" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2>🎟️ Gestione Codici Coupon & Sconti</h2>
+          <span style="font-size: 13px; color: var(--text-muted);">Crea codici promozionali percentuali o a valore fisso con eventuale spesa minima.</span>
+        </div>
+        <button type="button" class="tab-btn" onclick="openCouponModal()" style="background: var(--primary); color: #000; font-weight: 700;">➕ Nuovo Coupon</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Codice Coupon</th>
+              <th>Tipo & Valore</th>
+              <th>Spesa Minima</th>
+              <th>Stato</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="couponsTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Caricamento coupon in corso...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal Creazione/Modifica Coupon -->
+  <div id="couponModal" class="lock-screen" style="display: none; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 9999;">
+    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 28px; width: 100%; max-width: 460px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+      <h3 id="couponModalTitle" style="margin-top: 0; font-size: 20px; color: var(--primary); margin-bottom: 16px;">🎟️ Nuovo Coupon Sconto</h3>
+      <form id="formCoupon" onsubmit="saveCoupon(event)">
+        <input type="hidden" id="couponId" value="">
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Codice Coupon (es. BENVENUTO10) *</label>
+          <input type="text" id="couponCodeInput" class="pin-input" style="letter-spacing: 1px; text-transform: uppercase; font-size: 15px; padding: 10px; width: 100%; text-align: left;" required placeholder="ES. SCONTO5">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Tipologia Sconto</label>
+            <select id="couponTypeInput" class="tab-btn" style="width: 100%; padding: 10px; font-size: 13px;">
+              <option value="percentage">Percentuale (%)</option>
+              <option value="fixed">Importo Fisso (€)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Valore Sconto *</label>
+            <input type="number" step="0.10" min="0.10" id="couponValueInput" class="pin-input" style="letter-spacing: normal; font-size: 15px; padding: 10px; width: 100%; text-align: left;" required placeholder="10.0">
+          </div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Spesa Minima nel Carrello (€)</label>
+          <input type="number" step="0.50" min="0" id="couponMinSpendInput" class="pin-input" style="letter-spacing: normal; font-size: 15px; padding: 10px; width: 100%; text-align: left;" value="0.00">
+          <small style="color: var(--text-muted); font-size: 11px;">0 = Nessuna spesa minima richiesta</small>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 6px;">
+          <span style="font-size: 13px; font-weight: 600;">Coupon Attivo</span>
+          <label class="switch">
+            <input type="checkbox" id="couponActiveInput" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="tab-btn" onclick="closeCouponModal()">Annulla</button>
+          <button type="submit" class="btn" style="width: auto; padding: 10px 20px; font-size: 14px;">💾 Salva Coupon</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>
@@ -261,6 +335,7 @@
           loadOrders();
           loadFilaments();
           loadPricing();
+          loadCoupons();
         } else {
           sessionStorage.removeItem('admin_pin');
           pinError.textContent = "PIN non corretto!";
@@ -291,39 +366,23 @@
     const tabOrders = document.getElementById('tabOrders');
     const tabFilaments = document.getElementById('tabFilaments');
     const tabPricing = document.getElementById('tabPricing');
+    const tabCoupons = document.getElementById('tabCoupons');
     const secOrders = document.getElementById('sectionOrders');
     const secFilaments = document.getElementById('sectionFilaments');
     const secPricing = document.getElementById('sectionPricing');
+    const secCoupons = document.getElementById('sectionCoupons');
 
-    tabOrders.addEventListener('click', () => {
-      tabOrders.classList.add('active');
-      tabFilaments.classList.remove('active');
-      tabPricing.classList.remove('active');
-      secOrders.style.display = 'block';
-      secFilaments.style.display = 'none';
-      secPricing.style.display = 'none';
-      loadOrders();
-    });
+    function setActiveTab(activeTab, activeSec) {
+      [tabOrders, tabFilaments, tabPricing, tabCoupons].forEach(t => t?.classList.remove('active'));
+      [secOrders, secFilaments, secPricing, secCoupons].forEach(s => { if (s) s.style.display = 'none'; });
+      activeTab?.classList.add('active');
+      if (activeSec) activeSec.style.display = 'block';
+    }
 
-    tabFilaments.addEventListener('click', () => {
-      tabFilaments.classList.add('active');
-      tabOrders.classList.remove('active');
-      tabPricing.classList.remove('active');
-      secOrders.style.display = 'none';
-      secFilaments.style.display = 'block';
-      secPricing.style.display = 'none';
-      loadFilaments();
-    });
-
-    tabPricing.addEventListener('click', () => {
-      tabPricing.classList.add('active');
-      tabOrders.classList.remove('active');
-      tabFilaments.classList.remove('active');
-      secOrders.style.display = 'none';
-      secFilaments.style.display = 'none';
-      secPricing.style.display = 'block';
-      loadPricing();
-    });
+    tabOrders.addEventListener('click', () => { setActiveTab(tabOrders, secOrders); loadOrders(); });
+    tabFilaments.addEventListener('click', () => { setActiveTab(tabFilaments, secFilaments); loadFilaments(); });
+    tabPricing.addEventListener('click', () => { setActiveTab(tabPricing, secPricing); loadPricing(); });
+    tabCoupons.addEventListener('click', () => { setActiveTab(tabCoupons, secCoupons); loadCoupons(); });
 
     // Carica impostazioni listino
     async function loadPricing() {
@@ -385,6 +444,155 @@
       }
     }
 
+    // ----------------- GESTIONE COUPON ADMIN -----------------
+    let allCoupons = [];
+
+    async function loadCoupons() {
+      const tbody = document.getElementById('couponsTableBody');
+      if (!tbody) return;
+      try {
+        const resp = await fetch('/api/admin/coupons', {
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+        if (resp.ok) {
+          allCoupons = await resp.json();
+          if (!allCoupons || allCoupons.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Nessun codice coupon registrato. Clicca su "+ Nuovo Coupon" per crearne uno.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = allCoupons.map(c => {
+            const isPct = c.type === 'percentage';
+            const valLabel = isPct ? `${c.value}%` : `${Number(c.value).toFixed(2).replace('.', ',')} €`;
+            const typeLabel = isPct ? 'Percentuale (%)' : 'Importo Fisso (€)';
+            const minSpendLabel = c.min_spend > 0 ? `${Number(c.min_spend).toFixed(2).replace('.', ',')} €` : '<span style="color:var(--text-muted);">Nessuna</span>';
+            return `
+              <tr>
+                <td>
+                  <span style="font-family: monospace; font-weight: 800; font-size: 14px; background: rgba(56,189,248,0.12); color: var(--primary); padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--primary);">${c.code}</span>
+                </td>
+                <td>
+                  <strong>${valLabel}</strong> <small style="color: var(--text-muted);">(${typeLabel})</small>
+                </td>
+                <td>${minSpendLabel}</td>
+                <td>
+                  <label class="switch" title="Attiva / Disattiva Coupon">
+                    <input type="checkbox" ${c.active ? 'checked' : ''} onchange="toggleCoupon('${c.id}')">
+                    <span class="slider"></span>
+                  </label>
+                </td>
+                <td>
+                  <button type="button" class="tab-btn" onclick="openCouponModal('${c.id}')" style="padding: 4px 8px; font-size: 12px; margin-right: 6px;">✏️ Modifica</button>
+                  <button type="button" class="tab-btn" onclick="deleteCoupon('${c.id}')" style="padding: 4px 8px; font-size: 12px; border-color: var(--danger); color: var(--danger);">🗑️ Elimina</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" style="color: var(--danger); text-align: center;">Errore nel recupero dei coupon (HTTP ${resp.status}).</td></tr>`;
+        }
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color: var(--danger); text-align: center;">Errore: ${e.message}</td></tr>`;
+      }
+    }
+
+    function openCouponModal(couponId = null) {
+      const modal = document.getElementById('couponModal');
+      const title = document.getElementById('couponModalTitle');
+      const form = document.getElementById('formCoupon');
+      form.reset();
+
+      if (couponId) {
+        const c = allCoupons.find(x => x.id === couponId);
+        if (c) {
+          title.textContent = `✏️ Modifica Coupon: ${c.code}`;
+          document.getElementById('couponId').value = c.id;
+          document.getElementById('couponCodeInput').value = c.code;
+          document.getElementById('couponTypeInput').value = c.type;
+          document.getElementById('couponValueInput').value = c.value;
+          document.getElementById('couponMinSpendInput').value = c.min_spend || 0;
+          document.getElementById('couponActiveInput').checked = c.active;
+        }
+      } else {
+        title.textContent = "🎟️ Nuovo Codice Coupon";
+        document.getElementById('couponId').value = "";
+        document.getElementById('couponMinSpendInput').value = "0.00";
+        document.getElementById('couponActiveInput').checked = true;
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeCouponModal() {
+      document.getElementById('couponModal').style.display = 'none';
+    }
+
+    async function saveCoupon(e) {
+      if (e) e.preventDefault();
+      const id = document.getElementById('couponId').value;
+      const code = document.getElementById('couponCodeInput').value.trim().toUpperCase();
+      const type = document.getElementById('couponTypeInput').value;
+      const value = parseFloat(document.getElementById('couponValueInput').value);
+      const min_spend = parseFloat(document.getElementById('couponMinSpendInput').value) || 0;
+      const active = document.getElementById('couponActiveInput').checked;
+
+      if (!code || isNaN(value) || value <= 0) {
+        alert("Inserisci un codice coupon e un valore di sconto valido.");
+        return;
+      }
+
+      const payload = { code, type, value, min_spend, active };
+      try {
+        const url = id ? `/api/admin/coupons/${id}` : '/api/admin/coupons';
+        const method = id ? 'PUT' : 'POST';
+        const resp = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Pin': currentPin
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+          closeCouponModal();
+          loadCoupons();
+        } else {
+          const err = await resp.json();
+          alert("Errore salvataggio coupon: " + (err.detail || JSON.stringify(err)));
+        }
+      } catch (err) {
+        alert("Errore di connessione: " + err.message);
+      }
+    }
+
+    async function toggleCoupon(couponId) {
+      try {
+        await fetch(`/api/admin/coupons/${couponId}/toggle`, {
+          method: 'POST',
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+        loadCoupons();
+      } catch (e) {
+        alert("Errore modifica stato coupon: " + e.message);
+      }
+    }
+
+    async function deleteCoupon(couponId) {
+      if (!confirm("Sei sicuro di voler eliminare definitivamente questo codice coupon?")) return;
+      try {
+        const resp = await fetch(`/api/admin/coupons/${couponId}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+        if (resp.ok) {
+          loadCoupons();
+        } else {
+          alert("Errore durante l'eliminazione del coupon.");
+        }
+      } catch (e) {
+        alert("Errore di connessione: " + e.message);
+      }
+    }
+
     // Carica ordini
     async function loadOrders() {
       const tbody = document.getElementById('ordersTableBody');
@@ -399,6 +607,9 @@
         }
 
         tbody.innerHTML = orders.map(ord => {
+          const isPickup = ord.delivery_method === 'pickup';
+          const isCash = ord.payment_method === 'cash_on_pickup';
+
           const itemsHtml = (ord.items || []).map(it => `
             <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 6px;">
               <div><strong>${it.product_title}</strong>: "${it.custom_text_line1}" (Font: ${it.font_id}) ${it.icon_id && it.icon_id !== 'none' ? `<span style="color:var(--primary);">[Icona: ${it.icon_id} (${it.icon_position === 'left' ? '⬅️ Sinistra' : '➡️ Destra'})]</span>` : ''}</div>
@@ -416,30 +627,60 @@
             </div>
           `).join('');
 
+          let deliveryHtml = '';
+          if (isPickup) {
+            deliveryHtml = `
+              <strong>${ord.customer_name}</strong><br>
+              📞 <span style="color:var(--warning);">${ord.customer_phone}</span> 
+              <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.customer_phone}')">Copia</span><br>
+              ✉️ ${ord.customer_email}<br>
+              <span style="display:inline-block; margin-top:4px; background:rgba(56,189,248,0.15); color:var(--primary); font-weight:700; padding:2px 8px; border-radius:4px; font-size:12px;">🤝 Ritiro a Mano (0,00 €)</span>
+            `;
+          } else {
+            deliveryHtml = `
+              <strong>${ord.customer_name}</strong><br>
+              📞 <span style="color:var(--warning);">${ord.customer_phone}</span> 
+              <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.customer_phone}')">Copia</span><br>
+              ✉️ ${ord.customer_email}<br>
+              📍 ${ord.shipping_address}, ${ord.shipping_zip} ${ord.shipping_city} (${ord.shipping_province})
+              <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.shipping_address}, ${ord.shipping_zip} ${ord.shipping_city} (${ord.shipping_province})')">Copia Indirizzo</span>
+            `;
+          }
+
+          let payBadge = '';
+          if (isCash) {
+            payBadge = `<span style="background:#f59e0b;color:#000;font-weight:900;padding:2px 6px;border-radius:4px;font-size:11px;">💵 CONTANTI AL RITIRO</span>`;
+          } else if (ord.payment_status === 'paid') {
+            payBadge = `<small style="color: var(--text-muted);">✅ Pagato PayPal</small>`;
+          } else {
+            payBadge = `<small style="color: var(--text-muted);">${ord.payment_status}</small>`;
+          }
+
+          const couponSnippet = ord.coupon_code ? `
+            <br><span style="color:var(--primary); font-size:11px; font-weight:600;">🎟️ ${ord.coupon_code} (-${(ord.coupon_discount || ord.discount_amount || 0).toFixed(2).replace('.', ',')} €)</span>
+          ` : '';
+
           return `
             <tr>
               <td>
                 <strong>#${ord.order_number}</strong><br>
                 <small style="color: var(--text-muted);">${new Date(ord.created_at).toLocaleString('it-IT')}</small>
+                ${isPickup ? '<br><span style="font-size:11px;color:#38bdf8;">[Ritiro in Sede]</span>' : ''}
               </td>
-              <td>
-                <strong>${ord.customer_name}</strong><br>
-                📞 <span style="color:var(--warning);">${ord.customer_phone}</span> 
-                <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.customer_phone}')">Copia</span><br>
-                ✉️ ${ord.customer_email}<br>
-                📍 ${ord.shipping_address}, ${ord.shipping_zip} ${ord.shipping_city} (${ord.shipping_province})
-                <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.shipping_address}, ${ord.shipping_zip} ${ord.shipping_city} (${ord.shipping_province})')">Copia Indirizzo</span>
-              </td>
+              <td>${deliveryHtml}</td>
               <td>${itemsHtml}</td>
               <td>
                 <strong style="color: var(--success); font-size: 16px;">${ord.total_amount.toFixed(2).replace('.', ',')} €</strong><br>
-                <small style="color: var(--text-muted);">${ord.payment_status === 'paid' ? '✅ Pagato PayPal' : ord.payment_status}</small>
+                ${payBadge}
+                ${couponSnippet}
               </td>
               <td>
                 <select class="tab-btn" onchange="updateOrderStatus('${ord.id}', this.value)" style="padding: 4px 8px; font-size: 13px;">
                   <option value="da_stampare" ${ord.order_status === 'da_stampare' ? 'selected' : ''}>🟡 Da Stampare</option>
                   <option value="in_stampa" ${ord.order_status === 'in_stampa' ? 'selected' : ''}>🔵 In Stampa</option>
+                  <option value="pronto_ritiro" ${ord.order_status === 'pronto_ritiro' ? 'selected' : ''}>🟣 Pronto al Ritiro (Invia Email)</option>
                   <option value="spedito" ${ord.order_status === 'spedito' ? 'selected' : ''}>🟢 Spedito (Invia Email)</option>
+                  <option value="completato" ${ord.order_status === 'completato' ? 'selected' : ''}>✅ Consegnato / Ritirato</option>
                 </select>
               </td>
             </tr>

@@ -1,5 +1,5 @@
 /**
- * MOTORE DI CALCOLO CARRELLO & PROMOZIONE "PRENDI 3 PAGHI 2"
+ * MOTORE DI CALCOLO CARRELLO, PROMOZIONE "PRENDI 3 PAGHI 2", COUPON & RITIRO A MANO
  * Snapmaker U1 E-Commerce Storefront
  */
 
@@ -27,7 +27,7 @@ export function updatePricingSettings(settings) {
 /**
  * Determina il prezzo unitario del prodotto in base alle sue opzioni
  * @param {Object} itemConfig 
- * @returns {number} Prezzo in Euro (4.90, 6.90 o 9.90)
+ * @returns {number} Prezzo in Euro
  */
 export function determineItemPrice(itemConfig) {
   if (itemConfig.productType === 'desk_sign' || itemConfig.product_type === 'desk_sign') {
@@ -50,38 +50,43 @@ export function determineItemPrice(itemConfig) {
   );
 
   if (isTwoLines || hasIcon || isSilk || hasCustomIconColor) {
-    return CATALOG_PRICING.KEYCHAIN_COMPLEX; // 6.90 €
+    return CATALOG_PRICING.KEYCHAIN_COMPLEX;
   }
 
-  return CATALOG_PRICING.KEYCHAIN_STANDARD; // 4.90 €
+  return CATALOG_PRICING.KEYCHAIN_STANDARD;
 }
 
 /**
- * Calcola i totali del carrello applicando la promozione "Prendi 3 Paghi 2"
- * e la tariffa fissa di spedizione con corriere espresso BRT/SDA.
- * 
- * Regola 3x2:
- * Per ogni terzina di articoli presenti nel carrello (floor(N / 3)), 
- * l'articolo meno caro di ciascuna terzina viene scontato al 100% (gratis).
- * Questo equivale ad ordinare tutti gli articoli per prezzo crescente
- * e azzerare il costo dei primi floor(N / 3) articoli.
+ * Calcola i totali del carrello applicando la promozione "Prendi 3 Paghi 2",
+ * coupon sconto (% o fisso) e opzione di consegna (Corriere BRT/SDA vs Ritiro a mano gratuito).
  * 
  * @param {Array<Object>} items Lista degli articoli nel carrello
+ * @param {Object} options { coupon: Object|null, deliveryMethod: 'shipping'|'pickup' }
  * @returns {Object} Dettaglio completo dei calcoli per UI e Checkout
  */
-export function calculateCartSummary(items = []) {
+export function calculateCartSummary(items = [], options = {}) {
+  const deliveryMethod = (options && options.deliveryMethod === 'pickup') ? 'pickup' : 'shipping';
+  const shippingCost = deliveryMethod === 'pickup' ? 0.00 : SHIPPING_COST_FIXED;
+  const shippingLabel = deliveryMethod === 'pickup' ? "Ritiro a mano di persona (0,00 €)" : "Corriere espresso (BRT / SDA)";
+
   if (!items || items.length === 0) {
     return {
       itemCount: 0,
       subtotal: 0.00,
+      promoDiscount: 0.00,
+      couponDiscount: 0.00,
       discountAmount: 0.00,
       freeItemsCount: 0,
       freeItemIndices: [],
       promoApplied: false,
       promoLabel: null,
-      shippingCost: 0.00,
-      shippingLabel: "Corriere espresso (BRT / SDA)",
-      total: 0.00,
+      couponApplied: false,
+      couponCode: null,
+      couponLabel: null,
+      deliveryMethod,
+      shippingCost,
+      shippingLabel,
+      total: shippingCost,
       itemsWithPromo: []
     };
   }
@@ -98,32 +103,28 @@ export function calculateCartSummary(items = []) {
   });
 
   // 2. Calcola il subtotale lordo
-  const subtotal = mappedItems.reduce((acc, it) => acc + it.unitPrice, 0);
+  const subtotal = Math.round(mappedItems.reduce((acc, it) => acc + it.unitPrice, 0) * 100) / 100;
 
   // 3. Calcolo Promo 3x2
-  // Numero di pezzi in omaggio: 1 ogni 3 (se la promozione è attiva)
   const freeItemsCount = PROMO_3X2_ENABLED ? Math.floor(mappedItems.length / 3) : 0;
-  let discountAmount = 0.00;
+  let promoDiscount = 0.00;
   const freeItemIndices = [];
 
   if (freeItemsCount > 0) {
-    // Ordina una copia degli elementi per prezzo crescente (dal più economico al più costoso)
     const sortedByIndexAndPrice = [...mappedItems]
       .sort((a, b) => a.unitPrice - b.unitPrice);
 
-    // I primi 'freeItemsCount' articoli più economici sono scontati al 100%
     for (let i = 0; i < freeItemsCount; i++) {
       const freeItem = sortedByIndexAndPrice[i];
-      discountAmount += freeItem.unitPrice;
+      promoDiscount += freeItem.unitPrice;
       freeItemIndices.push(freeItem.cartIndex);
     }
   }
 
-  // Arrotonda sconti
-  discountAmount = Math.round(discountAmount * 100) / 100;
+  promoDiscount = Math.round(promoDiscount * 100) / 100;
   const promoApplied = freeItemsCount > 0;
   const promoLabel = promoApplied 
-    ? `Promo 3x2 applicata: -${discountAmount.toFixed(2).replace('.', ',')} € (${freeItemsCount} ${freeItemsCount === 1 ? 'articolo in omaggio' : 'articoli in omaggio'})`
+    ? `Promo 3x2 applicata: -${promoDiscount.toFixed(2).replace('.', ',')} € (${freeItemsCount} ${freeItemsCount === 1 ? 'articolo in omaggio' : 'articoli in omaggio'})`
     : null;
 
   // 4. Marca gli elementi omaggio nella lista finale
@@ -132,23 +133,54 @@ export function calculateCartSummary(items = []) {
     isFreePromo: freeItemIndices.includes(it.cartIndex)
   }));
 
-  // 5. Spedizione fissa
-  const shippingCost = SHIPPING_COST_FIXED;
+  const netAfterPromo = Math.max(0, Math.round((subtotal - promoDiscount) * 100) / 100);
 
-  // 6. Totale finale
-  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  // 5. Calcolo Coupon Sconto
+  let couponDiscount = 0.00;
+  let couponApplied = false;
+  let couponCode = null;
+  let couponLabel = null;
+
+  if (options && options.coupon && netAfterPromo > 0) {
+    const c = options.coupon;
+    const minSpend = typeof c.min_spend === 'number' ? c.min_spend : 0.0;
+    if (netAfterPromo >= minSpend) {
+      if (c.type === 'percentage') {
+        couponDiscount = Math.round((netAfterPromo * (c.value / 100)) * 100) / 100;
+      } else {
+        couponDiscount = Math.min(netAfterPromo, Math.round(c.value * 100) / 100);
+      }
+      couponDiscount = Math.round(couponDiscount * 100) / 100;
+      if (couponDiscount > 0) {
+        couponApplied = true;
+        couponCode = c.code ? String(c.code).toUpperCase() : '';
+        couponLabel = c.type === 'percentage'
+          ? `Coupon ${couponCode} (-${c.value}%): -${couponDiscount.toFixed(2).replace('.', ',')} €`
+          : `Coupon ${couponCode}: -${couponDiscount.toFixed(2).replace('.', ',')} €`;
+      }
+    }
+  }
+
+  const totalDiscount = Math.round((promoDiscount + couponDiscount) * 100) / 100;
+  const discountedSubtotal = Math.max(0, Math.round((subtotal - totalDiscount) * 100) / 100);
   const total = Math.round((discountedSubtotal + shippingCost) * 100) / 100;
 
   return {
     itemCount: items.length,
-    subtotal: Math.round(subtotal * 100) / 100,
-    discountAmount,
+    subtotal,
+    promoDiscount,
+    couponDiscount,
+    discountAmount: totalDiscount,
     freeItemsCount,
     freeItemIndices,
     promoApplied,
     promoLabel,
+    couponApplied,
+    couponCode,
+    couponLabel,
+    deliveryMethod,
     shippingCost,
-    shippingLabel: "Corriere espresso (BRT / SDA)",
+    shippingLabel,
     total,
     itemsWithPromo
   };

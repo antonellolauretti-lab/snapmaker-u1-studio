@@ -1,7 +1,7 @@
 """
 Servizio di Notifiche Email Resend per Snapmaker U1 Storefront.
 Gestisce l'invio sicuro di notifiche al proprietario dello store (STORE_OWNER_EMAIL)
-e al cliente finale per la conferma d'ordine.
+e al cliente finale per la conferma d'ordine (sia PayPal che Contanti al Ritiro).
 """
 import os
 import json
@@ -72,22 +72,47 @@ def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]
         from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
         store_owner = os.getenv("STORE_OWNER_EMAIL", "antonello.lauretti82@gmail.com")
 
+        delivery_method = order.get("delivery_method", "shipping")
+        is_pickup = delivery_method == "pickup"
+        payment_method = order.get("payment_method", "paypal")
+        is_cash = payment_method == "cash_on_pickup"
+
         items_summary = "".join([
             f"<li><strong>{it.get('product_title')}</strong>: '{it.get('custom_text_line1')}' "
             f"(Base: {it.get('base_color_name')} | Testo: {it.get('text_color_name')} | Font: {it.get('font_id')})</li>"
             for it in items
         ])
 
+        coupon_line = ""
+        if order.get("coupon_code"):
+            coupon_line = f"<p><strong>🎟️ Coupon Applicato:</strong> {order.get('coupon_code')}</p>"
+
+        if is_cash:
+            payment_line = f"<p><strong>💵 Metodo Pagamento:</strong> <span style='color: #f59e0b; font-weight: bold;'>CONTANTI AL RITIRO</span> (Da incassare: {total} €)</p>"
+        else:
+            tx_id = order.get('paypal_capture_id') or order.get('paypal_order_id', 'N/D')
+            payment_line = f"<p><strong>💳 Metodo Pagamento:</strong> PayPal (ID Transazione: {tx_id})</p>"
+
+        if is_pickup:
+            delivery_line = "<p><strong>🤝 Modalità Consegna:</strong> Ritiro a mano di persona (0,00 €)</p>"
+        else:
+            delivery_line = f"""
+            <p><strong>🚚 Spedizione Corriere:</strong> BRT / SDA</p>
+            <p><strong>Indirizzo:</strong> {order.get('shipping_address', 'N/D')}, {order.get('shipping_zip', '')} {order.get('shipping_city', '')} ({order.get('shipping_province', '')})</p>
+            """
+
         html = f"""
         <div style="font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 8px;">
             <h2 style="color: #38bdf8;">Nuovo Ordine Ricevuto! #{order_id}</h2>
-            <p><strong>Nuovo ordine completato:</strong> #{order_id}<br>Totale: <strong>{total} €</strong></p>
+            <p><strong>Codice Ordine:</strong> #{order_id}<br>Totale: <strong>{total} €</strong></p>
             <div style="background: #1e293b; padding: 14px; border-radius: 6px; margin: 16px 0;">
                 <p><strong>Cliente:</strong> {order.get('customer_name', 'N/D')}</p>
                 <p><strong>Email:</strong> {order.get('customer_email', 'N/D')}</p>
-                <p><strong>Cellulare Corriere:</strong> {order.get('customer_phone', 'N/D')}</p>
-                <p><strong>Indirizzo:</strong> {order.get('shipping_address', 'N/D')}, {order.get('shipping_zip', '')} {order.get('shipping_city', '')} ({order.get('shipping_province', '')})</p>
-                <p><strong>Transazione PayPal:</strong> {order.get('paypal_capture_id') or order.get('paypal_order_id', 'N/D')}</p>
+                <p><strong>Cellulare:</strong> {order.get('customer_phone', 'N/D')}</p>
+                {delivery_line}
+                {payment_line}
+                {coupon_line}
+                {f"<p><strong>Note Ordine:</strong> {order.get('order_notes')}</p>" if order.get('order_notes') else ""}
             </div>
             <h3>Pezzi da stampare ({len(items)}):</h3>
             <ul>
@@ -98,7 +123,7 @@ def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]
         return _send_resend_email(
             from_addr=from_email,
             to_addrs=[store_owner],
-            subject=f"Nuovo Ordine Ricevuto! #{order_id}",
+            subject=f"Nuovo Ordine #{order_id} ({'Contanti al Ritiro' if is_cash else 'PayPal'})",
             html_content=html
         )
     except Exception as e:
@@ -116,13 +141,39 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
         total = f"{float(order.get('total_amount', 0)):.2f}"
         from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
 
+        delivery_method = order.get("delivery_method", "shipping")
+        is_pickup = delivery_method == "pickup"
+        payment_method = order.get("payment_method", "paypal")
+        is_cash = payment_method == "cash_on_pickup"
+
+        if is_cash:
+            pay_desc = f"<p><strong>Metodo di Pagamento:</strong> Contanti al momento del ritiro<br><strong>Importo da saldare:</strong> <strong>{total} €</strong></p>"
+            delivery_desc = "<p><strong>Consegna:</strong> <strong>Ritiro a mano di persona (Gratuito)</strong>.<br>I tuoi articoli sono stati inseriti nella nostra coda di stampa 3D. Ti contatteremo via email e cellulare non appena l'ordine sarà pronto per il ritiro!</p>"
+            subject = f"Conferma Ordine #{order_id} - Ritiro a Mano & Contanti - GadgetPoint.it"
+        else:
+            pay_desc = f"<p><strong>Metodo di Pagamento:</strong> PayPal (Pagamento confermato)<br><strong>Totale Pagato:</strong> <strong>{total} €</strong></p>"
+            if is_pickup:
+                delivery_desc = "<p><strong>Consegna:</strong> Ritiro a mano di persona.<br>Ti invieremo un aggiornamento appena i pezzi saranno pronti per il ritiro!</p>"
+            else:
+                delivery_desc = f"<p><strong>Consegna:</strong> Corriere Espresso BRT / SDA.<br>Destinazione: {order.get('shipping_address')}, {order.get('shipping_city')}</p>"
+            subject = f"Conferma Ricezione Ordine #{order_id} - GadgetPoint.it"
+
+        coupon_line = ""
+        if order.get("coupon_code"):
+            coupon_line = f"<p><strong>Codice Sconto Applicato:</strong> {order.get('coupon_code')}</p>"
+
         html = f"""
         <div style="font-family: Arial, sans-serif; background: #ffffff; color: #1e293b; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
             <h2 style="color: #0284c7;">Conferma Ricezione Ordine #{order_id}</h2>
             <p>Gentile <strong>{order.get('customer_name', 'Cliente')}</strong>,<br>
-            abbiamo ricevuto con successo il tuo ordine personalizzato su GadgetPoint.it!</p>
-            <p><strong>Codice Ordine:</strong> #{order_id}<br><strong>Totale Pagato:</strong> {total} €</p>
-            <p>I tuoi oggetti sono ora in coda di produzione per la stampa 3D multicolore con Snapmaker U1.</p>
+            grazie per il tuo ordine personalizzato su GadgetPoint.it!</p>
+            <div style="background: #f8fafc; padding: 16px; border-radius: 6px; margin: 16px 0; border: 1px solid #e2e8f0;">
+                <p><strong>Codice Ordine:</strong> #{order_id}</p>
+                {pay_desc}
+                {delivery_desc}
+                {coupon_line}
+            </div>
+            <p>I tuoi oggetti sono ora in produzione con tecnologia di stampa 3D multicolore Snapmaker U1 ad alta precisione.</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
             <small style="color: #64748b;">GadgetPoint.it - Stampa 3D Personalizzata di Precisione</small>
         </div>
@@ -130,9 +181,9 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
         return _send_resend_email(
             from_addr=from_email,
             to_addrs=[customer_email],
-            subject=f"Conferma Ordine #{order_id} - GadgetPoint.it",
+            subject=subject,
             html_content=html
         )
     except Exception as e:
-        logger.warning(f"Invio email al cliente non riuscito (es. restrizione sandbox Resend): {str(e)}")
+        logger.warning(f"Invio email al cliente non riuscito: {str(e)}")
         return None
