@@ -1938,6 +1938,102 @@ body.mode-desksign .only-desksign {
   text-align: center;
 }
 
+/* ==============================================================================
+   OTTIMIZZAZIONE RESPONSIVE MOBILE SOTTO I 900px
+   ============================================================================== */
+@media (max-width: 900px) {
+  /* Layout principale: da affiancato (grid 2 colonne) a verticale */
+  .main-layout, .studio-container, .app-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow-x: hidden;
+  }
 
+  /* Canvas 3D: visibile in alto con altezza calibrata touch (es. 42vh o 320px) */
+  .viewport-container, #canvasContainer, .viewer-pane {
+    width: 100% !important;
+    height: 40vh !important;
+    min-height: 280px !important;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #0f172a;
+    border-bottom: 1px solid #1e293b;
+  }
 
+  /* Pannello di configurazione scorrevole sotto l'anteprima 3D */
+  .sidebar-controls, .controls-pane, .config-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px 12px 100px 12px !important; /* padding bottom extra per pulsante fisso */
+    overflow-y: visible !important;
+    height: auto !important;
+  }
 
+  /* Header e Barra promo: compatti su schermi piccoli */
+  .top-banner {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+    text-align: center;
+  }
+  .brand-title {
+    font-size: 16px !important;
+  }
+  .brand-subtitle {
+    display: none; /* Nascondi sottotitolo lungo per non affollare la barra mobile */
+  }
+
+  /* Griglie di opzioni (Font, Simboli, Colori): touch-friendly */
+  .tab-grid-2 {
+    gap: 6px !important;
+  }
+  .tab-grid-2 .btn-choice {
+    min-height: 48px !important;
+    padding: 6px 4px !important;
+  }
+  .btn-prod-title {
+    font-size: 12px !important;
+  }
+  .btn-prod-price {
+    font-size: 11px !important;
+  }
+
+  .font-selector-grid, .symbols-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Swatch palette colori: dimensione adatta al tocco delle dita (minimo 36x36px) */
+  .color-palette-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .color-swatch {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  /* Barra d'azione inferiore fissa su mobile con prezzo e "Aggiungi al Carrello" */
+  .mobile-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #0f172a;
+    border-top: 1px solid #334155;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Drawer Carrello a schermo intero su mobile */
+  .cart-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

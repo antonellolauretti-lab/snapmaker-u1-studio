@@ -28,7 +28,7 @@ except ImportError:
     pass
 
 from ecommerce.cart_engine import calculate_cart_totals
-from ecommerce.services.paypal_service import create_paypal_order, capture_paypal_order
+from ecommerce.services.paypal_service import create_paypal_order, capture_paypal_order, get_paypal_config
 from ecommerce.services.resend_service import (
     send_customer_order_confirmation,
     send_admin_new_order_alert,
@@ -138,11 +138,11 @@ async def api_verify_pin(
     return {"status": "ok", "valid": True, "message": "Autenticazione riuscita."}
 
 DEFAULT_PRICING_SETTINGS = {
-    "keychain_standard": 4.90,
-    "keychain_complex": 6.90,
-    "desk_sign": 9.90,
+    "keychain_standard": 2.90,
+    "keychain_complex": 3.90,
+    "desk_sign": 6.90,
     "extra_line2": 2.00,
-    "shipping_fixed": 5.00,
+    "shipping_fixed": 4.90,
     "promo_3x2_enabled": True
 }
 
@@ -175,8 +175,12 @@ def get_available_filaments():
 
 @router.get("/store/pricing")
 def get_store_pricing():
-    """Restituisce il listino prezzi e le promozioni correnti per lo Storefront."""
-    return _load_pricing_settings()
+    """Restituisce il listino prezzi, promozioni e configurazione PayPal per lo Storefront."""
+    settings = _load_pricing_settings()
+    paypal_cfg = get_paypal_config()
+    settings["paypal_client_id"] = paypal_cfg["client_id"] or "sb"
+    settings["paypal_mode"] = paypal_cfg["mode"]
+    return settings
 
 @router.get("/admin/pricing")
 def get_admin_pricing(auth: bool = Depends(verify_admin_auth)):
@@ -220,34 +224,46 @@ def api_calculate_cart(payload: Dict[str, Any]):
 # ==============================================================================
 
 @router.post("/store/orders/create-paypal")
+@router.post("/orders/create-paypal-order")
+@router.post("/orders/create-paypal")
 def api_create_paypal_order(payload: Dict[str, Any]):
-    """Crea un ordine PayPal sicuro con importi calcolati dal server."""
+    """Crea un ordine PayPal sicuro con importi calcolati dal server e logging esplicito."""
     items = payload.get("items", [])
     customer_info = payload.get("customerInfo", {})
 
     if not items:
         raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
 
-    # Se le credenziali PayPal non sono fornite, genera un ID mock di test
-    if not os.environ.get("PAYPAL_CLIENT_ID"):
+    cfg = get_paypal_config()
+    print(f"[API] Richiesta creazione ordine PayPal | Mode: {cfg['mode']} | Articoli: {len(items)}")
+
+    # Se le credenziali PayPal non sono fornite o sono 'sb' senza secret, genera un ID mock di test
+    if not cfg["client_id"] or not cfg["client_secret"] or cfg["client_id"] == "sb":
         mock_id = f"PAYPAL_MOCK_{uuid.uuid4().hex[:10].upper()}"
+        print(f"[API] Credenziali PayPal non configurate o default 'sb', generato mock ID: {mock_id}")
         return {"id": mock_id, "status": "CREATED", "mode": "mock"}
 
     try:
         order_res = create_paypal_order(items, customer_info)
         return order_res
     except Exception as e:
+        print(f"[API] Errore creazione ordine PayPal: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/store/orders/capture-paypal")
+@router.post("/orders/capture-paypal-order")
+@router.post("/orders/capture-paypal")
 def api_capture_paypal_order(payload: Dict[str, Any]):
     """Cattura il pagamento, salva l'ordine in DB e avvia le notifiche Resend."""
-    paypal_order_id = payload.get("paypalOrderId")
+    paypal_order_id = payload.get("paypalOrderId") or payload.get("orderID") or payload.get("paypal_order_id")
     items = payload.get("items", [])
     customer_info = payload.get("customerInfo", {})
 
     if not paypal_order_id or not items:
-        raise HTTPException(status_code=400, detail="Dati ordine mancanti.")
+        raise HTTPException(status_code=400, detail="Dati ordine mancanti (paypalOrderId o items).")
+
+    cfg = get_paypal_config()
+    print(f"[API] Richiesta cattura ordine PayPal ID: {paypal_order_id}")
 
     # Calcolo totale verificato
     totals = calculate_cart_totals(items)
@@ -258,11 +274,12 @@ def api_capture_paypal_order(payload: Dict[str, Any]):
     order_id = str(uuid.uuid4())
 
     capture_id = f"CAP_{uuid.uuid4().hex[:8]}"
-    if os.environ.get("PAYPAL_CLIENT_ID") and not paypal_order_id.startswith("PAYPAL_MOCK_"):
+    if cfg["client_id"] and cfg["client_secret"] and cfg["client_id"] != "sb" and not paypal_order_id.startswith("PAYPAL_MOCK_"):
         try:
             capture_res = capture_paypal_order(paypal_order_id)
             capture_id = capture_res.get("id", capture_id)
         except Exception as e:
+            print(f"[API] Errore cattura PayPal: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Errore cattura PayPal: {str(e)}")
 
     order_record = {

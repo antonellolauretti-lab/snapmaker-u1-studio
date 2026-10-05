@@ -360,6 +360,20 @@ def handle_create_test_order(payload: Dict[str, Any]):
     from ecommerce.api_router import api_create_test_order
     return api_create_test_order(payload)
 
+@app.post("/api/orders/create-paypal-order")
+@app.post("/orders/create-paypal-order")
+def handle_create_paypal_order_alias(payload: Dict[str, Any]):
+    """Alias diretto per creazione ordine PayPal."""
+    from ecommerce.api_router import api_create_paypal_order
+    return api_create_paypal_order(payload)
+
+@app.post("/api/orders/capture-paypal-order")
+@app.post("/orders/capture-paypal-order")
+def handle_capture_paypal_order_alias(payload: Dict[str, Any]):
+    """Alias diretto per cattura ordine PayPal."""
+    from ecommerce.api_router import api_capture_paypal_order
+    return api_capture_paypal_order(payload)
+
 @app.get("/api/admin/items/{item_id}/download-3mf")
 @app.get("/admin/items/{item_id}/download-3mf")
 async def download_order_item_3mf(item_id: str):

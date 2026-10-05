@@ -4,12 +4,12 @@
  */
 
 export let CATALOG_PRICING = {
-  KEYCHAIN_STANDARD: 4.90, // 1 riga, 2 colori base standard
-  KEYCHAIN_COMPLEX: 6.90,  // 2 righe, oppure bicolore Silk, oppure icona 3D
-  DESK_SIGN: 9.90          // Targhetta da tavolo professionale
+  KEYCHAIN_STANDARD: 2.90, // 1 riga, 2 colori base standard
+  KEYCHAIN_COMPLEX: 3.90,  // 2 righe, oppure bicolore Silk, oppure icona 3D
+  DESK_SIGN: 6.90          // Targhetta da tavolo professionale
 };
 
-export let SHIPPING_COST_FIXED = 5.00; // Corriere BRT / SDA per l'intero ordine
+export let SHIPPING_COST_FIXED = 4.90; // Corriere BRT / SDA per l'intero ordine
 export let PROMO_3X2_ENABLED = true;
 
 /**

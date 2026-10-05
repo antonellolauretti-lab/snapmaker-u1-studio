@@ -2,22 +2,47 @@
 Modulo backend per la convalida dei prezzi e il calcolo del carrello con Promozione 3x2.
 Garantisce che l'importo inviato a PayPal e registrato su Supabase sia matematicamente certo.
 """
-from typing import List, Dict, Any
+import json
+from pathlib import Path
+from typing import List, Dict, Any, Optional
 from decimal import Decimal, ROUND_HALF_UP
 
-PRICE_KEYCHAIN_STANDARD = Decimal("4.90")
-PRICE_KEYCHAIN_COMPLEX = Decimal("6.90")
-PRICE_DESK_SIGN = Decimal("9.90")
-SHIPPING_FIXED_BRT_SDA = Decimal("5.00")
+DATA_DIR = Path(__file__).resolve().parent / "data"
+PRICING_FILE = DATA_DIR / "pricing_settings.json"
 
-def determine_item_price(item: Dict[str, Any]) -> Decimal:
-    """Calcola il prezzo unitario esatto in base alla tipologia di prodotto."""
+def get_pricing_settings() -> Dict[str, Any]:
+    defaults = {
+        "keychain_standard": 2.90,
+        "keychain_complex": 3.90,
+        "desk_sign": 6.90,
+        "extra_line2": 2.00,
+        "shipping_fixed": 4.90,
+        "promo_3x2_enabled": True
+    }
+    if PRICING_FILE.exists() and PRICING_FILE.stat().st_size > 0:
+        try:
+            with open(PRICING_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                defaults.update(data)
+        except Exception:
+            pass
+    return defaults
+
+def determine_item_price(item: Dict[str, Any], settings: Optional[Dict[str, Any]] = None) -> Decimal:
+    """Calcola il prezzo unitario esatto in base alla tipologia di prodotto e al listino dinamico."""
+    if settings is None:
+        settings = get_pricing_settings()
+
+    price_desk_sign = Decimal(str(settings.get("desk_sign", 6.90)))
+    price_keychain_complex = Decimal(str(settings.get("keychain_complex", 3.90)))
+    price_keychain_standard = Decimal(str(settings.get("keychain_standard", 2.90)))
+
     product_type = str(item.get("productType") or item.get("product_type") or "").lower()
     if product_type in ["desk_sign", "targhetta"]:
-        return PRICE_DESK_SIGN
+        return price_desk_sign
     
     if product_type in ["keychain_complex", "portachiavi_complesso"]:
-        return PRICE_KEYCHAIN_COMPLEX
+        return price_keychain_complex
     
     # Portachiavi
     line2_enabled = bool(item.get("line2Enabled") or item.get("line2_enabled"))
@@ -34,22 +59,26 @@ def determine_item_price(item: Dict[str, Any]) -> Decimal:
     is_silk = "silk" in base_group.lower() or "silk" in text_group.lower() or "silk" in icon_group.lower()
 
     if has_line2 or has_icon or is_silk or has_custom_icon_color:
-        return PRICE_KEYCHAIN_COMPLEX
+        return price_keychain_complex
     
-    return PRICE_KEYCHAIN_STANDARD
+    return price_keychain_standard
 
 def calculate_cart_totals(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Calcola Subtotale, Sconto 3x2, Spedizione fissa e Totale finale.
     Regola 3x2: ogni 3 pezzi, il pezzo meno costoso tra i 3 viene scontato al 100%.
     """
+    settings = get_pricing_settings()
+    shipping_fixed = Decimal(str(settings.get("shipping_fixed", 4.90)))
+    promo_enabled = bool(settings.get("promo_3x2_enabled", True))
+
     if not items:
         return {
             "item_count": 0,
             "subtotal": Decimal("0.00"),
             "discount_amount": Decimal("0.00"),
-            "shipping_amount": Decimal("0.00"),
-            "total_amount": Decimal("0.00"),
+            "shipping_amount": shipping_fixed,
+            "total_amount": shipping_fixed,
             "free_items_count": 0,
             "promo_applied": False,
             "promo_label": "",
@@ -58,7 +87,7 @@ def calculate_cart_totals(items: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     evaluated_items = []
     for idx, raw_item in enumerate(items):
-        price = determine_item_price(raw_item)
+        price = determine_item_price(raw_item, settings)
         evaluated_items.append({
             "cart_index": idx,
             "raw": raw_item,
@@ -67,7 +96,7 @@ def calculate_cart_totals(items: List[Dict[str, Any]]) -> Dict[str, Any]:
         })
 
     subtotal = sum(it["unit_price"] for it in evaluated_items)
-    free_count = len(evaluated_items) // 3
+    free_count = (len(evaluated_items) // 3) if promo_enabled else 0
     discount_amount = Decimal("0.00")
     free_indices = set()
 
@@ -84,7 +113,7 @@ def calculate_cart_totals(items: List[Dict[str, Any]]) -> Dict[str, Any]:
             it["is_free_promo"] = True
 
     discounted_subtotal = max(Decimal("0.00"), subtotal - discount_amount)
-    shipping_amount = SHIPPING_FIXED_BRT_SDA
+    shipping_amount = shipping_fixed
     total_amount = discounted_subtotal + shipping_amount
 
     promo_label = (

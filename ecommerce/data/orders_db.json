@@ -1,6 +1,28 @@
 {
   "orders": [
     {
+      "id": "88d014ee-44a3-449d-aed5-8e1ade41c154",
+      "order_number": "U1-20261005-0004",
+      "customer_name": "Mario Rossi",
+      "customer_email": "mario.rossi@example.com",
+      "customer_phone": "340 1234567",
+      "shipping_address": "Via Roma 10",
+      "shipping_city": "Castel Gandolfo",
+      "shipping_zip": "00040",
+      "shipping_province": "RM",
+      "order_notes": "",
+      "subtotal_amount": 2.9,
+      "discount_amount": 0.0,
+      "shipping_amount": 4.9,
+      "total_amount": 7.8,
+      "paypal_order_id": "PAYPAL_MOCK_F007B80CE0",
+      "paypal_capture_id": "CAP_1f8c5a39",
+      "payment_status": "paid",
+      "order_status": "da_stampare",
+      "courier": "BRT / SDA",
+      "created_at": "2026-10-05T17:11:50.642064"
+    },
+    {
       "id": "d00be9a3-1a0a-4827-8138-4010f9dcf4f9",
       "order_number": "TEST-U1-20261005-0003",
       "customer_name": "Antonello Lauretti",
@@ -240,6 +262,28 @@
         "text_color": "#E72F1D",
         "icon_color": "#F8F81C"
       }
+    },
+    {
+      "id": "d541626f-57fc-4776-8fa7-402da1cb2ef4",
+      "order_id": "88d014ee-44a3-449d-aed5-8e1ade41c154",
+      "product_type": "keychain",
+      "product_title": "Portachiavi Personalizzato",
+      "unit_price": 2.9,
+      "is_free_promo": false,
+      "custom_text_line1": "MARIO",
+      "custom_text_line2": null,
+      "font_id": "Montserrat",
+      "icon_id": null,
+      "icon_position": "right",
+      "icon_color_hex": null,
+      "has_custom_icon_color": false,
+      "base_style": "rectangle",
+      "hole_position": "left",
+      "base_color_name": "SnapSpeed PLA Black",
+      "base_color_hex": "#080A0D",
+      "text_color_name": "SnapSpeed PLA Cool White",
+      "text_color_hex": "#D9DFE5",
+      "generator_params": {}
     }
   ],
   "filaments": [
