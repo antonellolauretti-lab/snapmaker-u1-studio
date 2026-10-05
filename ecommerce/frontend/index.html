@@ -604,6 +604,98 @@
       padding: 32px;
       text-align: center;
     }
+
+    /* Modal Informativo Trasparenza Dual-Color */
+    .custom-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 13, 16, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInModal 0.2s ease-out;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .custom-modal-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px var(--primary-glow);
+      border-radius: var(--radius-lg);
+      max-width: 480px;
+      width: 100%;
+      padding: 28px 24px;
+      text-align: center;
+      animation: popInModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popInModal {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .custom-modal-box .modal-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+    .custom-modal-box .modal-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.2px;
+    }
+    .custom-modal-box .modal-text {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .custom-modal-box .modal-text strong {
+      color: #f1f5f9;
+    }
+    .custom-modal-box .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .custom-modal-box .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #0284c7);
+      color: #0c0d10;
+      border: none;
+      padding: 13px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .custom-modal-box .btn-primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .custom-modal-box .btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      padding: 11px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .custom-modal-box .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-color: #475569;
+    }
   </style>
 </head>
 <body>
@@ -913,6 +1005,22 @@
         <a href="/admin" class="btn-choice" style="text-decoration:none; padding: 12px 20px;">
           Apri Gestionale Admin 🔐
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Informativo Dual-Color -->
+  <div id="dualColorNoticeModal" class="custom-modal-backdrop" style="display: none;">
+    <div class="custom-modal-box">
+      <div class="modal-icon">✨</div>
+      <h3 class="modal-title">Nota sulla finitura Silk Dual-Color</h3>
+      <p class="modal-text">
+        Hai selezionato un filamento <strong>bicolore co-estruso</strong>. 
+        La sfumatura e la transizione cromatica sul pezzo reale variano in base all'orientamento dei layer sul piatto di stampa e all'angolatura della luce, rendendo ogni pezzo unico e leggermente diverso dall'anteprima 3D.
+      </p>
+      <div class="modal-actions">
+        <button type="button" id="btnConfirmDualColor" class="btn-primary">Ho capito, aggiungi al carrello</button>
+        <button type="button" id="btnCancelDualColor" class="btn-secondary">Torna alla modifica</button>
       </div>
     </div>
   </div>
@@ -1536,13 +1644,24 @@
         }
       });
 
-      // Aggiungi al Carrello
-      document.getElementById('btnAddToCart')?.addEventListener('click', () => {
-        if (!currentConfig.textLine1.trim()) {
-          alert("Inserisci un nome o testo per personalizzare il pezzo!");
-          return;
-        }
+      function isDualColorConfigured() {
+        const isDualBase = Boolean(currentConfig.baseSecondaryHex || (currentConfig.baseGroupName && currentConfig.baseGroupName.toLowerCase().includes('silk')));
+        const isDualText = Boolean(currentConfig.textSecondaryHex || (currentConfig.textGroupName && currentConfig.textGroupName.toLowerCase().includes('silk')));
+        const isDualIcon = currentConfig.hasCustomIconColor && Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')));
+        return isDualBase || isDualText || isDualIcon;
+      }
 
+      function openDualColorModal() {
+        const modal = document.getElementById('dualColorNoticeModal');
+        if (modal) modal.style.display = 'flex';
+      }
+
+      function closeDualColorModal() {
+        const modal = document.getElementById('dualColorNoticeModal');
+        if (modal) modal.style.display = 'none';
+      }
+
+      function executeAddToCart() {
         const price = determineItemPrice(currentConfig);
         cart.push({
           cartId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -1588,6 +1707,42 @@
 
         renderCartDrawer();
         openCart();
+      }
+
+      document.getElementById('btnConfirmDualColor')?.addEventListener('click', () => {
+        closeDualColorModal();
+        executeAddToCart();
+      });
+
+      document.getElementById('btnCancelDualColor')?.addEventListener('click', () => {
+        closeDualColorModal();
+      });
+
+      document.getElementById('dualColorNoticeModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'dualColorNoticeModal') {
+          closeDualColorModal();
+        }
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeDualColorModal();
+          closeCart();
+        }
+      });
+
+      // Aggiungi al Carrello
+      document.getElementById('btnAddToCart')?.addEventListener('click', () => {
+        if (!currentConfig.textLine1.trim()) {
+          alert("Inserisci un nome o testo per personalizzare il pezzo!");
+          return;
+        }
+
+        if (isDualColorConfigured()) {
+          openDualColorModal();
+        } else {
+          executeAddToCart();
+        }
       });
 
       // Apri/Chiudi Carrello
