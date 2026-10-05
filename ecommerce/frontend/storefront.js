@@ -129,30 +129,34 @@ export class SnapmakerStorefront {
     const textContainer = document.getElementById('textColorSwatches');
     if (!baseContainer || !textContainer) return;
 
-    const createSwatches = (targetType, selectedHex) => {
+    const createSwatches = (targetType, selectedId, selectedSku, selectedHex) => {
       return this.availableFilaments.map(fil => {
-        const isSelected = fil.hex_color.toLowerCase() === selectedHex.toLowerCase();
+        const isSelected = (selectedId && fil.id === selectedId) ||
+                           (selectedSku && fil.sku === selectedSku) ||
+                           (!selectedId && !selectedSku && fil.hex_color.toLowerCase() === (selectedHex || '').toLowerCase());
         const bgStyle = fil.secondary_hex_color
           ? `background: linear-gradient(135deg, ${fil.hex_color} 50%, ${fil.secondary_hex_color} 50%)`
           : `background: ${fil.hex_color}`;
 
         return `
-          <div class="color-swatch-item ${isSelected ? 'selected' : ''}" 
+          <div class="color-swatch-item ${isSelected ? 'selected active' : ''}" 
                data-target="${targetType}"
                data-id="${fil.id}"
+               data-sku="${fil.sku || ''}"
                data-hex="${fil.hex_color}"
+               data-secondary-hex="${fil.secondary_hex_color || ''}"
                data-name="${fil.name}"
                data-group="${fil.group_name}"
                style="${bgStyle}"
                title="${fil.name} (${fil.group_name})">
-            ${isSelected ? '<span class="check-mark">✓</span>' : ''}
+            ${isSelected ? '<span class="check-mark check-icon">✓</span>' : ''}
           </div>
         `;
       }).join('');
     };
 
-    baseContainer.innerHTML = createSwatches('base', this.currentConfig.baseColorHex);
-    textContainer.innerHTML = createSwatches('text', this.currentConfig.textColorHex);
+    baseContainer.innerHTML = createSwatches('base', this.currentConfig.baseFilamentId, this.currentConfig.baseSku, this.currentConfig.baseColorHex);
+    textContainer.innerHTML = createSwatches('text', this.currentConfig.textFilamentId, this.currentConfig.textSku, this.currentConfig.textColorHex);
   }
 
   updateLivePriceBadge() {
@@ -232,18 +236,37 @@ export class SnapmakerStorefront {
       const swatch = e.target.closest('.color-swatch-item');
       if (swatch) {
         const target = swatch.dataset.target;
+        const container = target === 'base' ? document.getElementById('baseColorSwatches') : document.getElementById('textColorSwatches');
+        if (container) {
+          container.querySelectorAll('.color-swatch-item').forEach(el => {
+            el.classList.remove('selected', 'active');
+            const chk = el.querySelector('.check-mark, .check-icon');
+            if (chk) chk.remove();
+          });
+        }
+        swatch.classList.add('selected', 'active');
+        if (!swatch.querySelector('.check-mark, .check-icon')) {
+          const chkSpan = document.createElement('span');
+          chkSpan.className = 'check-mark check-icon';
+          chkSpan.textContent = '✓';
+          swatch.appendChild(chkSpan);
+        }
+
         if (target === 'base') {
           this.currentConfig.baseFilamentId = swatch.dataset.id;
+          this.currentConfig.baseSku = swatch.dataset.sku;
           this.currentConfig.baseColorHex = swatch.dataset.hex;
+          this.currentConfig.baseSecondaryHex = swatch.dataset.secondaryHex || null;
           this.currentConfig.baseColorName = swatch.dataset.name;
           this.currentConfig.baseGroupName = swatch.dataset.group;
         } else {
           this.currentConfig.textFilamentId = swatch.dataset.id;
+          this.currentConfig.textSku = swatch.dataset.sku;
           this.currentConfig.textColorHex = swatch.dataset.hex;
+          this.currentConfig.textSecondaryHex = swatch.dataset.secondaryHex || null;
           this.currentConfig.textColorName = swatch.dataset.name;
           this.currentConfig.textGroupName = swatch.dataset.group;
         }
-        this.renderColorSelectors();
         this.updateLivePriceBadge();
         this.refresh3DPreview();
       }

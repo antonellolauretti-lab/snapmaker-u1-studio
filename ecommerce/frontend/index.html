@@ -945,16 +945,57 @@
       iconId: 'none',
       iconPosition: 'right', // 'right' | 'left'
       hasCustomIconColor: false,
+      baseFilamentId: 'fil-01',
+      baseSku: '34062',
       baseColorHex: '#080A0D',
+      baseSecondaryHex: null,
       baseColorName: 'SnapSpeed PLA Black',
       baseGroupName: 'SnapSpeed PLA',
+      textFilamentId: 'fil-02',
+      textSku: '34073',
       textColorHex: '#D9DFE5',
+      textSecondaryHex: null,
       textColorName: 'SnapSpeed PLA Cool White',
       textGroupName: 'SnapSpeed PLA',
+      iconFilamentId: 'fil-04',
+      iconSku: '34065',
       iconColorHex: '#E72F1D',
+      iconSecondaryHex: null,
       iconColorName: 'SnapSpeed PLA Red',
       iconGroupName: 'SnapSpeed PLA'
     };
+
+    // Helper per palette Three.js con supporto Dual-Color shader
+    function getViewerPalette() {
+      const baseDef = {
+        id: currentConfig.baseFilamentId,
+        sku: currentConfig.baseSku,
+        name: currentConfig.baseColorName,
+        color: currentConfig.baseColorHex,
+        secondaryColor: currentConfig.baseSecondaryHex,
+        isDual: Boolean(currentConfig.baseSecondaryHex || (currentConfig.baseGroupName && currentConfig.baseGroupName.toLowerCase().includes('silk')))
+      };
+
+      const textDef = {
+        id: currentConfig.textFilamentId,
+        sku: currentConfig.textSku,
+        name: currentConfig.textColorName,
+        color: currentConfig.textColorHex,
+        secondaryColor: currentConfig.textSecondaryHex,
+        isDual: Boolean(currentConfig.textSecondaryHex || (currentConfig.textGroupName && currentConfig.textGroupName.toLowerCase().includes('silk')))
+      };
+
+      const iconDef = currentConfig.hasCustomIconColor ? {
+        id: currentConfig.iconFilamentId,
+        sku: currentConfig.iconSku,
+        name: currentConfig.iconColorName,
+        color: currentConfig.iconColorHex,
+        secondaryColor: currentConfig.iconSecondaryHex,
+        isDual: Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')))
+      } : textDef;
+
+      return [baseDef, textDef, iconDef, '#F8F81C'];
+    }
 
     // 2. INIZIALIZZAZIONE 3D THREE.JS
     function initViewer() {
@@ -978,29 +1019,49 @@
 
       if (availableFilaments.length === 0) {
         availableFilaments = [
-          { sku: '34062', name: 'SnapSpeed PLA Black', group_name: 'SnapSpeed PLA', hex_color: '#080A0D', is_available: true },
-          { sku: '34073', name: 'SnapSpeed PLA Cool White', group_name: 'SnapSpeed PLA', hex_color: '#D9DFE5', is_available: true },
-          { sku: '34065', name: 'SnapSpeed PLA Red', group_name: 'SnapSpeed PLA', hex_color: '#E72F1D', is_available: true },
-          { sku: '34064', name: 'SnapSpeed PLA Blue', group_name: 'SnapSpeed PLA', hex_color: '#003776', is_available: true },
-          { sku: '34112', name: 'SnapSpeed PLA Bright Yellow', group_name: 'SnapSpeed PLA', hex_color: '#F8F81C', is_available: true }
+          { id: 'fil-01', sku: '34062', name: 'SnapSpeed PLA Black', group_name: 'SnapSpeed PLA', hex_color: '#080A0D', secondary_hex_color: null, is_available: true },
+          { id: 'fil-02', sku: '34073', name: 'SnapSpeed PLA Cool White', group_name: 'SnapSpeed PLA', hex_color: '#D9DFE5', secondary_hex_color: null, is_available: true },
+          { id: 'fil-04', sku: '34065', name: 'SnapSpeed PLA Red', group_name: 'SnapSpeed PLA', hex_color: '#E72F1D', secondary_hex_color: null, is_available: true },
+          { id: 'fil-05', sku: '34064', name: 'SnapSpeed PLA Blue', group_name: 'SnapSpeed PLA', hex_color: '#003776', secondary_hex_color: null, is_available: true },
+          { id: 'fil-06', sku: '34112', name: 'SnapSpeed PLA Bright Yellow', group_name: 'SnapSpeed PLA', hex_color: '#F8F81C', secondary_hex_color: null, is_available: true }
         ];
       }
 
-      // Default colori
-      if (!availableFilaments.some(f => f.hex_color.toLowerCase() === currentConfig.baseColorHex.toLowerCase()) && availableFilaments[0]) {
-        currentConfig.baseColorHex = availableFilaments[0].hex_color;
-        currentConfig.baseColorName = availableFilaments[0].name;
-        currentConfig.baseGroupName = availableFilaments[0].group_name;
+      // Sincronizza stato iniziale coi filamenti reali caricati da API
+      const findFil = (sku, id, hexFallback) => {
+        return availableFilaments.find(f => (sku && f.sku === sku) || (id && f.id === id)) ||
+               availableFilaments.find(f => f.hex_color && f.hex_color.toLowerCase() === (hexFallback || '').toLowerCase()) ||
+               availableFilaments[0];
+      };
+
+      const baseFil = findFil(currentConfig.baseSku, currentConfig.baseFilamentId, currentConfig.baseColorHex);
+      if (baseFil) {
+        currentConfig.baseFilamentId = baseFil.id;
+        currentConfig.baseSku = baseFil.sku;
+        currentConfig.baseColorHex = baseFil.hex_color;
+        currentConfig.baseSecondaryHex = baseFil.secondary_hex_color || null;
+        currentConfig.baseColorName = baseFil.name;
+        currentConfig.baseGroupName = baseFil.group_name;
       }
-      if (!availableFilaments.some(f => f.hex_color.toLowerCase() === currentConfig.textColorHex.toLowerCase()) && availableFilaments[1]) {
-        currentConfig.textColorHex = availableFilaments[1].hex_color;
-        currentConfig.textColorName = availableFilaments[1].name;
-        currentConfig.textGroupName = availableFilaments[1].group_name;
+
+      const textFil = findFil(currentConfig.textSku, currentConfig.textFilamentId, currentConfig.textColorHex) || availableFilaments[1] || availableFilaments[0];
+      if (textFil) {
+        currentConfig.textFilamentId = textFil.id;
+        currentConfig.textSku = textFil.sku;
+        currentConfig.textColorHex = textFil.hex_color;
+        currentConfig.textSecondaryHex = textFil.secondary_hex_color || null;
+        currentConfig.textColorName = textFil.name;
+        currentConfig.textGroupName = textFil.group_name;
       }
-      if (!availableFilaments.some(f => f.hex_color.toLowerCase() === currentConfig.iconColorHex.toLowerCase()) && availableFilaments[2]) {
-        currentConfig.iconColorHex = availableFilaments[2].hex_color;
-        currentConfig.iconColorName = availableFilaments[2].name;
-        currentConfig.iconGroupName = availableFilaments[2].group_name;
+
+      const iconFil = findFil(currentConfig.iconSku, currentConfig.iconFilamentId, currentConfig.iconColorHex) || availableFilaments[2] || availableFilaments[0];
+      if (iconFil) {
+        currentConfig.iconFilamentId = iconFil.id;
+        currentConfig.iconSku = iconFil.sku;
+        currentConfig.iconColorHex = iconFil.hex_color;
+        currentConfig.iconSecondaryHex = iconFil.secondary_hex_color || null;
+        currentConfig.iconColorName = iconFil.name;
+        currentConfig.iconGroupName = iconFil.group_name;
       }
 
       // B) Font Incorporati dallo Studio
@@ -1104,9 +1165,11 @@
       const textGrid = document.getElementById('textSwatches');
       const iconGrid = document.getElementById('iconSwatches');
 
-      const buildHtml = (type, currentHex) => {
+      const buildHtml = (type, currentFilId, currentSku, currentHex) => {
         return availableFilaments.map(fil => {
-          const isSel = fil.hex_color.toLowerCase() === currentHex.toLowerCase();
+          const isSel = (currentFilId && fil.id === currentFilId) ||
+                        (currentSku && fil.sku === currentSku) ||
+                        (!currentFilId && !currentSku && fil.hex_color.toLowerCase() === (currentHex || '').toLowerCase());
           const bg = fil.secondary_hex_color 
             ? `background: linear-gradient(135deg, ${fil.hex_color} 50%, ${fil.secondary_hex_color} 50%)`
             : `background: ${fil.hex_color}`;
@@ -1114,7 +1177,10 @@
           return `
             <div class="swatch-item ${isSel ? 'active' : ''}" 
                  data-type="${type}" 
+                 data-id="${fil.id || ''}"
+                 data-sku="${fil.sku || ''}"
                  data-hex="${fil.hex_color}" 
+                 data-secondary-hex="${fil.secondary_hex_color || ''}"
                  data-name="${fil.name}" 
                  data-group="${fil.group_name}" 
                  style="${bg}" 
@@ -1125,9 +1191,9 @@
         }).join('');
       };
 
-      if (baseGrid) baseGrid.innerHTML = buildHtml('base', currentConfig.baseColorHex);
-      if (textGrid) textGrid.innerHTML = buildHtml('text', currentConfig.textColorHex);
-      if (iconGrid) iconGrid.innerHTML = buildHtml('icon', currentConfig.iconColorHex);
+      if (baseGrid) baseGrid.innerHTML = buildHtml('base', currentConfig.baseFilamentId, currentConfig.baseSku, currentConfig.baseColorHex);
+      if (textGrid) textGrid.innerHTML = buildHtml('text', currentConfig.textFilamentId, currentConfig.textSku, currentConfig.textColorHex);
+      if (iconGrid) iconGrid.innerHTML = buildHtml('icon', currentConfig.iconFilamentId, currentConfig.iconSku, currentConfig.iconColorHex);
 
       document.getElementById('baseColorLabel').textContent = `${currentConfig.baseColorName} (${currentConfig.baseGroupName})`;
       document.getElementById('textColorLabel').textContent = `${currentConfig.textColorName} (${currentConfig.textGroupName})`;
@@ -1239,14 +1305,8 @@
           });
           if (resp.ok) {
             const data = await resp.json();
-            // Palette a 4 estrusori fisici Snapmaker U1
-            const palette = [
-              currentConfig.baseColorHex,
-              currentConfig.textColorHex,
-              currentConfig.iconColorHex,
-              '#F8F81C'
-            ];
-            viewer.updateGeometry(data, palette, 0, 1);
+            // Palette a 4 estrusori fisici Snapmaker U1 con supporto Dual-Color shader
+            viewer.updateGeometry(data, getViewerPalette(), 0, 1);
             
             if (data.dimensions) {
               const wCm = (data.dimensions.width / 10).toFixed(1).replace('.', ',');
@@ -1415,29 +1475,63 @@
         const swatch = e.target.closest('.swatch-item');
         if (swatch) {
           const type = swatch.dataset.type;
-          if (type === 'base') {
-            currentConfig.baseColorHex = swatch.dataset.hex;
-            currentConfig.baseColorName = swatch.dataset.name;
-            currentConfig.baseGroupName = swatch.dataset.group;
-          } else if (type === 'text') {
-            currentConfig.textColorHex = swatch.dataset.hex;
-            currentConfig.textColorName = swatch.dataset.name;
-            currentConfig.textGroupName = swatch.dataset.group;
-          } else if (type === 'icon') {
-            currentConfig.iconColorHex = swatch.dataset.hex;
-            currentConfig.iconColorName = swatch.dataset.name;
-            currentConfig.iconGroupName = swatch.dataset.group;
+          const filId = swatch.dataset.id;
+          const sku = swatch.dataset.sku;
+          const hex = swatch.dataset.hex;
+          const secHex = swatch.dataset.secondaryHex || null;
+          const name = swatch.dataset.name;
+          const group = swatch.dataset.group;
+
+          // Rimuovi tassativamente la selezione da TUTTI gli swatch del rispettivo contenitore
+          const containerId = type === 'base' ? 'baseSwatches' : (type === 'text' ? 'textSwatches' : 'iconSwatches');
+          const container = document.getElementById(containerId);
+          if (container) {
+            container.querySelectorAll('.swatch-item').forEach(el => {
+              el.classList.remove('active', 'selected');
+              const chk = el.querySelector('.swatch-check');
+              if (chk) chk.remove();
+            });
           }
-          renderSwatches();
+
+          // Attiva solo l'elemento cliccato
+          swatch.classList.add('active');
+          if (!swatch.querySelector('.swatch-check')) {
+            const chkSpan = document.createElement('span');
+            chkSpan.className = 'swatch-check';
+            chkSpan.textContent = '✓';
+            swatch.appendChild(chkSpan);
+          }
+
+          if (type === 'base') {
+            currentConfig.baseFilamentId = filId;
+            currentConfig.baseSku = sku;
+            currentConfig.baseColorHex = hex;
+            currentConfig.baseSecondaryHex = secHex;
+            currentConfig.baseColorName = name;
+            currentConfig.baseGroupName = group;
+            document.getElementById('baseColorLabel').textContent = `${name} (${group})`;
+          } else if (type === 'text') {
+            currentConfig.textFilamentId = filId;
+            currentConfig.textSku = sku;
+            currentConfig.textColorHex = hex;
+            currentConfig.textSecondaryHex = secHex;
+            currentConfig.textColorName = name;
+            currentConfig.textGroupName = group;
+            document.getElementById('textColorLabel').textContent = `${name} (${group})`;
+          } else if (type === 'icon') {
+            currentConfig.iconFilamentId = filId;
+            currentConfig.iconSku = sku;
+            currentConfig.iconColorHex = hex;
+            currentConfig.iconSecondaryHex = secHex;
+            currentConfig.iconColorName = name;
+            currentConfig.iconGroupName = group;
+            document.getElementById('iconColorLabel').textContent = `${name} (${group})`;
+          }
+
           updateLivePrice();
           
           if (viewer) {
-            viewer.updateColors([
-              currentConfig.baseColorHex,
-              currentConfig.textColorHex,
-              currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
-              '#F8F81C'
-            ]);
+            viewer.updateColors(getViewerPalette());
           }
         }
       });

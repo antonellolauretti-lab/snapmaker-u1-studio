@@ -39,7 +39,7 @@ class ModelViewer {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Spazio colore sRGB calibrato per fedeltà cromatica esatta
+    // Spazio colore sRGB calibrato per fedeltÃ  cromatica esatta
     if (typeof THREE.ColorManagement !== "undefined" && THREE.ColorManagement.enabled !== undefined) {
       THREE.ColorManagement.enabled = true;
     }
@@ -166,6 +166,120 @@ class ModelViewer {
     fitCameraToObject(this.camera, object || this.modelGroup, this.controls, padding);
   }
 
+  resolveDualColor(colorDef) {
+    if (!colorDef) return null;
+
+    const PRESETS = {
+      sunset_ember: { color1: '#d9251d', color2: '#eab308' },
+      '34202': { color1: '#d9251d', color2: '#eab308' },
+      aurora_gold: { color1: '#0284c7', color2: '#eab308' },
+      '34203': { color1: '#0284c7', color2: '#eab308' },
+      solar_alloy: { color1: '#ea580c', color2: '#10b981' },
+      '34204': { color1: '#ea580c', color2: '#10b981' },
+      mint_lemonade: { color1: '#ECED17', color2: '#44ADE5' },
+      '34205': { color1: '#ECED17', color2: '#44ADE5' },
+      sea_glass: { color1: '#44ADE5', color2: '#18CCAF' },
+      '34206': { color1: '#44ADE5', color2: '#18CCAF' },
+      ice_lake: { color1: '#C4C7D9', color2: '#44ADE5' },
+      '34207': { color1: '#C4C7D9', color2: '#44ADE5' },
+      city_billboard: { color1: '#CBF914', color2: '#D623AA' },
+      '34208': { color1: '#CBF914', color2: '#D623AA' }
+    };
+
+    if (typeof colorDef === 'object') {
+      const sku = colorDef.sku ? String(colorDef.sku) : '';
+      if (sku && PRESETS[sku]) return PRESETS[sku];
+
+      const name = (colorDef.name || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+      for (const [k, v] of Object.entries(PRESETS)) {
+        if (name.includes(k)) return v;
+      }
+
+      if (colorDef.secondaryColor || colorDef.secondary_hex_color) {
+        return {
+          color1: colorDef.color || colorDef.hex_color || colorDef.color1 || '#d9251d',
+          color2: colorDef.secondaryColor || colorDef.secondary_hex_color || colorDef.color2 || '#eab308'
+        };
+      }
+    } else if (typeof colorDef === 'string') {
+      const clean = colorDef.toLowerCase().trim();
+      if (PRESETS[clean]) return PRESETS[clean];
+      for (const [k, v] of Object.entries(PRESETS)) {
+        if (clean.includes(k)) return v;
+      }
+    }
+    return null;
+  }
+
+  createDualColorMaterial(color1Hex, color2Hex, wireframe = false) {
+    const mat = new THREE.MeshStandardMaterial({
+      roughness: 0.25,
+      metalness: 0.35,
+      wireframe: wireframe
+    });
+
+    mat.customProgramCacheKey = () => "dual_color_" + color1Hex + "_" + color2Hex;
+
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uColorA = { value: new THREE.Color(color1Hex) };
+      shader.uniforms.uColorB = { value: new THREE.Color(color2Hex) };
+
+      shader.vertexShader = `
+        varying vec3 vWorldNormal;
+        varying vec3 vViewDir;
+      ` + shader.vertexShader;
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <worldpos_vertex>',
+        `
+        #include <worldpos_vertex>
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        vec4 worldPos = modelMatrix * vec4(transformed, 1.0);
+        vViewDir = normalize(cameraPosition - worldPos.xyz);
+        `
+      );
+
+      shader.fragmentShader = `
+        uniform vec3 uColorA;
+        uniform vec3 uColorB;
+        varying vec3 vWorldNormal;
+        varying vec3 vViewDir;
+      ` + shader.fragmentShader;
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <color_fragment>',
+        `
+        #include <color_fragment>
+        // Calcola la proiezione della normale orizzontale o rispetto alla camera
+        vec2 normXZ = length(vWorldNormal.xz) > 0.001 ? normalize(vWorldNormal.xz) : (length(vWorldNormal.xy) > 0.001 ? normalize(vWorldNormal.xy) : (length(vViewDir.xz) > 0.001 ? normalize(vViewDir.xz) : vec2(0.707, 0.707)));
+        float angleFactor = dot(normXZ, vec2(0.707, 0.707));
+        float fresnel = 0.5 + 0.5 * angleFactor;
+        diffuseColor.rgb = mix(uColorA, uColorB, clamp(fresnel, 0.0, 1.0));
+        `
+      );
+    };
+
+    return mat;
+  }
+
+  createMaterial(colorDef, wireframe = false) {
+    const dual = this.resolveDualColor(colorDef);
+    if (dual) {
+      return this.createDualColorMaterial(dual.color1, dual.color2, wireframe);
+    }
+
+    const hex = (typeof colorDef === 'object' && colorDef !== null) 
+      ? (colorDef.color || colorDef.hex_color || '#ffffff') 
+      : (colorDef || '#ffffff');
+
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(hex),
+      roughness: 0.35,
+      metalness: 0.1,
+      wireframe: wireframe
+    });
+  }
+
   /**
    * Aggiorna la geometria della scena con i dati ricevuti da /api/preview
    */
@@ -174,7 +288,7 @@ class ModelViewer {
     while (this.modelGroup.children.length > 0) {
       const obj = this.modelGroup.children[0];
       obj.geometry.dispose();
-      obj.material.dispose();
+      if (obj.material) obj.material.dispose();
       this.modelGroup.remove(obj);
     }
     this.partMeshes = [];
@@ -186,14 +300,9 @@ class ModelViewer {
       geom.setIndex(p.faces);
       geom.computeVertexNormals();
 
-      // Colore filamento associato all'estrusore
-      const colorHex = palette[p.extruder] || "#ffffff";
-      const mat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(colorHex),
-        roughness: 0.60,
-        metalness: 0.02,
-        wireframe: this.wireframeMode,
-      });
+      // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
+      const colorDef = palette[p.extruder] || "#ffffff";
+      const mat = this.createMaterial(colorDef, this.wireframeMode);
 
       const mesh = new THREE.Mesh(geom, mat);
       mesh.castShadow = true;
@@ -216,8 +325,14 @@ class ModelViewer {
   updateColors(palette) {
     this.partMeshes.forEach((mesh) => {
       const ext = mesh.userData.extruder;
-      if (palette[ext]) {
-        mesh.material.color.set(palette[ext]);
+      const colorDef = palette[ext];
+      if (colorDef) {
+        const oldMat = mesh.material;
+        const newMat = this.createMaterial(colorDef, this.wireframeMode);
+        mesh.material = newMat;
+        if (oldMat && oldMat !== newMat) {
+          oldMat.dispose();
+        }
       }
     });
   }
@@ -254,7 +369,7 @@ class ModelViewer {
 
   /**
    * Cattura sincrona e affidabile dell'immagine 3D con SFONDO TRASPARENTE
-   * e inquadratura prospettica 3D a 45° standard (isolamento modello) per la thumbnail del 3MF.
+   * e inquadratura prospettica 3D a 45Â° standard (isolamento modello) per la thumbnail del 3MF.
    * Restituisce una Data URL in formato image/png (RGBA 32-bit con canale alfa reale).
    */
   captureThumbnail() {
@@ -280,7 +395,7 @@ class ModelViewer {
         const fovRad = (this.camera.fov * Math.PI) / 180;
         const fitDistance = (maxDim / 2) / Math.tan(fovRad / 2) * 1.35;
 
-        // Vettore di direzione assonometrico a 45° (inclinato da fronte-destra in alto)
+        // Vettore di direzione assonometrico a 45Â° (inclinato da fronte-destra in alto)
         // Evidenzia lo spessore delle lettere, il contrasto dei rilievi e l'asola laterale
         const dir = new THREE.Vector3(0.35, -0.85, 0.75).normalize();
         const targetCamPos = center.clone().add(dir.multiplyScalar(fitDistance));

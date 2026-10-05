@@ -348,8 +348,8 @@
       "name": "Silk Sunset Ember",
       "group_name": "Silk Dual-Color",
       "material_type": "PLA",
-      "hex_color": "#D9A63A",
-      "secondary_hex_color": "#CC434F",
+      "hex_color": "#d9251d",
+      "secondary_hex_color": "#eab308",
       "icon": "✨",
       "is_available": true
     },
@@ -359,8 +359,8 @@
       "name": "Silk Aurora Gold",
       "group_name": "Silk Dual-Color",
       "material_type": "PLA",
-      "hex_color": "#D9A63A",
-      "secondary_hex_color": "#9675CD",
+      "hex_color": "#0284c7",
+      "secondary_hex_color": "#eab308",
       "icon": "✨",
       "is_available": true
     },
@@ -370,8 +370,8 @@
       "name": "Silk Solar Alloy",
       "group_name": "Silk Dual-Color",
       "material_type": "PLA",
-      "hex_color": "#D9A63A",
-      "secondary_hex_color": "#C4C7D9",
+      "hex_color": "#ea580c",
+      "secondary_hex_color": "#10b981",
       "icon": "✨",
       "is_available": true
     },
