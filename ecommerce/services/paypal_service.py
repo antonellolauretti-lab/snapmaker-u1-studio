@@ -9,7 +9,7 @@ import base64
 import logging
 import urllib.request
 import urllib.error
-from typing import Dict, Any, List
+from typing import Optional, Dict, Any, List
 from decimal import Decimal
 
 try:
