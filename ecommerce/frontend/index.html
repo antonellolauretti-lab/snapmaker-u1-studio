@@ -1129,11 +1129,11 @@
         <div style="margin-top: 8px;" id="succBadgeTest"></div>
       </div>
 
-      <div style="display: flex; gap: 10px; justify-content: center;">
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
         <button type="button" class="btn-add" onclick="window.location.reload()">
           Crea un altro modello
         </button>
-        <a href="/admin" class="btn-choice" style="text-decoration:none; padding: 12px 20px;">
+        <a href="/admin" id="btnAdminSuccessLink" class="btn-choice" style="display: none; text-decoration:none; padding: 12px 20px;">
           Apri Gestionale Admin 🔐
         </a>
       </div>
@@ -1933,6 +1933,10 @@
           document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
           if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
           document.getElementById('succBadgeTest').innerHTML = `Stato: <span style="background:#f59e0b;color:#000;font-weight:900;padding:2px 6px;border-radius:4px;font-size:11px;">TEST SENZA TRANSAZIONE</span>`;
+          const adminLinkTest = document.getElementById('btnAdminSuccessLink');
+          if (adminLinkTest) {
+            adminLinkTest.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
+          }
           document.getElementById('orderSuccessScreen').style.display = 'block';
         } catch (e) {
           alert("Errore Test Checkout: " + e.message);
@@ -2159,7 +2163,11 @@
             document.getElementById('succHeaderTitle').textContent = "Grazie per il tuo acquisto!";
             document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
             if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
-            document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--success);">PayPal Ufficiale</strong>`;
+            document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--success);">PayPal</strong>`;
+            const adminLinkPaypal = document.getElementById('btnAdminSuccessLink');
+            if (adminLinkPaypal) {
+              adminLinkPaypal.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
+            }
             document.getElementById('orderSuccessScreen').style.display = 'block';
           },
           onError: (err) => {
