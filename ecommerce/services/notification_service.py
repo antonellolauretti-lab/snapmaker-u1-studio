@@ -174,6 +174,10 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
                 {coupon_line}
             </div>
             <p>I tuoi oggetti sono ora in produzione con tecnologia di stampa 3D multicolore Snapmaker U1 ad alta precisione.</p>
+            <div style="margin: 24px 0; padding: 16px; background-color: #f3f4f6; border-radius: 8px; border-left: 4px solid #10b981; text-align: center;">
+                <p style="margin: 0 0 6px 0; font-size: 14px; color: #374151; font-weight: 600;">Un piccolo regalo per il tuo prossimo ordine!</p>
+                <p style="margin: 0; font-size: 13px; color: #4b5563;">Usa il codice coupon <strong style="color: #10b981; font-size: 15px; letter-spacing: 1px;">RIECCOMI5</strong> al carrello per ottenere subito il <strong>5% di sconto</strong> sul tuo prossimo acquisto personalizzato.</p>
+            </div>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
             <small style="color: #64748b;">GadgetPoint.it - Stampa 3D Personalizzata di Precisione</small>
         </div>

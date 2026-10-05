@@ -9,6 +9,14 @@
       "min_spend": 0.0
     },
     {
+      "id": "coupon-rieccomi5",
+      "code": "RIECCOMI5",
+      "type": "percentage",
+      "value": 5.0,
+      "active": true,
+      "min_spend": 0.0
+    },
+    {
       "id": "coupon-sconto2",
       "code": "SCONTO2",
       "type": "fixed",
