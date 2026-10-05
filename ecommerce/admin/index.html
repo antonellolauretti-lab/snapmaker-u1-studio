@@ -295,6 +295,7 @@
 
   <script>
     let currentPin = sessionStorage.getItem('admin_pin') || '';
+    let currentToken = sessionStorage.getItem('admin_token') || '';
 
     // Autenticazione PIN
     const lockScreen = document.getElementById('lockScreen');
@@ -328,8 +329,13 @@
         }
 
         if (resp.ok) {
+          const resData = await resp.json().catch(() => ({}));
           currentPin = cleanPin;
           sessionStorage.setItem('admin_pin', cleanPin);
+          if (resData && resData.token) {
+            currentToken = resData.token;
+            sessionStorage.setItem('admin_token', resData.token);
+          }
           lockScreen.style.display = 'none';
           pinError.style.display = 'none';
           loadOrders();
@@ -338,6 +344,7 @@
           loadCoupons();
         } else {
           sessionStorage.removeItem('admin_pin');
+          sessionStorage.removeItem('admin_token');
           pinError.textContent = "PIN non corretto!";
           pinError.style.display = 'block';
           if (pinInput) pinInput.focus();
@@ -606,6 +613,8 @@
           return;
         }
 
+        const authParam = currentToken ? `token=${encodeURIComponent(currentToken)}` : `pin=${encodeURIComponent(currentPin)}`;
+
         tbody.innerHTML = orders.map(ord => {
           const isPickup = ord.delivery_method === 'pickup';
           const isCash = ord.payment_method === 'cash_on_pickup';
@@ -621,7 +630,7 @@
               <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
                 Forma: ${it.base_style === 'contour' ? '🏷️ Sagomata sul Testo' : '🔲 Rettangolare'} | Foro: ${it.hole_position === 'left' ? '⬅️ Sinistra' : (it.hole_position === 'right' ? '➡️ Destra' : '⬆️ In Alto')}
               </div>
-              <a href="/api/admin/items/${it.id}/download-3mf" class="btn-3mf" target="_blank" download>
+              <a href="/api/admin/items/${it.id}/download-3mf?${authParam}" class="btn-3mf" target="_blank" download>
                 📥 Scarica 3MF per Snapmaker U1
               </a>
             </div>

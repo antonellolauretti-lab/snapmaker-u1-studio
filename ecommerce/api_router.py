@@ -12,6 +12,12 @@ import sys
 import uuid
 import datetime
 import json
+import hmac
+import hashlib
+import time
+import secrets
+import collections
+import re
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
@@ -103,29 +109,130 @@ def _save_local_db():
 
 _load_local_db()
 
+# ==============================================================================
+# SICUREZZA, TOKEN DI SESSIONE & RATE LIMITING
+# ==============================================================================
+
+_RATE_LIMIT_STORE = collections.defaultdict(list)
+ORDER_RATE_LIMIT_WINDOW = 60 # 60 secondi
+ORDER_RATE_LIMIT_MAX = 10 # massimo 10 ordini al minuto per IP
+
+def check_order_rate_limit(request: Optional[Request] = None):
+    """Limita la frequenza di creazione ordini per singolo IP per prevenire attacchi di spam e DoS."""
+    if not request:
+        return
+    client_ip = "unknown"
+    if request.client and request.client.host:
+        client_ip = request.client.host
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+
+    now = time.time()
+    timestamps = _RATE_LIMIT_STORE[client_ip]
+    _RATE_LIMIT_STORE[client_ip] = [t for t in timestamps if now - t < ORDER_RATE_LIMIT_WINDOW]
+
+    if len(_RATE_LIMIT_STORE[client_ip]) >= ORDER_RATE_LIMIT_MAX:
+        raise HTTPException(
+            status_code=429,
+            detail="Troppe richieste inviate. Attendi un momento prima di inoltrare un nuovo ordine."
+        )
+
+    _RATE_LIMIT_STORE[client_ip].append(now)
+
+def _sanitize_customer_info(customer_info: Dict[str, Any]) -> Dict[str, Any]:
+    """Sanifica e limita la lunghezza dei campi inseriti dall'utente prima del salvataggio."""
+    return {
+        "customer_name": str(customer_info.get("customer_name") or "Cliente")[:100].strip(),
+        "customer_email": str(customer_info.get("customer_email") or "")[:120].strip(),
+        "customer_phone": str(customer_info.get("customer_phone") or "")[:40].strip(),
+        "shipping_address": str(customer_info.get("shipping_address") or "")[:200].strip(),
+        "shipping_city": str(customer_info.get("shipping_city") or "")[:100].strip(),
+        "shipping_zip": str(customer_info.get("shipping_zip") or "")[:20].strip(),
+        "shipping_province": str(customer_info.get("shipping_province") or "")[:10].strip().upper(),
+        "order_notes": str(customer_info.get("order_notes") or "")[:500].strip(),
+    }
+
+ADMIN_SESSION_SECRET = os.getenv("SESSION_SECRET") or hashlib.sha256(EXPECTED_PIN.encode("utf-8")).hexdigest()
+
+def generate_admin_token() -> str:
+    """Genera un token di sessione firmato HMAC-SHA256 con scadenza a 24 ore."""
+    exp = int(time.time()) + 86400
+    nonce = secrets.token_hex(8)
+    payload = f"{exp}:{nonce}"
+    signature = hmac.new(ADMIN_SESSION_SECRET.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{payload}:{signature}"
+
+def verify_admin_token(token_str: str) -> bool:
+    """Verifica crittograficamente la validità e la scadenza del token di sessione admin."""
+    if not token_str or ":" not in token_str:
+        return False
+    parts = token_str.strip().split(":")
+    if len(parts) != 3:
+        return False
+    exp_str, nonce, signature = parts
+    try:
+        exp = int(exp_str)
+        if time.time() > exp:
+            return False
+    except (ValueError, TypeError):
+        return False
+
+    payload = f"{exp_str}:{nonce}"
+    expected_sig = hmac.new(ADMIN_SESSION_SECRET.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(signature, expected_sig)
+
 def verify_admin_auth(
     x_admin_pin: Optional[str] = Header(None),
-    pin: Optional[str] = Query(None)
-):
+    x_admin_token: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None),
+    pin: Optional[str] = Query(None),
+    token: Optional[str] = Query(None)
+) -> bool:
+    """
+    Verifica l'autenticazione per gli endpoint amministrativi.
+    Supporta:
+    1. Header Authorization: Bearer <token>
+    2. Header X-Admin-Token o query param 'token' (firmato HMAC)
+    3. Header X-Admin-Pin o query param 'pin' (confronto timing-attack safe con expected_pin)
+    """
+    # 1. Bearer Token
+    if authorization and authorization.lower().startswith("bearer "):
+        bearer_val = authorization.split(" ", 1)[1].strip()
+        if verify_admin_token(bearer_val):
+            return True
+
+    # 2. X-Admin-Token / Query token
+    cand_token = (x_admin_token or token or "").strip()
+    if cand_token and verify_admin_token(cand_token):
+        return True
+
+    # 3. PIN (Header o Query) con confronto a tempo costante
     expected_pin = os.getenv("ADMIN_PIN", "L21dic82").strip()
-    provided = str(x_admin_pin or pin or "").strip()
-    if not provided or provided != expected_pin:
-        raise HTTPException(status_code=401, detail="PIN di accesso non valido.")
-    return True
+    cand_pin = str(x_admin_pin or pin or "").strip()
+    if cand_pin and hmac.compare_digest(cand_pin, expected_pin):
+        return True
+
+    raise HTTPException(status_code=401, detail="Non autorizzato: PIN o token amministrativo non valido.")
 
 @router.post("/admin/verify-pin")
 @router.get("/admin/verify-pin")
 async def api_verify_pin(
-    request: Request,
+    request: Optional[Request] = None,
+    payload: Optional[Dict[str, Any]] = None,
     x_admin_pin: Optional[str] = Header(None),
     pin: Optional[str] = Query(None)
 ):
-    """Endpoint dedicato per la verifica della chiave PIN admin."""
+    """Endpoint dedicato per la verifica della chiave PIN admin e rilascio token di sessione HMAC."""
     expected_pin = os.getenv("ADMIN_PIN", "L21dic82").strip()
     provided = ""
 
-    # 1. Prova da JSON body (se presente in POST)
-    if request.method == "POST":
+    # 1. Da payload dizionario
+    if payload and isinstance(payload, dict):
+        provided = payload.get("pin") or payload.get("admin_pin") or ""
+
+    # 2. Da JSON body (se presente in POST)
+    if not provided and request and request.method == "POST":
         try:
             body = await request.json()
             if isinstance(body, dict):
@@ -135,14 +242,22 @@ async def api_verify_pin(
         except Exception:
             pass
 
-    # 2. Fallback su Header o Query string
+    # 3. Fallback su Header o Query string
     if not provided:
         provided = x_admin_pin or pin or ""
 
     provided = str(provided).strip()
-    if not provided or provided != expected_pin:
+    if not provided or not hmac.compare_digest(provided, expected_pin):
         raise HTTPException(status_code=401, detail="PIN non corretto!")
-    return {"status": "ok", "valid": True, "message": "Autenticazione riuscita."}
+
+    token = generate_admin_token()
+    return {
+        "status": "ok",
+        "valid": True,
+        "token": token,
+        "expires_in": 86400,
+        "message": "Autenticazione riuscita."
+    }
 
 DEFAULT_PRICING_SETTINGS = {
     "keychain_standard": 2.90,
@@ -246,15 +361,18 @@ def api_validate_coupon(payload: Dict[str, Any]):
 @router.post("/store/orders/create-paypal")
 @router.post("/orders/create-paypal-order")
 @router.post("/orders/create-paypal")
-def api_create_paypal_order(payload: Dict[str, Any]):
+def api_create_paypal_order(payload: Dict[str, Any], request: Optional[Request] = None):
     """Crea un ordine PayPal sicuro con importi calcolati dal server e logging esplicito."""
+    check_order_rate_limit(request)
     items = payload.get("items", [])
-    customer_info = payload.get("customerInfo", {})
-    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
-    delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
-
     if not items:
         raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
+    if len(items) > 50:
+        raise HTTPException(status_code=400, detail="Il carrello non può contenere più di 50 articoli per ordine.")
+
+    customer_info = _sanitize_customer_info(payload.get("customerInfo", {}))
+    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
+    delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
 
     cfg = get_paypal_config()
     print(f"[API] Richiesta creazione ordine PayPal | Mode: {cfg['mode']} | Articoli: {len(items)} | Delivery: {delivery_method} | Coupon: {coupon_code}")
@@ -274,17 +392,20 @@ def api_create_paypal_order(payload: Dict[str, Any]):
 @router.post("/store/orders/capture-paypal")
 @router.post("/orders/capture-paypal-order")
 @router.post("/orders/capture-paypal")
-def api_capture_paypal_order(payload: Dict[str, Any]):
+def api_capture_paypal_order(payload: Dict[str, Any], request: Optional[Request] = None):
     """Cattura il pagamento PayPal, salva l'ordine in DB e avvia le notifiche Resend."""
+    check_order_rate_limit(request)
     paypal_order_id = payload.get("paypalOrderId") or payload.get("orderID") or payload.get("paypal_order_id")
     items = payload.get("items", [])
-    customer_info = payload.get("customerInfo", {})
+    if not paypal_order_id or not items:
+        raise HTTPException(status_code=400, detail="Dati ordine mancanti (paypalOrderId o items).")
+    if len(items) > 50:
+        raise HTTPException(status_code=400, detail="Il carrello non può contenere più di 50 articoli per ordine.")
+
+    customer_info = _sanitize_customer_info(payload.get("customerInfo", {}))
     coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
     delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
     is_pickup = delivery_method == "pickup"
-
-    if not paypal_order_id or not items:
-        raise HTTPException(status_code=400, detail="Dati ordine mancanti (paypalOrderId o items).")
 
     cfg = get_paypal_config()
     print(f"[API] Richiesta cattura ordine PayPal ID: {paypal_order_id} | Delivery: {delivery_method} | Coupon: {coupon_code}")
@@ -386,25 +507,31 @@ def api_capture_paypal_order(payload: Dict[str, Any]):
 
 @router.post("/store/orders/create-pickup-cash")
 @router.post("/orders/create-pickup-cash")
-def api_create_pickup_cash_order(payload: Dict[str, Any]):
+def api_create_pickup_cash_order(payload: Dict[str, Any], request: Optional[Request] = None):
     """
     Registra un ordine con consegna 'Ritiro a Mano' e pagamento 'Contanti al Ritiro'.
     Salta PayPal, assegna stato 'da_stampare' e payment_status 'in_attesa_al_ritiro',
     invia le notifiche email al cliente e all'amministratore.
     """
+    check_order_rate_limit(request)
     items = payload.get("items", [])
-    customer_info = payload.get("customerInfo", {})
-    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
-    
     if not items:
         raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
+    if len(items) > 50:
+        raise HTTPException(status_code=400, detail="Il carrello non può contenere più di 50 articoli per ordine.")
 
-    cust_name = (customer_info.get("customer_name") or "").strip()
-    cust_email = (customer_info.get("customer_email") or "").strip()
-    cust_phone = (customer_info.get("customer_phone") or "").strip()
+    customer_info = _sanitize_customer_info(payload.get("customerInfo", {}))
+    coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
+
+    cust_name = customer_info["customer_name"]
+    cust_email = customer_info["customer_email"]
+    cust_phone = customer_info["customer_phone"]
 
     if not cust_name or not cust_email or not cust_phone:
         raise HTTPException(status_code=400, detail="Nome, Email e Cellulare sono obbligatori per il ritiro a mano.")
+
+    if "@" not in cust_email or "." not in cust_email:
+        raise HTTPException(status_code=400, detail="Inserisci un indirizzo email valido.")
 
     # Calcolo totale verificato con delivery_method='pickup'
     totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method="pickup")
@@ -491,13 +618,19 @@ def api_create_pickup_cash_order(payload: Dict[str, Any]):
     }
 
 @router.post("/store/orders/create-test")
-def api_create_test_order(payload: Dict[str, Any]):
+def api_create_test_order(payload: Dict[str, Any], request: Optional[Request] = None):
     """
     MODALITÀ TEST CHECKOUT:
     Crea e registra un ordine di test senza richiedere transazioni monetarie reali su PayPal.
     """
+    check_order_rate_limit(request)
     items = payload.get("items", [])
-    customer_info = payload.get("customerInfo", {})
+    if not items:
+        raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
+    if len(items) > 50:
+        raise HTTPException(status_code=400, detail="Il carrello non può contenere più di 50 articoli per ordine.")
+
+    customer_info = _sanitize_customer_info(payload.get("customerInfo", {}))
     coupon_code = payload.get("coupon_code") or customer_info.get("coupon_code") or payload.get("coupon")
     delivery_method = payload.get("delivery_method") or customer_info.get("delivery_method") or "shipping"
     is_pickup = delivery_method == "pickup"
@@ -776,11 +909,15 @@ def admin_update_order_status(order_id: str, payload: Dict[str, Any], auth: bool
     raise HTTPException(status_code=404, detail="Ordine non trovato.")
 
 @router.get("/admin/items/{item_id}/download-3mf")
-async def api_download_order_item_3mf(item_id: str):
+async def api_download_order_item_3mf(
+    item_id: str,
+    auth: bool = Depends(verify_admin_auth)
+):
     """
     GENERAZIONE AUTOMATICA 3MF CON UN CLIC:
     Compila istantaneamente il file .3mf per Snapmaker U1 con zero torre di spurgo.
-    Restituisce i byte direttamente al browser per il download senza blocchi o dipendenze da header.
+    Richiede autenticazione amministratore tramite Header (X-Admin-Pin, X-Admin-Token, Bearer)
+    oppure Query string (?pin=... o ?token=...) per download diretto dal browser.
     """
     item = next((it for it in _LOCAL_ORDER_ITEMS_DB if str(it.get("id")) == str(item_id)), None)
     if not item:
@@ -794,17 +931,28 @@ async def api_download_order_item_3mf(item_id: str):
     order_number = order.get("order_number", "ORD")
 
     try:
+        import tempfile
         file_path, filename = compile_order_item_to_3mf(order_number, item)
-        with open(file_path, "rb") as f:
+        resolved_fp = Path(file_path).resolve()
+        temp_dir = Path(tempfile.gettempdir()).resolve()
+        if not (resolved_fp == temp_dir or resolved_fp.is_relative_to(temp_dir)):
+            raise HTTPException(status_code=403, detail="Percorso file 3MF non autorizzato.")
+
+        with open(resolved_fp, "rb") as f:
             bytes_3mf = f.read()
+
+        # Sanitize filename in header
+        safe_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', filename)
 
         return Response(
             content=bytes_3mf,
             media_type="application/vnd.ms-package.3dmanufacturing-3dmodel+xml",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f'attachment; filename="{safe_filename}"'
             }
         )
+    except HTTPException:
+        raise
     except Exception as e:
         import traceback
         traceback.print_exc()

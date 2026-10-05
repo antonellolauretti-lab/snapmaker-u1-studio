@@ -64,10 +64,16 @@ def _send_resend_email(from_addr: str, to_addrs: List[str], subject: str, html_c
             logger.info(f"Notifica Resend inviata via REST con successo: {body}")
             return body
 
+import html
+
+def _esc(val: Any) -> str:
+    """Sanifica stringhe utente per prevenire HTML injection nelle email."""
+    return html.escape(str(val or "").strip())
+
 def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """Invia notifica istantanea all'amministratore (STORE_OWNER_EMAIL)."""
     try:
-        order_id = order.get("order_number") or order.get("id", "N/D")
+        order_id = _esc(order.get("order_number") or order.get("id", "N/D"))
         total = f"{float(order.get('total_amount', 0)):.2f}"
         from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
         store_owner = os.getenv("STORE_OWNER_EMAIL", "antonello.lauretti82@gmail.com")
@@ -78,19 +84,19 @@ def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]
         is_cash = payment_method == "cash_on_pickup"
 
         items_summary = "".join([
-            f"<li><strong>{it.get('product_title')}</strong>: '{it.get('custom_text_line1')}' "
-            f"(Base: {it.get('base_color_name')} | Testo: {it.get('text_color_name')} | Font: {it.get('font_id')})</li>"
+            f"<li><strong>{_esc(it.get('product_title'))}</strong>: '{_esc(it.get('custom_text_line1'))}' "
+            f"(Base: {_esc(it.get('base_color_name'))} | Testo: {_esc(it.get('text_color_name'))} | Font: {_esc(it.get('font_id'))})</li>"
             for it in items
         ])
 
         coupon_line = ""
         if order.get("coupon_code"):
-            coupon_line = f"<p><strong>🎟️ Coupon Applicato:</strong> {order.get('coupon_code')}</p>"
+            coupon_line = f"<p><strong>🎟️ Coupon Applicato:</strong> {_esc(order.get('coupon_code'))}</p>"
 
         if is_cash:
             payment_line = f"<p><strong>💵 Metodo Pagamento:</strong> <span style='color: #f59e0b; font-weight: bold;'>CONTANTI AL RITIRO</span> (Da incassare: {total} €)</p>"
         else:
-            tx_id = order.get('paypal_capture_id') or order.get('paypal_order_id', 'N/D')
+            tx_id = _esc(order.get('paypal_capture_id') or order.get('paypal_order_id', 'N/D'))
             payment_line = f"<p><strong>💳 Metodo Pagamento:</strong> PayPal (ID Transazione: {tx_id})</p>"
 
         if is_pickup:
@@ -98,21 +104,23 @@ def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]
         else:
             delivery_line = f"""
             <p><strong>🚚 Spedizione Corriere:</strong> BRT / SDA</p>
-            <p><strong>Indirizzo:</strong> {order.get('shipping_address', 'N/D')}, {order.get('shipping_zip', '')} {order.get('shipping_city', '')} ({order.get('shipping_province', '')})</p>
+            <p><strong>Indirizzo:</strong> {_esc(order.get('shipping_address', 'N/D'))}, {_esc(order.get('shipping_zip', ''))} {_esc(order.get('shipping_city', ''))} ({_esc(order.get('shipping_province', ''))})</p>
             """
 
-        html = f"""
+        cust_notes = _esc(order.get('order_notes'))
+
+        html_body = f"""
         <div style="font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 8px;">
             <h2 style="color: #38bdf8;">Nuovo Ordine Ricevuto! #{order_id}</h2>
             <p><strong>Codice Ordine:</strong> #{order_id}<br>Totale: <strong>{total} €</strong></p>
             <div style="background: #1e293b; padding: 14px; border-radius: 6px; margin: 16px 0;">
-                <p><strong>Cliente:</strong> {order.get('customer_name', 'N/D')}</p>
-                <p><strong>Email:</strong> {order.get('customer_email', 'N/D')}</p>
-                <p><strong>Cellulare:</strong> {order.get('customer_phone', 'N/D')}</p>
+                <p><strong>Cliente:</strong> {_esc(order.get('customer_name', 'N/D'))}</p>
+                <p><strong>Email:</strong> {_esc(order.get('customer_email', 'N/D'))}</p>
+                <p><strong>Cellulare:</strong> {_esc(order.get('customer_phone', 'N/D'))}</p>
                 {delivery_line}
                 {payment_line}
                 {coupon_line}
-                {f"<p><strong>Note Ordine:</strong> {order.get('order_notes')}</p>" if order.get('order_notes') else ""}
+                {f"<p><strong>Note Ordine:</strong> {cust_notes}</p>" if cust_notes else ""}
             </div>
             <h3>Pezzi da stampare ({len(items)}):</h3>
             <ul>
@@ -124,7 +132,7 @@ def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]
             from_addr=from_email,
             to_addrs=[store_owner],
             subject=f"Nuovo Ordine #{order_id} ({'Contanti al Ritiro' if is_cash else 'PayPal'})",
-            html_content=html
+            html_content=html_body
         )
     except Exception as e:
         logger.error(f"Errore durante l'invio dell'email con Resend: {str(e)}")
@@ -137,7 +145,7 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
         return None
 
     try:
-        order_id = order.get("order_number") or order.get("id", "N/D")
+        order_id = _esc(order.get("order_number") or order.get("id", "N/D"))
         total = f"{float(order.get('total_amount', 0)):.2f}"
         from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
 
@@ -155,17 +163,17 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
             if is_pickup:
                 delivery_desc = "<p><strong>Consegna:</strong> Ritiro a mano di persona.<br>Ti invieremo un aggiornamento appena i pezzi saranno pronti per il ritiro!</p>"
             else:
-                delivery_desc = f"<p><strong>Consegna:</strong> Corriere Espresso BRT / SDA.<br>Destinazione: {order.get('shipping_address')}, {order.get('shipping_city')}</p>"
+                delivery_desc = f"<p><strong>Consegna:</strong> Corriere Espresso BRT / SDA.<br>Destinazione: {_esc(order.get('shipping_address'))}, {_esc(order.get('shipping_city'))}</p>"
             subject = f"Conferma Ricezione Ordine #{order_id} - GadgetPoint.it"
 
         coupon_line = ""
         if order.get("coupon_code"):
-            coupon_line = f"<p><strong>Codice Sconto Applicato:</strong> {order.get('coupon_code')}</p>"
+            coupon_line = f"<p><strong>Codice Sconto Applicato:</strong> {_esc(order.get('coupon_code'))}</p>"
 
-        html = f"""
+        html_body = f"""
         <div style="font-family: Arial, sans-serif; background: #ffffff; color: #1e293b; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
             <h2 style="color: #0284c7;">Conferma Ricezione Ordine #{order_id}</h2>
-            <p>Gentile <strong>{order.get('customer_name', 'Cliente')}</strong>,<br>
+            <p>Gentile <strong>{_esc(order.get('customer_name', 'Cliente'))}</strong>,<br>
             grazie per il tuo ordine personalizzato su GadgetPoint.it!</p>
             <div style="background: #f8fafc; padding: 16px; border-radius: 6px; margin: 16px 0; border: 1px solid #e2e8f0;">
                 <p><strong>Codice Ordine:</strong> #{order_id}</p>
@@ -186,7 +194,7 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
             from_addr=from_email,
             to_addrs=[customer_email],
             subject=subject,
-            html_content=html
+            html_content=html_body
         )
     except Exception as e:
         logger.warning(f"Invio email al cliente non riuscito: {str(e)}")

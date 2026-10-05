@@ -10,7 +10,7 @@ import urllib.error
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Depends, Header, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,7 +32,7 @@ except ImportError:
 from generator_u1.generators.keychain_generator import generate_keychain_parts
 from generator_u1.generators.desk_sign_generator import generate_desk_sign_parts
 from generator_u1.packager.snapmaker_3mf import Snapmaker3MFPackager
-from ecommerce.api_router import router as ecommerce_router
+from ecommerce.api_router import router as ecommerce_router, verify_admin_auth
 
 app = FastAPI(title="Snapmaker U1 Parametric Studio API")
 app.include_router(ecommerce_router)
@@ -54,6 +54,16 @@ app.add_middleware(
     expose_headers=["Content-Disposition"],
 )
 
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Aggiunge header difensivi HTTP a tutte le risposte per prevenire clickjacking, MIME sniffing e XSS."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
 @app.get("/api/health")
 def healthcheck():
     """Endpoint di healthcheck per Render, Railway e monitoraggio."""
@@ -71,6 +81,19 @@ TEMPLATES_DIR = WEB_DIR / "templates"
 FONTS_UPLOAD_DIR = WEB_DIR / "uploads" / "fonts"
 FONTS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 ECOMMERCE_DIR = PROJECT_ROOT / "ecommerce"
+
+def _is_safe_font_path(p: Path) -> bool:
+    """Verifica che il percorso del file risieda rigorosamente nelle directory dei font autorizzate."""
+    try:
+        resolved = p.resolve()
+        allowed_dirs = [
+            FONTS_UPLOAD_DIR.resolve(),
+            FONTS_DIR.resolve(),
+            ASSETS_FONTS_DIR.resolve() if ASSETS_FONTS_DIR.is_dir() else FONTS_DIR.resolve()
+        ]
+        return any(resolved == d or resolved.is_relative_to(d) for d in allowed_dirs)
+    except Exception:
+        return False
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/fonts", StaticFiles(directory=str(ASSETS_FONTS_DIR if ASSETS_FONTS_DIR.is_dir() else FONTS_DIR)), name="fonts")
@@ -292,28 +315,35 @@ CURATED_FONTS = [
 UPLOADED_FONTS: List[Dict[str, Any]] = []
 
 def _resolve_font_path(params: Dict[str, Any], font_key: str = "font_family", path_key: str = "font_path"):
-    """Risolve il percorso fisico del font se bundled, caricato o specificato."""
+    """Risolve il percorso fisico del font se bundled, caricato o specificato in modo sicuro."""
     font_id = (params.get(font_key) or "").strip()
-    font_path = params.get(path_key)
-    if font_path and os.path.isfile(font_path):
-        return font_path
+    raw_font_path = params.get(path_key)
+    if raw_font_path:
+        p = Path(raw_font_path)
+        if p.is_file() and _is_safe_font_path(p):
+            return str(p.resolve())
 
     if not font_id:
         return None
 
+    safe_font_id = Path(font_id).name
+
     # 1. Cerca tra i font caricati dall'utente
     for uf in UPLOADED_FONTS:
-        if uf["id"] == font_id or uf.get("path") == font_id:
-            return uf["path"]
+        if uf["id"] == font_id or uf["id"] == safe_font_id:
+            p = Path(uf["path"])
+            if p.is_file() and _is_safe_font_path(p):
+                return str(p.resolve())
 
     # 2. Controlla nella cartella uploads
-    candidate = FONTS_UPLOAD_DIR / font_id
-    if candidate.is_file():
+    candidate = (FONTS_UPLOAD_DIR / safe_font_id).resolve()
+    if candidate.is_file() and _is_safe_font_path(candidate):
         return str(candidate)
 
     # 3. Risoluzione centralizzata tramite font_resolver (assets/fonts o fonts)
-    resolved = resolve_font_path(font_id, explicit_path=font_path)
-    if resolved:
+    safe_explicit = raw_font_path if (raw_font_path and _is_safe_font_path(Path(raw_font_path))) else None
+    resolved = resolve_font_path(safe_font_id, explicit_path=safe_explicit)
+    if resolved and _is_safe_font_path(Path(resolved)):
         return resolved
 
     return None
@@ -382,38 +412,43 @@ async def serve_admin():
 
 @app.post("/admin/verify-pin")
 @app.get("/admin/verify-pin")
-def handle_verify_pin_direct(payload: Optional[Dict[str, Any]] = None):
+async def handle_verify_pin_direct(
+    request: Request,
+    payload: Optional[Dict[str, Any]] = None,
+    x_admin_pin: Optional[str] = Header(None),
+    pin: Optional[str] = Query(None)
+):
     """Verifica PIN accessibile anche senza prefisso /api."""
     from ecommerce.api_router import api_verify_pin
-    return api_verify_pin(payload=payload)
+    return await api_verify_pin(request=request, payload=payload, x_admin_pin=x_admin_pin, pin=pin)
 
 @app.post("/api/store/orders/create-test")
 @app.post("/store/orders/create-test")
-def handle_create_test_order(payload: Dict[str, Any]):
+def handle_create_test_order(payload: Dict[str, Any], request: Request):
     """Endpoint diretto per ordini di prova (test rapido senza pagamento)."""
     from ecommerce.api_router import api_create_test_order
-    return api_create_test_order(payload)
+    return api_create_test_order(payload, request=request)
 
 @app.post("/api/orders/create-paypal-order")
 @app.post("/orders/create-paypal-order")
-def handle_create_paypal_order_alias(payload: Dict[str, Any]):
+def handle_create_paypal_order_alias(payload: Dict[str, Any], request: Request):
     """Alias diretto per creazione ordine PayPal."""
     from ecommerce.api_router import api_create_paypal_order
-    return api_create_paypal_order(payload)
+    return api_create_paypal_order(payload, request=request)
 
 @app.post("/api/orders/capture-paypal-order")
 @app.post("/orders/capture-paypal-order")
-def handle_capture_paypal_order_alias(payload: Dict[str, Any]):
+def handle_capture_paypal_order_alias(payload: Dict[str, Any], request: Request):
     """Alias diretto per cattura ordine PayPal."""
     from ecommerce.api_router import api_capture_paypal_order
-    return api_capture_paypal_order(payload)
+    return api_capture_paypal_order(payload, request=request)
 
 @app.get("/api/admin/items/{item_id}/download-3mf")
 @app.get("/admin/items/{item_id}/download-3mf")
-async def download_order_item_3mf(item_id: str):
-    """Endpoint diretto per download del pacchetto 3MF per Snapmaker U1."""
+async def download_order_item_3mf(item_id: str, auth: bool = Depends(verify_admin_auth)):
+    """Endpoint protetto per download del pacchetto 3MF per Snapmaker U1."""
     from ecommerce.api_router import api_download_order_item_3mf
-    return await api_download_order_item_3mf(item_id)
+    return await api_download_order_item_3mf(item_id=item_id, auth=auth)
 
 @app.get("/api/fonts")
 def list_fonts():
@@ -450,22 +485,35 @@ def list_icons():
     """Restituisce l'elenco completo delle icone vettoriali per la UI."""
     return ICONS_LIBRARY
 
+MAX_FONT_FILE_SIZE = 10 * 1024 * 1024  # 10 MB massimo
+
 @app.post("/api/fonts/upload")
 async def upload_font(file: UploadFile = File(...)):
     """
-    Riceve un file .ttf o .otf, lo salva nella cache locale e lo rende
-    subito disponibile per la generazione senza installazione nel sistema operativo.
+    Riceve un file .ttf o .otf, verifica la dimensione (max 10MB) e il nome sicuro,
+    lo salva nella cache locale e lo rende subito disponibile.
     """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Nome file mancante.")
+
     ext = Path(file.filename).suffix.lower()
     if ext not in [".ttf", ".otf"]:
         raise HTTPException(status_code=400, detail="Formato font non supportato. Carica un file .ttf o .otf.")
 
-    safe_filename = Path(file.filename).name
-    target_path = FONTS_UPLOAD_DIR / safe_filename
+    raw_name = Path(file.filename).name
+    clean_stem = re.sub(r"[^a-zA-Z0-9_\-]", "_", Path(raw_name).stem)[:50]
+    safe_filename = f"{clean_stem}{ext}"
+    target_path = (FONTS_UPLOAD_DIR / safe_filename).resolve()
 
-    # Salva il file
+    if not _is_safe_font_path(target_path):
+        raise HTTPException(status_code=400, detail="Nome file font non valido o non autorizzato.")
+
+    content = await file.read()
+    if len(content) > MAX_FONT_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File troppo grande. Il limite massimo per i font è 10MB.")
+
     with open(target_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(content)
 
     # Leggi il nome interno del font tramite FontProperties
     try:
@@ -788,8 +836,23 @@ def sync_printer_palette(payload: Dict[str, Any]):
             content={"status": "error", "detail": f"L'indirizzo IP '{clean_ip}' non è valido."}
         )
 
+    # Protezione SSRF: blocca indirizzi link-local (169.254.x.x, cloud metadata) e multicast
+    if ip_obj.is_link_local or ip_obj.is_multicast:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "detail": "Indirizzo IP non consentito."}
+        )
+
     # Rilevamento ambiente cloud (Render, Vercel, Railway) vs locale
     is_cloud_env = bool(os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("VERCEL"))
+    if is_cloud_env:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "info",
+                "detail": f"La sincronizzazione LAN diretta con la stampante non è disponibile nell'ambiente cloud ospitato (la macchina è nella tua rete locale {clean_ip}). Avvia l'app in locale oppure seleziona i filamenti manualmente."
+            }
+        )
 
     # Sequenza di porte ed endpoint da interrogare
     ports_to_try = [port]

@@ -56,7 +56,8 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
         params["extruder_icon"] = 1
         filament_colors = [base_hex, text_hex, "#E72F1D", "#F8F81C"]
 
-    clean_text = "".join(c for c in (item_data.get("custom_text_line1") or "Model") if c.isalnum() or c in "_-").strip() or "Model"
+    clean_order = "".join(c for c in str(order_number) if c.isalnum() or c in "_-")[:32] or "ORD"
+    clean_text = "".join(c for c in (item_data.get("custom_text_line1") or "Model") if c.isalnum() or c in "_-")[:30].strip() or "Model"
 
     if "desk_sign" in product_type:
         params["text_line1"] = item_data.get("custom_text_line1") or params.get("text_line1", "DeskSign")
@@ -70,8 +71,8 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
             params["font_path_line1"] = resolved_font
             params["font_path_line2"] = resolved_font
         parts = generate_desk_sign_parts(params)
-        filename = f"{order_number}_{clean_text}_DeskSign_U1.3mf"
-        proj_name = f"{order_number}_{clean_text}_DeskSign"
+        filename = f"{clean_order}_{clean_text}_DeskSign_U1.3mf"
+        proj_name = f"{clean_order}_{clean_text}_DeskSign"
     else:
         params["text"] = item_data.get("custom_text_line1") or params.get("text", "Keychain")
         if item_data.get("custom_text_line2"):
@@ -89,11 +90,13 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
         params["icon_position"] = icon_pos
 
         parts = generate_keychain_parts(params)
-        filename = f"{order_number}_{clean_text}_Keychain_U1.3mf"
-        proj_name = f"{order_number}_{clean_text}_Keychain"
+        filename = f"{clean_order}_{clean_text}_Keychain_U1.3mf"
+        proj_name = f"{clean_order}_{clean_text}_Keychain"
 
-    temp_dir = Path(tempfile.gettempdir())
-    out_path = temp_dir / filename
+    temp_dir = Path(tempfile.gettempdir()).resolve()
+    out_path = (temp_dir / filename).resolve()
+    if not (out_path == temp_dir or out_path.is_relative_to(temp_dir)):
+        raise ValueError("Percorso di salvataggio 3MF non autorizzato.")
 
     # Packager con preferenze Snapmaker U1
     packager = Snapmaker3MFPackager(
