@@ -6,6 +6,17 @@
   <title>GadgetPoint.it - Portachiavi e Targhette Personalizzate Multicolore</title>
   <meta name="description" content="Configura e acquista online portachiavi e targhette personalizzate stampate in 3D multicolore con GadgetPoint.it.">
 
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GadgetPoint">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon.png">
+
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
   <!-- Google Fonts Completi (Curati e Ottimizzati) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -880,6 +891,101 @@
       .cart-drawer-overlay.open .cart-drawer {
         right: 0 !important;
       }
+    }
+
+    /* Smart PWA Install Banner */
+    .pwa-install-banner {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(37, 99, 235, 0.3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #f8fafc;
+      animation: pwaSlideUp 0.35s ease-out;
+    }
+    @keyframes pwaSlideUp {
+      from { transform: translate(-50%, 100%); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    .pwa-icon-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+    .pwa-banner-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .pwa-banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.2;
+    }
+    .pwa-banner-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+    .pwa-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-pwa-install {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-pwa-install:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    .btn-pwa-close {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-pwa-close:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
     }
   </style>
 </head>
@@ -2666,6 +2772,75 @@
       }
     }
 
+    // 12. PWA SMART INSTALL BANNER (Android & iOS) & SERVICE WORKER
+    (function initPwaBanner() {
+      // Registra Service Worker se supportato
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js').catch(err => {
+          console.debug("Service worker non registrato:", err);
+        });
+      }
+
+      // Non mostrare se l'app è già aperta in modalità standalone (app già installata)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (isStandalone) return;
+
+      // Non mostrare se l'utente ha già chiuso il banner (salvato in localStorage per 7 giorni)
+      const dismissedUntil = localStorage.getItem('gadgetpoint_pwa_dismissed');
+      if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
+
+      let deferredPrompt = null;
+      const banner = document.getElementById('pwaInstallBanner');
+      const titleEl = document.getElementById('pwaBannerTitle');
+      const descEl = document.getElementById('pwaBannerDesc');
+      const btnInstall = document.getElementById('btnPwaInstall');
+      const btnClose = document.getElementById('btnPwaClose');
+
+      btnClose?.addEventListener('click', () => {
+        if (banner) banner.style.display = 'none';
+        localStorage.setItem('gadgetpoint_pwa_dismissed', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      });
+
+      // Rilevamento iOS
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isIos = /iphone|ipad|ipod/.test(ua);
+
+      // Evento nativo di installazione per Android / Chromium
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (banner) {
+          titleEl.textContent = "📲 Installa GadgetPoint";
+          descEl.textContent = "Installa l'app sullo smartphone per un'esperienza a tutto schermo ad alta velocità.";
+          if (btnInstall) btnInstall.style.display = 'block';
+          banner.style.display = 'flex';
+        }
+      });
+
+      btnInstall?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted' && banner) {
+            banner.style.display = 'none';
+          }
+          deferredPrompt = null;
+        }
+      });
+
+      // Su iOS Safari: mostra il suggerimento guidato con i 2 passaggi
+      if (isIos) {
+        setTimeout(() => {
+          if (banner && banner.style.display === 'none') {
+            titleEl.innerHTML = "📲 Installa GadgetPoint su iPhone";
+            descEl.innerHTML = "Tocca il tasto <strong>Condividi</strong> (icona quadrata con freccia in basso) e seleziona <strong>'Aggiungi a schermata Home'</strong>.";
+            if (btnInstall) btnInstall.style.display = 'none';
+            banner.style.display = 'flex';
+          }
+        }, 2200);
+      }
+    })();
+
     // AVVIO
     window.addEventListener('DOMContentLoaded', async () => {
       initViewer();
@@ -2675,5 +2850,18 @@
       request3DPreview();
     });
   </script>
+
+  <!-- Smart PWA Install Banner (Android & iOS) -->
+  <div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;">
+    <img src="/static/icons/apple-touch-icon.png" alt="GadgetPoint" class="pwa-icon-thumb">
+    <div class="pwa-banner-content">
+      <div class="pwa-banner-title" id="pwaBannerTitle">📲 Installa GadgetPoint</div>
+      <div class="pwa-banner-desc" id="pwaBannerDesc">Aggiungi l'app alla schermata Home per aprirla come app nativa.</div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button type="button" id="btnPwaInstall" class="btn-pwa-install" style="display: none;">Installa</button>
+      <button type="button" id="btnPwaClose" class="btn-pwa-close" title="Chiudi">✕</button>
+    </div>
+  </div>
 </body>
 </html>

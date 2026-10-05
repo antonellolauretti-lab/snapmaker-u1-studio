@@ -330,6 +330,22 @@ async def serve_storefront():
         raise HTTPException(status_code=404, detail="Storefront index.html non trovato.")
     return FileResponse(str(STOREFRONT_HTML), media_type="text/html")
 
+@app.get("/manifest.json", response_class=FileResponse)
+async def serve_manifest():
+    """Manifest PWA accessibile direttamente alla radice."""
+    manifest_p = STATIC_DIR / "manifest.json"
+    if manifest_p.is_file():
+        return FileResponse(str(manifest_p), media_type="application/manifest+json")
+    raise HTTPException(status_code=404, detail="Manifest non trovato.")
+
+@app.get("/sw.js", response_class=FileResponse)
+async def serve_service_worker():
+    """Service worker PWA accessibile alla radice per scope globale."""
+    sw_p = STATIC_DIR / "sw.js"
+    if sw_p.is_file():
+        return FileResponse(str(sw_p), media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="Service worker non trovato.")
+
 @app.get("/studio", response_class=FileResponse)
 @app.get("/studio/", response_class=FileResponse)
 async def serve_studio():

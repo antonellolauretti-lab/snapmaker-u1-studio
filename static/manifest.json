@@ -1,14 +1,12 @@
 {
-  "name": "Snapmaker U1 Studio",
-  "short_name": "U1 Studio",
-  "description": "Studio Parametrico 3D per Snapmaker U1 - Portachiavi e Targhette Multicolore 4 Ugelli",
+  "name": "GadgetPoint - Stampe 3D Personalizzate",
+  "short_name": "GadgetPoint",
+  "description": "Crea e ordina portachiavi e targhette 3D multicolore su misura",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#121316",
-  "theme_color": "#e31b23",
-  "categories": ["utilities", "productivity", "graphics"],
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -21,11 +19,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/static/icons/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
     }
   ]
 }
