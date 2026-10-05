@@ -13,7 +13,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 30,
-      "default": "ANTONELLO",
+      "default": "TUO NOME",
       "description": "Stringa di testo personalizzata"
     },
     "font_family": {

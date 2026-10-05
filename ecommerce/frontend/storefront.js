@@ -13,7 +13,7 @@ export class SnapmakerStorefront {
     this.availableFilaments = [];
     this.currentConfig = {
       productType: 'keychain', // 'keychain' o 'desk_sign'
-      textLine1: 'MARCO',
+      textLine1: 'TUO NOME',
       line2Enabled: false,
       textLine2: '',
       fontId: 'Montserrat',

@@ -319,7 +319,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     Genera le mesh 3D della Base, del Testo (1 o 2 righe sovrapposte) e dell'eventuale Icona
     rispettando la configurazione degli utensili Snapmaker U1 (T0..T3).
     """
-    text = params.get("text", "ANTONELLO").strip()
+    text = params.get("text", "TUO NOME").strip()
     font_family = params.get("font_family", "Anton")
     font_path = params.get("font_path")
     font_size = float(params.get("font_size", 14.0))
