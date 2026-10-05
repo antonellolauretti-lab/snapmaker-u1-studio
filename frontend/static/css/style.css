@@ -87,15 +87,23 @@ body {
   flex-direction: column;
 }
 
+/* Supporto per Notch e Dynamic Island */
+.promo-banner,
+.top-banner,
+header:first-child,
+.app-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 /* Header */
 .app-header {
-  height: 56px;
+  height: calc(56px + env(safe-area-inset-top, 0px));
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: env(safe-area-inset-top, 0px) 20px 0 20px;
   z-index: 10;
 }
 
