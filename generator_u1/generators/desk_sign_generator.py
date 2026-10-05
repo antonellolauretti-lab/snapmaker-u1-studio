@@ -9,7 +9,11 @@ from matplotlib.textpath import TextPath
 from matplotlib.font_manager import FontProperties
 
 from generator_u1.packager.snapmaker_3mf import PartItem
-from generator_u1.font_resolver import get_font_properties
+from generator_u1.font_resolver import (
+    get_font_properties,
+    get_font_dilation_offset,
+    apply_text_polygon_buffer
+)
 
 def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
     """
@@ -57,30 +61,36 @@ def _generate_text_2d(
     font_family: str,
     font_path: Optional[str],
     font_size: float,
-    letter_spacing: float
+    letter_spacing: float,
+    dilation_offset: float = 0.0
 ) -> sg.base.BaseGeometry:
-    """Genera la geometria 2D vettoriale di una riga di testo."""
+    """Genera la geometria 2D vettoriale di una riga di testo con buffer opzionale."""
     fp = get_font_properties(font_family, font_path)
 
     if letter_spacing == 0.0 or len(text) <= 1:
         tp = TextPath((0, 0), text, size=font_size, prop=fp)
-        return _extract_shapely_polygons_from_textpath(tp)
+        raw_geom = _extract_shapely_polygons_from_textpath(tp)
+    else:
+        char_polys = []
+        cur_x = 0.0
+        for char in text:
+            char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
+            if len(char_tp.to_polygons()) > 0:
+                cp = _extract_shapely_polygons_from_textpath(char_tp)
+                char_polys.append(cp)
+                cbounds = cp.bounds
+                cur_x = cbounds[2] + letter_spacing
+            else:
+                cur_x += (font_size * 0.4) + letter_spacing
 
-    char_polys = []
-    cur_x = 0.0
-    for char in text:
-        char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
-        if len(char_tp.to_polygons()) > 0:
-            cp = _extract_shapely_polygons_from_textpath(char_tp)
-            char_polys.append(cp)
-            cbounds = cp.bounds
-            cur_x = cbounds[2] + letter_spacing
-        else:
-            cur_x += (font_size * 0.4) + letter_spacing
+        if not char_polys:
+            raise ValueError(f"Nessun carattere valido generato per '{text}'")
+        raw_geom = unary_union(char_polys)
 
-    if not char_polys:
-        raise ValueError(f"Nessun carattere valido generato per '{text}'")
-    return unary_union(char_polys)
+    if dilation_offset > 0.0:
+        raw_geom = apply_text_polygon_buffer(raw_geom, dilation_offset)
+
+    return raw_geom
 
 def _extrude_geometry(geom: Any, height: float) -> trimesh.Trimesh:
     """Estrude un Polygon o MultiPolygon Shapely in una mesh trimesh 3D manifold."""
@@ -151,8 +161,11 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     # Base
     extruder_base = int(params.get("extruder_base", 0))
 
-    # 1. Generazione 2D Testo Riga 1
-    t1_raw = _generate_text_2d(text_line1, font_family_line1, font_path_line1, font_size_line1, letter_spacing_line1)
+    offset1 = get_font_dilation_offset(font_family_line1)
+    offset2 = get_font_dilation_offset(font_family_line2)
+
+    # 1. Generazione 2D Testo Riga 1 (con buffer per tratti sottili)
+    t1_raw = _generate_text_2d(text_line1, font_family_line1, font_path_line1, font_size_line1, letter_spacing_line1, dilation_offset=offset1)
     t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
     w1 = t1_maxx - t1_minx
     h1 = t1_maxy - t1_miny
@@ -162,7 +175,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     t2_norm = None
     w2, h2 = 0.0, 0.0
     if line2_enabled:
-        t2_raw = _generate_text_2d(text_line2, font_family_line2, font_path_line2, font_size_line2, letter_spacing_line2)
+        t2_raw = _generate_text_2d(text_line2, font_family_line2, font_path_line2, font_size_line2, letter_spacing_line2, dilation_offset=offset2)
         t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
         w2 = t2_maxx - t2_minx
         h2 = t2_maxy - t2_miny

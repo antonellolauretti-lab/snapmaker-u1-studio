@@ -1,4 +1,34 @@
-/* Font-Face Fallback per Corsivi e Script nel Cloud e Mobile */
+/* Font-Face Fallback e Varianti Heavy/Bold per Stampa 3D FDM */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  src: url('/fonts/Montserrat-Black.ttf') format('truetype'), url('/fonts/Montserrat.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype'), url('/fonts/Playfair_Display.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/Cinzel-Bold.ttf') format('truetype'), url('/fonts/Cinzel.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Segoe UI';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Segoe UI Bold'), local('Segoe UI'), url('/fonts/Montserrat-Black.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Georgia';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Georgia Bold'), local('Georgia'), url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
+}
 @font-face {
   font-family: 'Segoe Script';
   font-style: normal;
@@ -23,6 +53,7 @@
   font-weight: 400;
   src: url('/fonts/GreatVibes-Regular.ttf') format('truetype');
 }
+
 
 :root {
   --bg-primary: #121316;
@@ -1026,6 +1057,28 @@ body.mode-desksign .only-desksign {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+/* Fedele resa dell'ingrossamento FDM per font critici */
+.custom-font-option-item[data-value="Montserrat"] .custom-font-item-name,
+.custom-font-option-item[data-value="Montserrat"] .custom-font-item-sample {
+  font-weight: 900 !important;
+  -webkit-text-stroke: 0.3px currentColor;
+}
+.custom-font-option-item[data-value="Cinzel"] .custom-font-item-name,
+.custom-font-option-item[data-value="Playfair Display"] .custom-font-item-name,
+.custom-font-option-item[data-value="Georgia"] .custom-font-item-name,
+.custom-font-option-item[data-value="Segoe UI"] .custom-font-item-name {
+  font-weight: 800 !important;
+  -webkit-text-stroke: 0.25px currentColor;
+}
+.custom-font-option-item[data-value="Dancing Script"] .custom-font-item-name,
+.custom-font-option-item[data-value="Caveat"] .custom-font-item-name,
+.custom-font-option-item[data-value="Great Vibes"] .custom-font-item-name,
+.custom-font-option-item[data-value="Segoe Script"] .custom-font-item-name {
+  font-weight: 700 !important;
+  -webkit-text-stroke: 0.35px currentColor;
+  text-shadow: 0 0 0.5px currentColor;
 }
 
 .custom-font-check {

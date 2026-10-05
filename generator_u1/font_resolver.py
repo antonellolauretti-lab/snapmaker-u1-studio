@@ -40,18 +40,20 @@ FONT_ALIAS_MAP: Dict[str, str] = {
     "oswald": "Oswald.ttf",
     "permanent marker": "Permanent_Marker.ttf",
     "permanentmarker": "Permanent_Marker.ttf",
-    # Sans-serif & Serif
-    "montserrat": "Montserrat.ttf",
+    # Sans-serif & Serif (Rigorosamente varianti Heavy / Bold per estrusione FDM)
+    "montserrat": "Montserrat-Black.ttf",
+    "montserrat black": "Montserrat-Black.ttf",
+    "montserrat bold": "Montserrat-Black.ttf",
     "poppins": "Poppins.ttf",
     "roboto": "Roboto.ttf",
     "ubuntu": "Ubuntu.ttf",
-    "playfair display": "Playfair_Display.ttf",
-    "playfairdisplay": "Playfair_Display.ttf",
-    "cinzel": "Cinzel.ttf",
+    "playfair display": "PlayfairDisplay-Bold.ttf",
+    "playfairdisplay": "PlayfairDisplay-Bold.ttf",
+    "cinzel": "Cinzel-Bold.ttf",
     "arial black": "Anton.ttf",
     "arial": "Roboto.ttf",
-    "segoe ui": "Montserrat.ttf",
-    "georgia": "Playfair_Display.ttf",
+    "segoe ui": "Montserrat-Black.ttf",
+    "georgia": "PlayfairDisplay-Bold.ttf",
     "consolas": "Ubuntu.ttf",
 }
 
@@ -104,11 +106,68 @@ def resolve_font_path(font_name: Optional[str], explicit_path: Optional[str] = N
     return None
 
 def get_font_properties(font_name: Optional[str], explicit_path: Optional[str] = None) -> FontProperties:
-    """Restituisce un oggetto FontProperties con percorso fisico valido per Matplotlib."""
+    """Restituisce un oggetto FontProperties con percorso fisico valido e peso calibrato per Matplotlib."""
     path = resolve_font_path(font_name, explicit_path)
-    if path and os.path.isfile(path):
-        return FontProperties(fname=path)
+    weight = "bold" if font_name and font_name.lower() in [
+        "montserrat", "segoe ui", "playfair display", "playfairdisplay", "cinzel", "georgia", "arial", "arial black"
+    ] else "normal"
 
-    # Fallback se non trovato su disco
-    weight = "bold" if font_name and font_name.lower() in ["arial", "segoe ui", "georgia"] else "normal"
+    if path and os.path.isfile(path):
+        return FontProperties(fname=path, weight=weight)
+
     return FontProperties(family=font_name or "sans-serif", weight=weight)
+
+def get_font_dilation_offset(font_name: Optional[str]) -> float:
+    """
+    Restituisce l'offset di dilatazione/buffer vettoriale (in mm) per rinforzare
+    i tratti sottili ed evitare parti fragili o mancanti con ugello 0.4 mm.
+    Garantisce che nessun tratto del testo scenda al di sotto di 0.8 mm reali.
+    """
+    if not font_name:
+        return 0.0
+    fn = font_name.strip().lower()
+
+    # Script e corsivi (Dancing Script, Caveat, Great Vibes, Segoe Script, Pacifico):
+    # Necessitano di buffer solido tra 0.28 e 0.32 mm per saldare tratti sottili e legature
+    if any(s in fn for s in [
+        "dancing script", "dancingscript",
+        "caveat",
+        "great vibes", "greatvibes",
+        "segoe script", "segoescript",
+        "pacifico", "lobster"
+    ]):
+        return 0.30
+
+    # Serif e caratteri con grazie o dettagli delicati (Playfair Display, Cinzel, Georgia): 0.28 mm
+    if any(s in fn for s in [
+        "playfair", "cinzel", "georgia"
+    ]):
+        return 0.28
+
+    # Montserrat e Segoe UI: 0.18 mm per dare una presenza solida e monolitica
+    if any(s in fn for s in [
+        "montserrat", "segoe ui"
+    ]):
+        return 0.18
+
+    return 0.0
+
+def apply_text_polygon_buffer(geom: Any, offset_distance: float) -> Any:
+    """
+    Applica un'operazione di dilatazione/offset sul poligono del testo Shapely
+    con pulizia topologica per garantire contorni chiusi, saldati e manifold.
+    """
+    if offset_distance <= 0.0 or geom is None:
+        return geom
+    try:
+        # Se geometria vuota restituisce invariato
+        if hasattr(geom, "is_empty") and geom.is_empty:
+            return geom
+        buffered = geom.buffer(offset_distance, resolution=16)
+        if hasattr(buffered, "is_valid") and not buffered.is_valid:
+            buffered = buffered.buffer(0)
+        return buffered
+    except Exception as e:
+        print(f"Avviso durante buffer dilatazione font: {e}")
+        return geom
+

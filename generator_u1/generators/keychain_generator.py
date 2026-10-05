@@ -11,7 +11,11 @@ from matplotlib.textpath import TextPath
 from matplotlib.font_manager import FontProperties
 
 from generator_u1.packager.snapmaker_3mf import PartItem
-from generator_u1.font_resolver import get_font_properties
+from generator_u1.font_resolver import (
+    get_font_properties,
+    get_font_dilation_offset,
+    apply_text_polygon_buffer
+)
 
 def _ensure_single_connected_polygon(geom: Any, bridge_width: float = 4.0) -> sg.Polygon:
     """
@@ -291,28 +295,34 @@ def _generate_text_line_2d(
     text: str,
     fp: FontProperties,
     font_size: float,
-    letter_spacing: float = 0.0
+    letter_spacing: float = 0.0,
+    dilation_offset: float = 0.0
 ) -> sg.base.BaseGeometry:
-    """Genera la geometria 2D vettoriale di una singola riga di testo con corretta gestione dei fori."""
+    """Genera la geometria 2D vettoriale di una singola riga di testo con corretta gestione dei fori e buffer opzionale."""
     if letter_spacing == 0.0 or len(text) <= 1:
         tp = TextPath((0, 0), text, size=font_size, prop=fp)
-        return _extract_shapely_polygons_from_textpath(tp)
+        raw_geom = _extract_shapely_polygons_from_textpath(tp)
+    else:
+        char_polys = []
+        cur_x = 0.0
+        for char in text:
+            char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
+            if len(char_tp.to_polygons()) > 0:
+                cp = _extract_shapely_polygons_from_textpath(char_tp)
+                char_polys.append(cp)
+                cbounds = cp.bounds
+                cur_x = cbounds[2] + letter_spacing
+            else:
+                cur_x += (font_size * 0.4) + letter_spacing
 
-    char_polys = []
-    cur_x = 0.0
-    for char in text:
-        char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
-        if len(char_tp.to_polygons()) > 0:
-            cp = _extract_shapely_polygons_from_textpath(char_tp)
-            char_polys.append(cp)
-            cbounds = cp.bounds
-            cur_x = cbounds[2] + letter_spacing
-        else:
-            cur_x += (font_size * 0.4) + letter_spacing
+        if not char_polys:
+            raise ValueError(f"Nessun carattere valido generato per '{text}'")
+        raw_geom = unary_union(char_polys)
 
-    if not char_polys:
-        raise ValueError(f"Nessun carattere valido generato per '{text}'")
-    return unary_union(char_polys)
+    if dilation_offset > 0.0:
+        raw_geom = apply_text_polygon_buffer(raw_geom, dilation_offset)
+
+    return raw_geom
 
 def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     """
@@ -359,9 +369,11 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
     fp1 = get_font_properties(font_family, font_path)
     fp2 = get_font_properties(font_family_line2, font_path_line2)
+    offset1 = get_font_dilation_offset(font_family)
+    offset2 = get_font_dilation_offset(font_family_line2)
 
-    # 2. Generazione vettoriale Riga 1
-    t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing)
+    # 2. Generazione vettoriale Riga 1 (con eventuale offset di dilatazione per tratti sottili)
+    t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
     t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
     w1 = t1_maxx - t1_minx
     h1 = t1_maxy - t1_miny
@@ -372,7 +384,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     w2, h2 = 0.0, 0.0
     if line2_enabled and text_line2:
         try:
-            t2_raw = _generate_text_line_2d(text_line2, fp2, font_size_line2, letter_spacing_line2)
+            t2_raw = _generate_text_line_2d(text_line2, fp2, font_size_line2, letter_spacing_line2, dilation_offset=offset2)
             t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
             w2 = t2_maxx - t2_minx
             h2 = t2_maxy - t2_miny

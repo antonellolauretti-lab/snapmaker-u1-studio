@@ -9,7 +9,7 @@
   <!-- Google Fonts Completi (Curati e Ottimizzati) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Caveat:wght@700&family=Cinzel:wght@700&family=Dancing+Script:wght@700&family=Great+Vibes&family=Lobster&family=Montserrat:wght@700;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Caveat:wght@700&family=Cinzel:wght@700;900&family=Dancing+Script:wght@700&family=Great+Vibes&family=Lobster&family=Montserrat:wght@800;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
 
   <!-- Three.js, OrbitControls e Viewer 3D -->
   <script src="/static/js/libs/three.min.js"></script>
@@ -17,6 +17,38 @@
   <script src="/static/js/viewer.js"></script>
 
   <style>
+    /* Font-Face Fallback e Varianti Heavy/Bold per Stampa 3D FDM */
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: normal;
+      font-weight: 900;
+      src: url('/fonts/Montserrat-Black.ttf') format('truetype'), url('/fonts/Montserrat.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype'), url('/fonts/Playfair_Display.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/fonts/Cinzel-Bold.ttf') format('truetype'), url('/fonts/Cinzel.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Segoe UI';
+      font-style: normal;
+      font-weight: 700;
+      src: local('Segoe UI Bold'), local('Segoe UI'), url('/fonts/Montserrat-Black.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Georgia';
+      font-style: normal;
+      font-weight: 700;
+      src: local('Georgia Bold'), local('Georgia'), url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
+    }
+
     :root {
       --bg-dark: #0c0d10;
       --bg-surface: #14161b;
@@ -272,6 +304,26 @@
       max-width: 100%;
       display: block;
       line-height: 1.2;
+    }
+    /* Stili calibrati per mostrare l'ingrossamento reale anche nelle anteprime 2D */
+    .font-card[data-font="Montserrat"] .font-card-preview {
+      font-weight: 900 !important;
+      -webkit-text-stroke: 0.35px currentColor;
+    }
+    .font-card[data-font="Cinzel"] .font-card-preview,
+    .font-card[data-font="Playfair Display"] .font-card-preview,
+    .font-card[data-font="Georgia"] .font-card-preview,
+    .font-card[data-font="Segoe UI"] .font-card-preview {
+      font-weight: 800 !important;
+      -webkit-text-stroke: 0.28px currentColor;
+    }
+    .font-card[data-font="Dancing Script"] .font-card-preview,
+    .font-card[data-font="Caveat"] .font-card-preview,
+    .font-card[data-font="Great Vibes"] .font-card-preview,
+    .font-card[data-font="Segoe Script"] .font-card-preview {
+      font-weight: 700 !important;
+      -webkit-text-stroke: 0.35px currentColor;
+      text-shadow: 0 0 0.5px currentColor;
     }
 
     /* Selettore Icone con Categorie */
@@ -1392,7 +1444,7 @@
       }
       if (!fontsCatalog || fontsCatalog.length === 0) {
         fontsCatalog = [
-          { id: 'Montserrat', name: 'Montserrat Bold', family: "'Montserrat', sans-serif" },
+          { id: 'Montserrat', name: 'Montserrat Black', family: "'Montserrat', sans-serif" },
           { id: 'Bebas Neue', name: 'Bebas Neue', family: "'Bebas Neue', sans-serif" },
           { id: 'Pacifico', name: 'Pacifico Script', family: "'Pacifico', cursive" },
           { id: 'Lobster', name: 'Lobster Vintage', family: "'Lobster', cursive" },
@@ -1400,8 +1452,11 @@
           { id: 'Bungee', name: 'Bungee 3D', family: "'Bungee', cursive" },
           { id: 'Orbitron', name: 'Orbitron Tech', family: "'Orbitron', sans-serif" },
           { id: 'Poppins', name: 'Poppins Clean', family: "'Poppins', sans-serif" },
-          { id: 'Playfair Display', name: 'Playfair Serif', family: "'Playfair Display', serif" },
-          { id: 'Dancing Script', name: 'Dancing Script', family: "'Dancing Script', cursive" },
+          { id: 'Playfair Display', name: 'Playfair Display Bold', family: "'Playfair Display', serif" },
+          { id: 'Cinzel', name: 'Cinzel Bold', family: "'Cinzel', serif" },
+          { id: 'Dancing Script', name: 'Dancing Script Bold', family: "'Dancing Script', cursive" },
+          { id: 'Caveat', name: 'Caveat Bold', family: "'Caveat', cursive" },
+          { id: 'Great Vibes', name: 'Great Vibes', family: "'Great Vibes', cursive" },
           { id: 'Impact', name: 'Impact Massiccio', family: "Impact, sans-serif" }
         ];
       }
