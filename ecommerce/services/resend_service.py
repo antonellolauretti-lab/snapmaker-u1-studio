@@ -21,8 +21,8 @@ RESEND_API_URL = "https://api.resend.com/emails"
 def get_resend_config() -> Dict[str, str]:
     """Recupera la configurazione email corrente dall'ambiente con fallback sicuri."""
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
-    from_email = (os.environ.get("FROM_EMAIL") or os.environ.get("RESEND_FROM_EMAIL") or "ordini@gadgetpoint.it").strip()
-    store_owner_email = (os.environ.get("STORE_OWNER_EMAIL") or os.environ.get("ADMIN_EMAIL") or "antonello.lauretti@gmail.com").strip()
+    from_email = (os.environ.get("FROM_EMAIL") or os.environ.get("RESEND_FROM_EMAIL") or "onboarding@resend.dev").strip()
+    store_owner_email = (os.environ.get("STORE_OWNER_EMAIL") or os.environ.get("ADMIN_EMAIL") or "antonello.lauretti82@gmail.com").strip()
     app_url = os.environ.get("APP_URL", "http://localhost:8000").rstrip("/")
     return {
         "api_key": api_key,

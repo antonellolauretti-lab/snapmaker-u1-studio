@@ -11,3 +11,4 @@ trimesh>=4.0.0
 matplotlib>=3.8.0
 mapbox-earcut>=1.0.0
 svgpath2mpl>=1.0.0
+resend>=2.0.0

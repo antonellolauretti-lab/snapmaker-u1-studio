@@ -1126,9 +1126,7 @@
       
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin: 20px 0; text-align: left;">
         <div>Codice Ordine: <strong id="succOrderNum" style="color: var(--primary);">#GP-202610-0001</strong></div>
-        <div style="margin-top: 6px;">Email di notifica: <strong id="succEmail">cliente@email.it</strong></div>
-        <div style="margin-top: 6px;">Spedizione: <strong>Corriere espresso BRT / SDA (Fissa 5,00 €)</strong></div>
-        <div style="margin-top: 6px;" id="succBadgeTest"></div>
+        <div style="margin-top: 8px;" id="succBadgeTest"></div>
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: center;">
@@ -1933,7 +1931,7 @@
           document.getElementById('succHeaderTitle').textContent = "🧪 Ordine di Prova Registrato!";
           document.getElementById('succSubtext').textContent = "L'ordine è stato salvato nel database ed è immediatamente visibile nel gestionale /admin per testare la stampa e il download del 3MF.";
           document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
-          document.getElementById('succEmail').textContent = result.customer_email;
+          if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
           document.getElementById('succBadgeTest').innerHTML = `Stato: <span style="background:#f59e0b;color:#000;font-weight:900;padding:2px 6px;border-radius:4px;font-size:11px;">TEST SENZA TRANSAZIONE</span>`;
           document.getElementById('orderSuccessScreen').style.display = 'block';
         } catch (e) {
@@ -2160,7 +2158,7 @@
             closeCart();
             document.getElementById('succHeaderTitle').textContent = "Grazie per il tuo acquisto!";
             document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
-            document.getElementById('succEmail').textContent = result.customer_email;
+            if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
             document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--success);">PayPal Ufficiale</strong>`;
             document.getElementById('orderSuccessScreen').style.display = 'block';
           },

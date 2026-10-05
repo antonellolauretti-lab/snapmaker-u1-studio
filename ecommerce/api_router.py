@@ -29,11 +29,11 @@ except ImportError:
 
 from ecommerce.cart_engine import calculate_cart_totals
 from ecommerce.services.paypal_service import create_paypal_order, capture_paypal_order, get_paypal_config
-from ecommerce.services.resend_service import (
+from ecommerce.services.notification_service import (
     send_customer_order_confirmation,
-    send_admin_new_order_alert,
-    send_order_shipped_notification
+    send_admin_new_order_alert
 )
+from ecommerce.services.resend_service import send_order_shipped_notification
 from ecommerce.services.model_generator_service import compile_order_item_to_3mf
 
 router = APIRouter(prefix="/api", tags=["ecommerce"])
@@ -428,6 +428,11 @@ def api_create_test_order(payload: Dict[str, Any]):
         saved_items.append(item_record)
 
     _save_local_db()
+
+    try:
+        send_admin_new_order_alert(order_record, saved_items)
+    except Exception as e:
+        print(f"[WARN] Invio email test non riuscito: {e}")
 
     return {
         "success": True,
