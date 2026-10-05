@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate_brand_icon.py - Generatore icona moderna 3D Isometrica per il brand GadgetPoint.
+generate_brand_icon.py - Generatore icona moderna 3D per GadgetPoint (Stampante 3D + Portachiavi).
 Produce icone PWA, iOS Apple Touch Icon e Favicon ad altissima definizione.
 """
 
@@ -14,7 +14,6 @@ def create_gradient_square(size: int, color1: tuple, color2: tuple) -> Image.Ima
     base = Image.new("RGBA", (size, size), color1)
     top = Image.new("RGBA", (size, size), color2)
     mask = Image.new("L", (size, size))
-    draw_mask = ImageDraw.Draw(mask)
     for y in range(size):
         for x in range(size):
             factor = (x + y) / (2.0 * size)
@@ -23,11 +22,11 @@ def create_gradient_square(size: int, color1: tuple, color2: tuple) -> Image.Ima
 
 
 def generate_gadgetpoint_icon(size: int = 512) -> Image.Image:
-    """Genera l'icona isometrica 3D high-tech GadgetPoint a risoluzione variabile."""
+    """Genera l'icona con stampante 3D e portachiavi personalizzato emergente."""
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
 
-    # 1. SFONDO SCURO PRINCIPALE (#090d16 -> #111827)
-    c_bg1 = (9, 13, 22, 255)
+    # 1. SFONDO SCURO PRINCIPALE (#0b0f19 -> #111827)
+    c_bg1 = (11, 15, 25, 255)
     c_bg2 = (17, 24, 39, 255)
     bg_img = create_gradient_square(size, c_bg1, c_bg2)
 
@@ -42,25 +41,25 @@ def generate_gadgetpoint_icon(size: int = 512) -> Image.Image:
 
     img.paste(bg_img, (0, 0), squircle_mask)
 
-    # 3. AMBIENT GLOW CENTRALE (Aura neon ciano e viola diffusa)
+    # 3. AMBIENT GLOW CENTRALE (Aura neon ciano e arancio)
     halo_size = int(size * 0.85)
     halo = Image.new("RGBA", (halo_size, halo_size), (0, 0, 0, 0))
     halo_draw = ImageDraw.Draw(halo)
-    halo_draw.ellipse([0, 0, halo_size, halo_size], fill=(0, 242, 254, 70))
+    halo_draw.ellipse([0, 0, halo_size, halo_size], fill=(0, 242, 254, 65))
     halo = halo.filter(ImageFilter.GaussianBlur(radius=int(size * 0.15)))
     img.paste(halo, (int((size - halo_size) / 2), int((size - halo_size) / 2)), halo)
 
-    # 4. RIFLESSO LUCIDO VETRO CURVO (Glossy Highlight)
+    # 4. RIFLESSO LUCIDO SUPERIORE (Glossy glass highlight)
     gloss = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     g_draw = ImageDraw.Draw(gloss)
     g_draw.ellipse(
         [pad - int(size * 0.15), pad - int(size * 0.28), pad + badge_w + int(size * 0.15), int(size * 0.40)],
-        fill=(255, 255, 255, 45)
+        fill=(255, 255, 255, 40)
     )
     gloss = Image.composite(gloss, Image.new("RGBA", (size, size), (0, 0, 0, 0)), squircle_mask)
     img = Image.alpha_composite(img, gloss)
 
-    # 5. BORDO LUMINOSO NEON SUL PERIMETRO
+    # 5. BORDO LUMINOSO AL NEON
     border_draw = ImageDraw.Draw(img)
     border_w = max(2, int(size * 0.016))
     border_draw.rounded_rectangle(
@@ -70,115 +69,110 @@ def generate_gadgetpoint_icon(size: int = 512) -> Image.Image:
         width=border_w
     )
 
-    # 6. CUBO ISOMETRICO MULTI-LAYER (STAMPA 3D SLICES)
+    # 6. STAMPANTE 3D (TELAIO CUBICO E PIATTO RISCALDATO)
     cx = size * 0.50
-    cy = size * 0.45
-    w = size * 0.31
-    rh = w * 0.577
-    total_h = size * 0.38
+    bed_w = size * 0.36
+    bed_rh = bed_w * 0.48
+    bed_y = size * 0.72
 
-    num_layers = 4
-    slice_h = total_h / num_layers
-    gap = size * 0.009
+    draw = ImageDraw.Draw(img)
 
-    layer_colors = [
-        {"left": (15, 23, 42), "right": (30, 41, 59), "neon": (59, 130, 246, 200)},
-        {"left": (29, 78, 216), "right": (37, 99, 235), "neon": (96, 165, 250, 230)},
-        {"left": (109, 40, 217), "right": (139, 92, 246), "neon": (192, 132, 252, 240)},
-        {"left": (2, 132, 199), "right": (0, 242, 254), "neon": (125, 250, 255, 255)},
+    # Piatto di stampa
+    pts_bed = [
+        (cx, bed_y - (2 * bed_rh)),
+        (cx + bed_w, bed_y - bed_rh),
+        (cx, bed_y),
+        (cx - bed_w, bed_y - bed_rh)
     ]
+    draw.polygon(pts_bed, fill=(18, 25, 40, 255))
+    draw.line(pts_bed + [pts_bed[0]], fill=(56, 189, 248, 180), width=max(1, int(size * 0.008)))
 
-    cube_draw = ImageDraw.Draw(img)
+    # Griglia piatto
+    for g_idx in range(1, 4):
+        t = g_idx / 4.0
+        p1 = (cx - (bed_w * (1 - t)), bed_y - (bed_rh * (1 + t)))
+        p2 = (cx + (bed_w * t), bed_y - (bed_rh * t))
+        draw.line([p1, p2], fill=(56, 189, 248, 45), width=max(1, int(size * 0.003)))
 
-    for i in range(num_layers):
-        y_base = cy + (total_h * 0.5) - (i * slice_h)
-        y_top = y_base - slice_h + gap
-        info = layer_colors[i]
+        p3 = (cx + (bed_w * (1 - t)), bed_y - (bed_rh * (1 + t)))
+        p4 = (cx - (bed_w * t), bed_y - (bed_rh * t))
+        draw.line([p3, p4], fill=(56, 189, 248, 45), width=max(1, int(size * 0.003)))
 
-        # Faccia sinistra
-        pts_left = [
-            (cx - w, y_base - rh),
-            (cx, y_base),
-            (cx, y_top),
-            (cx - w, y_top - rh)
-        ]
-        cube_draw.polygon(pts_left, fill=info["left"])
+    # Telaio cubico aperto
+    frame_h = size * 0.48
+    frame_top_y = bed_y - (2 * bed_rh) - frame_h
+    frame_col = (71, 85, 105, 140)
+    draw.line([(cx, bed_y - (2 * bed_rh)), (cx, frame_top_y)], fill=frame_col, width=max(2, int(size * 0.012)))
+    draw.line([(cx + bed_w, bed_y - bed_rh), (cx + bed_w, bed_y - bed_rh - frame_h)], fill=frame_col, width=max(2, int(size * 0.012)))
+    draw.line([(cx - bed_w, bed_y - bed_rh), (cx - bed_w, bed_y - bed_rh - frame_h)], fill=frame_col, width=max(2, int(size * 0.012)))
+    draw.line([(cx - bed_w, bed_y - bed_rh - frame_h), (cx, frame_top_y)], fill=frame_col, width=max(2, int(size * 0.012)))
+    draw.line([(cx, frame_top_y), (cx + bed_w, bed_y - bed_rh - frame_h)], fill=frame_col, width=max(2, int(size * 0.012)))
 
-        # Faccia destra
-        pts_right = [
-            (cx, y_base),
-            (cx + w, y_base - rh),
-            (cx + w, y_top - rh),
-            (cx, y_top)
-        ]
-        cube_draw.polygon(pts_right, fill=info["right"])
-
-        # Linea neon orizzontale
-        seam_w = max(1, int(size * 0.008))
-        cube_draw.line([(cx - w, y_top - rh), (cx, y_top)], fill=info["neon"], width=seam_w)
-        cube_draw.line([(cx, y_top), (cx + w, y_top - rh)], fill=info["neon"], width=seam_w)
-
-    # FACCIA SUPERIORE ISOMETRICA
-    y_top_surface = cy - (total_h * 0.5) + gap
-    pts_top = [
-        (cx, y_top_surface - (2 * rh)),
-        (cx + w, y_top_surface - rh),
-        (cx, y_top_surface),
-        (cx - w, y_top_surface - rh)
-    ]
-    cube_draw.polygon(pts_top, fill=(0, 242, 254, 255))
-    top_border_w = max(1, int(size * 0.012))
-    cube_draw.line(pts_top + [pts_top[0]], fill=(255, 255, 255, 240), width=top_border_w)
-
-    # 7. UGELLO DI STAMPA 3D TECNOLOGICO
-    noz_x = cx + (w * 0.48)
-    noz_tip_y = y_top_surface - (rh * 0.65)
-    noz_w = size * 0.052
-    noz_h = size * 0.095
-
-    # Dissipatore (alette)
-    sink_h = noz_h * 0.45
-    sink_y = noz_tip_y - noz_h
-    for k in range(3):
-        fin_y = sink_y + (k * (sink_h / 3.0))
-        cube_draw.line(
-            [(noz_x - (noz_w * 0.7), fin_y), (noz_x + (noz_w * 0.7), fin_y)],
-            fill=(160, 175, 195, 255),
-            width=max(2, int(size * 0.009))
-        )
-
-    # Blocco riscaldante
-    block_y = sink_y + sink_h
-    block_h = noz_h * 0.28
-    cube_draw.rectangle(
-        [noz_x - (noz_w * 0.5), block_y, noz_x + (noz_w * 0.5), block_y + block_h],
-        fill=(203, 213, 225, 255)
+    # Traversa asse X
+    gantry_y = size * 0.28
+    draw.line(
+        [(cx - (bed_w * 0.70), gantry_y - (bed_rh * 0.60)), (cx + (bed_w * 0.90), gantry_y + (bed_rh * 0.40))],
+        fill=(148, 163, 184, 210), width=max(3, int(size * 0.016))
     )
 
-    # Cono ottone
+    # Gruppo estrusore / Hotend
+    car_x = cx + (size * 0.18)
+    car_y = gantry_y + (size * 0.03)
+    car_w = size * 0.09
+    car_h = size * 0.08
+    draw.rectangle([car_x - (car_w * 0.5), car_y, car_x + (car_w * 0.5), car_y + car_h], fill=(30, 41, 59, 255), outline=(56, 189, 248, 255), width=max(1, int(size * 0.006)))
+
+    # Alette dissipatore
+    for f in range(1, 4):
+        fy = car_y + (f * (car_h * 0.22))
+        draw.line([(car_x - (car_w * 0.4), fy), (car_x + (car_w * 0.4), fy)], fill=(148, 163, 184, 255), width=max(1, int(size * 0.007)))
+
+    # Nozzle ottone dorato
+    noz_tip_y = car_y + car_h + (size * 0.035)
     pts_nozzle = [
-        (noz_x - (noz_w * 0.45), block_y + block_h),
-        (noz_x + (noz_w * 0.45), block_y + block_h),
-        (noz_x + (noz_w * 0.12), noz_tip_y),
-        (noz_x - (noz_w * 0.12), noz_tip_y)
+        (car_x - (car_w * 0.28), car_y + car_h),
+        (car_x + (car_w * 0.28), car_y + car_h),
+        (car_x + (car_w * 0.09), noz_tip_y),
+        (car_x - (car_w * 0.09), noz_tip_y)
     ]
-    cube_draw.polygon(pts_nozzle, fill=(245, 158, 11, 255))
+    draw.polygon(pts_nozzle, fill=(245, 158, 11, 255))
+    tip_r = size * 0.016
+    draw.ellipse([car_x - tip_r, noz_tip_y - tip_r, car_x + tip_r, noz_tip_y + tip_r], fill=(255, 255, 255, 240))
 
-    # Filamento neon emesso
-    fil_pts = [
-        (noz_x, noz_tip_y),
-        (noz_x - (w * 0.15), noz_tip_y + (rh * 0.25)),
-        (noz_x - (w * 0.35), noz_tip_y + (rh * 0.35))
-    ]
-    cube_draw.line(fil_pts, fill=(0, 242, 254, 255), width=max(2, int(size * 0.013)))
+    # 7. PORTACHIAVI 3D IN USCITA
+    # Inclinazione dinamica con tag layer
+    tag_img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    tag_draw = ImageDraw.Draw(tag_img)
 
-    # Punto incandescente
-    pt_r = size * 0.020
-    cube_draw.ellipse([noz_x - pt_r, noz_tip_y - pt_r, noz_x + pt_r, noz_tip_y + pt_r], fill=(255, 255, 255, 255))
+    kw = int(size * 0.28)
+    kh = int(size * 0.44)
+    kr = int(size * 0.05)
 
-    # 8. MONOGRAMMA "GP"
-    text_y = cy + (size * 0.08)
-    font_size = int(size * 0.26)
+    kx0 = int((size - kw) / 2)
+    ky0 = int((size - kh) / 2)
+
+    # Ombra
+    tag_draw.rounded_rectangle([kx0 + int(size * 0.03), ky0 + int(size * 0.04), kx0 + kw + int(size * 0.03), ky0 + kh + int(size * 0.04)], radius=kr, fill=(4, 7, 15, 180))
+
+    # Bevel 3D arancio scuro
+    thick = int(size * 0.02)
+    tag_draw.rounded_rectangle([kx0 + thick, ky0 + thick, kx0 + kw + thick, ky0 + kh + thick], radius=kr, fill=(194, 65, 12, 255))
+
+    # Corpo arancio sunset
+    tag_draw.rounded_rectangle([kx0, ky0, kx0 + kw, ky0 + kh], radius=kr, fill=(255, 107, 0, 255), outline=(255, 237, 213, 240), width=max(1, int(size * 0.009)))
+
+    # Foro passante
+    hole_y = ky0 + int(kr * 1.5)
+    hole_cx = int(size / 2)
+    hole_r = int(size * 0.03)
+    tag_draw.ellipse([hole_cx - hole_r, hole_y - hole_r, hole_cx + hole_r, hole_y + hole_r], fill=(14, 20, 34, 255))
+
+    # Anello metallico
+    ring_r = int(size * 0.052)
+    tag_draw.ellipse([hole_cx - ring_r, hole_y - int(ring_r * 1.1), hole_cx + ring_r, hole_y + int(ring_r * 0.9)], outline=(226, 232, 240, 255), width=max(2, int(size * 0.016)))
+
+    # Testo "GP" in rilievo
+    font_size = int(size * 0.17)
     try:
         font = ImageFont.truetype("arialbd.ttf", font_size)
     except Exception:
@@ -187,23 +181,26 @@ def generate_gadgetpoint_icon(size: int = 512) -> Image.Image:
         except Exception:
             font = ImageFont.load_default()
 
-    # Calcolo bounding box testo
-    text_str = "GP"
-    bbox = cube_draw.textbbox((0, 0), text_str, font=font)
+    bbox = tag_draw.textbbox((0, 0), "GP", font=font)
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
     tx = (size - tw) / 2
-    ty = text_y
+    ty = size * 0.52
 
-    # Ombra profonda
-    shadow_offset = max(3, int(size * 0.022))
-    cube_draw.text((tx, ty + shadow_offset), text_str, font=font, fill=(4, 7, 15, 240))
+    tag_draw.text((tx, ty + 2), "GP", font=font, fill=(154, 52, 18, 180))
+    tag_draw.text((tx, ty), "GP", font=font, fill=(255, 255, 255, 255))
 
-    # Bevel 3D
-    cube_draw.text((tx, ty + (shadow_offset * 0.5)), text_str, font=font, fill=(3, 105, 161, 255))
+    # Ruota il portachiavi di circa -24 gradi
+    rotated_tag = tag_img.rotate(24, resample=Image.Resampling.BICUBIC, center=(size * 0.5, size * 0.5))
+    img.paste(rotated_tag, (-int(size * 0.06), int(size * 0.02)), rotated_tag)
 
-    # Testo frontale bianco brillante
-    cube_draw.text((tx, ty), text_str, font=font, fill=(255, 255, 255, 255))
+    # 8. FILAMENTO NEON FLUIDO
+    draw = ImageDraw.Draw(img)
+    fil_x = cx + (size * 0.08)
+    fil_y = size * 0.62
+    draw.line([(car_x, noz_tip_y), (fil_x, fil_y)], fill=(0, 242, 254, 255), width=max(2, int(size * 0.012)))
+    c_r = size * 0.016
+    draw.ellipse([fil_x - c_r, fil_y - c_r, fil_x + c_r, fil_y + c_r], fill=(0, 242, 254, 255))
 
     return img
 
@@ -231,7 +228,6 @@ def generate_all_icons():
             im.save(out_p, "PNG")
             print(f"Generato: {out_p} ({sz}x{sz})")
 
-        # Favicon ICO
         ico_im = generate_gadgetpoint_icon(64)
         ico_im.save(d / "favicon.ico", format="ICO", sizes=[(64, 64), (32, 32), (16, 16)])
         print(f"Generato: {d / 'favicon.ico'}")
