@@ -346,6 +346,24 @@ async def serve_service_worker():
         return FileResponse(str(sw_p), media_type="application/javascript")
     raise HTTPException(status_code=404, detail="Service worker non trovato.")
 
+@app.get("/apple-touch-icon.png", response_class=FileResponse)
+@app.get("/apple-touch-icon-precomposed.png", response_class=FileResponse)
+async def serve_apple_touch_icon():
+    """Icona Apple Touch per iOS Home Screen."""
+    icon_p = STATIC_DIR / "icons" / "apple-touch-icon.png"
+    if icon_p.is_file():
+        return FileResponse(str(icon_p), media_type="image/png")
+    raise HTTPException(status_code=404, detail="Icona non trovata.")
+
+@app.get("/favicon.ico", response_class=FileResponse)
+@app.get("/favicon.png", response_class=FileResponse)
+async def serve_favicon():
+    """Favicon per browser desktop e mobile."""
+    fav_p = STATIC_DIR / "icons" / "favicon.png"
+    if fav_p.is_file():
+        return FileResponse(str(fav_p), media_type="image/png")
+    raise HTTPException(status_code=404, detail="Favicon non trovata.")
+
 @app.get("/studio", response_class=FileResponse)
 @app.get("/studio/", response_class=FileResponse)
 async def serve_studio():
