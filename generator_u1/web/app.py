@@ -22,11 +22,20 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# Caricamento variabili d'ambiente (.env)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass
+
 from generator_u1.generators.keychain_generator import generate_keychain_parts
 from generator_u1.generators.desk_sign_generator import generate_desk_sign_parts
 from generator_u1.packager.snapmaker_3mf import Snapmaker3MFPackager
+from ecommerce.api_router import router as ecommerce_router
 
 app = FastAPI(title="Snapmaker U1 Parametric Studio API")
+app.include_router(ecommerce_router)
 
 # Configurazione CORS per deployment online (Vercel, custom domain o local)
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "*")
@@ -61,10 +70,12 @@ STATIC_DIR = WEB_DIR / "static"
 TEMPLATES_DIR = WEB_DIR / "templates"
 FONTS_UPLOAD_DIR = WEB_DIR / "uploads" / "fonts"
 FONTS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+ECOMMERCE_DIR = PROJECT_ROOT / "ecommerce"
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/fonts", StaticFiles(directory=str(ASSETS_FONTS_DIR if ASSETS_FONTS_DIR.is_dir() else FONTS_DIR)), name="fonts")
 app.mount("/uploads/fonts", StaticFiles(directory=str(FONTS_UPLOAD_DIR)), name="uploads_fonts")
+app.mount("/ecommerce", StaticFiles(directory=str(ECOMMERCE_DIR)), name="ecommerce")
 
 CURATED_FONTS = [
     {
@@ -307,13 +318,54 @@ def _resolve_font_path(params: Dict[str, Any], font_key: str = "font_family", pa
 
     return None
 
-@app.get("/", response_class=HTMLResponse)
-def get_index():
-    index_file = TEMPLATES_DIR / "index.html"
-    if not index_file.exists():
-        raise HTTPException(status_code=404, detail="Template index.html non trovato.")
-    with open(index_file, "r", encoding="utf-8") as f:
-        return f.read()
+STOREFRONT_HTML = ECOMMERCE_DIR / "frontend" / "index.html"
+STUDIO_HTML = TEMPLATES_DIR / "index.html"
+ADMIN_HTML = ECOMMERCE_DIR / "admin" / "index.html"
+
+@app.get("/", response_class=FileResponse)
+@app.get("/index.html", response_class=FileResponse)
+async def serve_storefront():
+    """Homepage pubblica Storefront E-Commerce (cliente finale)."""
+    if not STOREFRONT_HTML.is_file():
+        raise HTTPException(status_code=404, detail="Storefront index.html non trovato.")
+    return FileResponse(str(STOREFRONT_HTML), media_type="text/html")
+
+@app.get("/studio", response_class=FileResponse)
+@app.get("/studio/", response_class=FileResponse)
+async def serve_studio():
+    """Studio parametrico 3D tecnico avanzato (per uso interno e test geometrici)."""
+    if not STUDIO_HTML.is_file():
+        raise HTTPException(status_code=404, detail="Studio 3D template index.html non trovato.")
+    return FileResponse(str(STUDIO_HTML), media_type="text/html")
+
+@app.get("/admin", response_class=FileResponse)
+@app.get("/admin/", response_class=FileResponse)
+async def serve_admin():
+    """Pannello gestionale ordini e inventario filamenti Snapmaker."""
+    if not ADMIN_HTML.is_file():
+        raise HTTPException(status_code=404, detail="Pannello admin non trovato.")
+    return FileResponse(str(ADMIN_HTML), media_type="text/html")
+
+@app.post("/admin/verify-pin")
+@app.get("/admin/verify-pin")
+def handle_verify_pin_direct(payload: Optional[Dict[str, Any]] = None):
+    """Verifica PIN accessibile anche senza prefisso /api."""
+    from ecommerce.api_router import api_verify_pin
+    return api_verify_pin(payload=payload)
+
+@app.post("/api/store/orders/create-test")
+@app.post("/store/orders/create-test")
+def handle_create_test_order(payload: Dict[str, Any]):
+    """Endpoint diretto per ordini di prova (test rapido senza pagamento)."""
+    from ecommerce.api_router import api_create_test_order
+    return api_create_test_order(payload)
+
+@app.get("/api/admin/items/{item_id}/download-3mf")
+@app.get("/admin/items/{item_id}/download-3mf")
+async def download_order_item_3mf(item_id: str):
+    """Endpoint diretto per download del pacchetto 3MF per Snapmaker U1."""
+    from ecommerce.api_router import api_download_order_item_3mf
+    return await api_download_order_item_3mf(item_id)
 
 @app.get("/api/fonts")
 def list_fonts():

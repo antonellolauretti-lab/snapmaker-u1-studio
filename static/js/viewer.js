@@ -148,12 +148,22 @@ class ModelViewer {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    if (this.modelGroup && this.modelGroup.children.length > 0) {
+      this.fitCameraToObject(this.modelGroup);
+    }
   }
 
   animate() {
     requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Auto-fit camera al modello
+   */
+  fitCameraToObject(object, padding = 1.35) {
+    fitCameraToObject(this.camera, object || this.modelGroup, this.controls, padding);
   }
 
   /**
@@ -193,6 +203,11 @@ class ModelViewer {
       this.modelGroup.add(mesh);
       this.partMeshes.push(mesh);
     });
+
+    // Auto-fit camera al modello generato
+    if (this.partMeshes.length > 0) {
+      this.fitCameraToObject(this.modelGroup);
+    }
   }
 
   /**
@@ -212,6 +227,9 @@ class ModelViewer {
     this.camera.position.set(0, -110, 95);
     this.controls.target.set(0, 0, 2);
     this.controls.update();
+    if (this.modelGroup && this.modelGroup.children.length > 0) {
+      this.fitCameraToObject(this.modelGroup);
+    }
   }
 
   topView() {
@@ -314,3 +332,53 @@ class ModelViewer {
     }
   }
 }
+
+/**
+ * Auto-fit camera Three.js al modello con padding adattivo
+ * Inquadra perfettamente l'oggetto sia in orizzontale che in verticale,
+ * adattandosi al fov, all'aspect ratio della finestra e alle dimensioni dell'oggetto.
+ */
+function fitCameraToObject(camera, object, controls, padding = 1.35) {
+  if (!camera || !object) return;
+  const boundingBox = new THREE.Box3().setFromObject(object);
+  if (boundingBox.isEmpty()) return;
+  const size = new THREE.Vector3();
+  boundingBox.getSize(size);
+  const center = new THREE.Vector3();
+  boundingBox.getCenter(center);
+
+  const maxDim = Math.max(size.x, size.y, size.z, 20);
+  const fov = camera.fov * (Math.PI / 180);
+  let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * padding;
+
+  if (camera.aspect < 1) {
+    cameraZ = cameraZ / camera.aspect;
+  }
+
+  // Direzione prospettica: se i controlli hanno un orientamento valido mantienilo, altrimenti prospettiva frontale ideale U1 (Y negativo, Z positivo)
+  let direction = new THREE.Vector3(0, -0.75, 0.65).normalize();
+  if (controls && controls.target && camera.position.distanceTo(controls.target) > 1) {
+    const curDir = camera.position.clone().sub(controls.target);
+    if (curDir.lengthSq() > 0.001) {
+      direction = curDir.normalize();
+    }
+  }
+
+  camera.position.copy(center).add(direction.multiplyScalar(cameraZ));
+
+  camera.near = cameraZ / 100;
+  camera.far = cameraZ * 100;
+  camera.updateProjectionMatrix();
+
+  if (controls) {
+    controls.target.copy(center);
+    controls.maxDistance = cameraZ * 3;
+    controls.minDistance = cameraZ * 0.3;
+    controls.update();
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.fitCameraToObject = fitCameraToObject;
+}
+

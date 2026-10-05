@@ -330,11 +330,11 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     text_mode = params.get("text_mode", "embossed")
     corner_radius = float(params.get("corner_radius", 4.0))
     padding_x = float(params.get("padding_x", 5.0))
-    padding_y = float(params.get("padding_y", 4.5))
+    padding_y = float(params.get("padding_y", 2.0))
     hole_enabled = bool(params.get("hole_enabled", True))
     hole_position = params.get("hole_position", "left")
     hole_diameter = float(params.get("hole_diameter", 5.0))
-    icon_name = params.get("icon_name", "none")
+    icon_name = params.get("icon_name") or params.get("icon_id") or "none"
     icon_position = params.get("icon_position", "left")
     extruder_base = int(params.get("extruder_base", 0))
     extruder_text = int(params.get("extruder_text", 1))
@@ -410,15 +410,17 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         iw = imaxx - iminx
         ih = imaxy - iminy
 
+        icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
+
         spacing_icon = 2.5
-        if icon_position == "left":
+        if str(icon_position).lower() == "left":
             ix = minx - iw - spacing_icon
             iy = mid_y - (ih / 2.0)
-            icon_2d = affinity.translate(icon_scaled, xoff=ix, yoff=iy)
+            icon_2d = affinity.translate(icon_norm, xoff=ix, yoff=iy)
         else:
             ix = maxx + spacing_icon
             iy = mid_y - (ih / 2.0)
-            icon_2d = affinity.translate(icon_scaled, xoff=ix, yoff=iy)
+            icon_2d = affinity.translate(icon_norm, xoff=ix, yoff=iy)
 
     # 6. Unione elementi in rilievo per il calcolo della base
     foreground_items = [text1_2d]

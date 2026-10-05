@@ -1,13 +1,33 @@
 services:
   - type: web
-    name: snapmaker-u1-studio-backend
+    name: gadgetpoint-storefront
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: free
+    plan: starter
     region: frankfurt
     healthCheckPath: /api/health
     envVars:
       - key: PORT
         value: 8000
+      - key: ENVIRONMENT
+        value: production
       - key: ALLOWED_ORIGINS
         value: "*"
+      - key: APP_URL
+        value: https://gadgetpoint.it
+      - key: ADMIN_PIN
+        sync: false
+      - key: PAYPAL_MODE
+        value: live
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_PAYEE_EMAIL
+        value: antonello.lauretti@gmail.com
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        value: ordini@gadgetpoint.it
+      - key: STORE_OWNER_EMAIL
+        value: antonello.lauretti@gmail.com

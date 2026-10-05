@@ -27,12 +27,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copia dell'engine geometrico e web backend
+# Copia dell'engine geometrico, modulo ecommerce, risorse e web backend
 COPY generator_u1 /app/generator_u1
+COPY ecommerce /app/ecommerce
+COPY fonts /app/fonts
+COPY static /app/static
 COPY run_web.py /app/run_web.py
 
-# Crea directory per uploads temporanei
-RUN mkdir -p /app/generator_u1/web/uploads/fonts
+# Crea directory per dati ordini e uploads temporanei
+RUN mkdir -p /app/generator_u1/web/uploads/fonts /app/ecommerce/data
 
 # Esponi porta documentata
 EXPOSE 8000

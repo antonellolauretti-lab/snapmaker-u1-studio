@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin & Gestionale Ordini - Snapmaker U1 Studio</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* Header */
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 24px; }
+    h1 { font-size: 22px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+    .nav-tabs { display: flex; gap: 10px; }
+    .tab-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+    .tab-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+
+    /* Lockscreen PIN */
+    #lockScreen { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .pin-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 360px; max-width: 92%; text-align: center; }
+    .admin-pin-input, .pin-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 2px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      margin: 16px 0;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .admin-pin-input:focus, .pin-input:focus { border-color: var(--primary); }
+    .btn { background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; font-size: 15px; }
+
+    /* Filaments Grid */
+    .filament-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+    .filament-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .filament-info { display: flex; align-items: center; gap: 12px; }
+    .color-preview { width: 36px; height: 36px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); }
+    .filament-name { font-weight: 600; font-size: 14px; }
+    .filament-meta { font-size: 12px; color: var(--text-muted); }
+    
+    /* Toggle switch */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: #475569; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--success); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Orders Table */
+    .table-container { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th { background: #162032; padding: 12px 16px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 14px 16px; border-top: 1px solid var(--border); vertical-align: top; }
+    .order-status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .status-da_stampare { background: #b45309; color: #fff; }
+    .status-in_stampa { background: #0284c7; color: #fff; }
+    .status-spedito { background: #15803d; color: #fff; }
+    .btn-3mf { background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; margin-top: 6px; }
+    .btn-3mf:hover { background: #2563eb; }
+    .copy-chip { background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- Schermata di blocco PIN -->
+  <div id="lockScreen">
+    <div class="pin-card">
+      <h2 style="font-size: 18px; margin-bottom: 8px;">🔐 Accesso Gestionale</h2>
+      <p style="color: var(--text-muted); font-size: 13px;">Inserisci la password amministratore</p>
+      <input type="password" id="adminPinInput" class="admin-pin-input pin-input" placeholder="Inserisci password admin" maxlength="64" autocomplete="current-password" autofocus>
+      <button type="button" class="btn" id="btnUnlock">Accedi</button>
+      <p id="pinError" style="color: var(--danger); font-size: 12px; margin-top: 10px; display: none;">PIN non corretto!</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>🖨️ Snapmaker U1 - Gestionale Ordini & Inventario</h1>
+      <div class="nav-tabs">
+        <a href="/" class="tab-btn" style="text-decoration: none; color: var(--text-muted);">🏪 Storefront</a>
+        <a href="/studio" class="tab-btn" style="text-decoration: none; color: var(--text-muted);">🔧 Studio Tecnico</a>
+        <button type="button" class="tab-btn active" id="tabOrders">📦 Ordini Clienti</button>
+        <button type="button" class="tab-btn" id="tabFilaments">🧵 Inventario Filamenti</button>
+        <button type="button" class="tab-btn" id="tabPricing">🏷️ Listino & Promozioni</button>
+      </div>
+    </header>
+
+    <!-- Sezione 1: Dashboard Ordini -->
+    <section id="sectionOrders">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2>Elenco Ordini di Stampa</h2>
+        <button type="button" class="tab-btn" onclick="loadOrders()">🔄 Aggiorna Lista</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID & Data</th>
+              <th>Cliente & Spedizione</th>
+              <th>Articoli da Produrre</th>
+              <th>Totale</th>
+              <th>Stato Ordine</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Caricamento ordini in corso...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Sezione 2: Gestione Filamenti -->
+    <section id="sectionFilaments" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2>Stato Disponibilità Filamenti Snapmaker</h2>
+        <span style="font-size: 13px; color: var(--text-muted);">I filamenti disattivati spariscono istantaneamente dallo storefront.</span>
+      </div>
+      <div class="filament-grid" id="filamentGrid">
+        <!-- Renderizzato via JS -->
+      </div>
+    </section>
+
+    <!-- Sezione 3: Gestione Listino & Promozioni -->
+    <section id="sectionPricing" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2>🏷️ Gestione Listino Prezzi, Promozioni & Spedizione</h2>
+        <span style="font-size: 13px; color: var(--text-muted);">Le modifiche si riflettono all'istante sullo Storefront e nel Carrello.</span>
+      </div>
+
+      <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 24px; max-width: 650px;">
+        <form id="formPricing" onsubmit="savePricing(event)">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                Portachiavi Standard (€)
+              </label>
+              <input type="number" step="0.10" min="0" id="inputKeychainStandard" class="pin-input" style="letter-spacing: normal; font-size: 16px; padding: 10px; margin: 0; width: 100%; text-align: left;" required>
+              <small style="color: var(--text-muted); font-size: 11px;">1 riga, colori base standard</small>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                Portachiavi Complesso (€)
+              </label>
+              <input type="number" step="0.10" min="0" id="inputKeychainComplex" class="pin-input" style="letter-spacing: normal; font-size: 16px; padding: 10px; margin: 0; width: 100%; text-align: left;" required>
+              <small style="color: var(--text-muted); font-size: 11px;">2 righe, Silk bicolore, icona 3D</small>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                Supplemento Seconda Riga (€)
+              </label>
+              <input type="number" step="0.10" min="0" id="inputExtraLine2" class="pin-input" style="letter-spacing: normal; font-size: 16px; padding: 10px; margin: 0; width: 100%; text-align: left;" required>
+              <small style="color: var(--text-muted); font-size: 11px;">Costo aggiuntivo per seconda riga</small>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                Targhetta da Tavolo / Desk Sign (€)
+              </label>
+              <input type="number" step="0.10" min="0" id="inputDeskSign" class="pin-input" style="letter-spacing: normal; font-size: 16px; padding: 10px; margin: 0; width: 100%; text-align: left;" required>
+              <small style="color: var(--text-muted); font-size: 11px;">Targhetta professionale massiccia</small>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                Spedizione Fissa BRT/SDA (€)
+              </label>
+              <input type="number" step="0.10" min="0" id="inputShippingFixed" class="pin-input" style="letter-spacing: normal; font-size: 16px; padding: 10px; margin: 0; width: 100%; text-align: left;" required>
+              <small style="color: var(--text-muted); font-size: 11px;">Costo corriere espresso per ordine</small>
+            </div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; color: var(--text);">🎁 Promozione Automatica "Prendi 3 Paghi 2"</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                  Ogni 3 articoli nel carrello, il pezzo meno costoso viene scontato al 100% (gratis).
+                </div>
+              </div>
+              <label class="switch" title="Attiva / Disattiva Promo 3x2">
+                <input type="checkbox" id="checkPromo3x2">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button type="submit" class="btn" id="btnSavePricing" style="width: auto; padding: 12px 24px; font-size: 14px;">
+              💾 Salva Modifiche Listino
+            </button>
+            <span id="pricingSaveNotice" style="font-size: 13px; font-weight: 600; color: var(--success); display: none;">
+              ✅ Impostazioni salvate con successo!
+            </span>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let currentPin = sessionStorage.getItem('admin_pin') || '';
+
+    // Autenticazione PIN
+    const lockScreen = document.getElementById('lockScreen');
+    const pinInput = document.getElementById('adminPinInput') || document.getElementById('pinInput');
+    const btnUnlock = document.getElementById('btnUnlock');
+    const pinError = document.getElementById('pinError');
+
+    async function checkAuth(pin) {
+      const cleanPin = (pin || '').trim();
+      if (!cleanPin) {
+        pinError.textContent = "Inserisci la password prima di accedere.";
+        pinError.style.display = 'block';
+        return;
+      }
+      try {
+        // Verifica prima su endpoint dedicato POST /api/admin/verify-pin
+        let resp = await fetch('/api/admin/verify-pin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Pin': cleanPin
+          },
+          body: JSON.stringify({ pin: cleanPin })
+        });
+
+        // Fallback se verify-pin non disponibile (HTTP 404)
+        if (!resp.ok && resp.status === 404) {
+          resp = await fetch('/api/admin/filaments', {
+            headers: { 'X-Admin-Pin': cleanPin }
+          });
+        }
+
+        if (resp.ok) {
+          currentPin = cleanPin;
+          sessionStorage.setItem('admin_pin', cleanPin);
+          lockScreen.style.display = 'none';
+          pinError.style.display = 'none';
+          loadOrders();
+          loadFilaments();
+          loadPricing();
+        } else {
+          sessionStorage.removeItem('admin_pin');
+          pinError.textContent = "PIN non corretto!";
+          pinError.style.display = 'block';
+          if (pinInput) pinInput.focus();
+        }
+      } catch (e) {
+        pinError.textContent = "Errore di connessione al server.";
+        pinError.style.display = 'block';
+      }
+    }
+
+    if (btnUnlock && pinInput) {
+      btnUnlock.addEventListener('click', () => checkAuth(pinInput.value));
+      pinInput.addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') checkAuth(pinInput.value); 
+      });
+      pinInput.addEventListener('input', () => { 
+        pinError.style.display = 'none'; 
+      });
+    }
+
+    if (currentPin) {
+      checkAuth(currentPin);
+    }
+
+    // Navigazione Tab
+    const tabOrders = document.getElementById('tabOrders');
+    const tabFilaments = document.getElementById('tabFilaments');
+    const tabPricing = document.getElementById('tabPricing');
+    const secOrders = document.getElementById('sectionOrders');
+    const secFilaments = document.getElementById('sectionFilaments');
+    const secPricing = document.getElementById('sectionPricing');
+
+    tabOrders.addEventListener('click', () => {
+      tabOrders.classList.add('active');
+      tabFilaments.classList.remove('active');
+      tabPricing.classList.remove('active');
+      secOrders.style.display = 'block';
+      secFilaments.style.display = 'none';
+      secPricing.style.display = 'none';
+      loadOrders();
+    });
+
+    tabFilaments.addEventListener('click', () => {
+      tabFilaments.classList.add('active');
+      tabOrders.classList.remove('active');
+      tabPricing.classList.remove('active');
+      secOrders.style.display = 'none';
+      secFilaments.style.display = 'block';
+      secPricing.style.display = 'none';
+      loadFilaments();
+    });
+
+    tabPricing.addEventListener('click', () => {
+      tabPricing.classList.add('active');
+      tabOrders.classList.remove('active');
+      tabFilaments.classList.remove('active');
+      secOrders.style.display = 'none';
+      secFilaments.style.display = 'none';
+      secPricing.style.display = 'block';
+      loadPricing();
+    });
+
+    // Carica impostazioni listino
+    async function loadPricing() {
+      try {
+        const resp = await fetch('/api/admin/pricing', {
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          document.getElementById('inputKeychainStandard').value = (data.keychain_standard !== undefined ? data.keychain_standard : 4.90).toFixed(2);
+          document.getElementById('inputKeychainComplex').value = (data.keychain_complex !== undefined ? data.keychain_complex : 6.90).toFixed(2);
+          document.getElementById('inputExtraLine2').value = (data.extra_line2 !== undefined ? data.extra_line2 : 2.00).toFixed(2);
+          document.getElementById('inputDeskSign').value = (data.desk_sign !== undefined ? data.desk_sign : 9.90).toFixed(2);
+          document.getElementById('inputShippingFixed').value = (data.shipping_fixed !== undefined ? data.shipping_fixed : 5.00).toFixed(2);
+          document.getElementById('checkPromo3x2').checked = Boolean(data.promo_3x2_enabled !== false);
+        }
+      } catch (e) {
+        console.error("Errore caricamento listino:", e);
+      }
+    }
+
+    // Salva impostazioni listino
+    async function savePricing(e) {
+      if (e) e.preventDefault();
+      const btn = document.getElementById('btnSavePricing');
+      const notice = document.getElementById('pricingSaveNotice');
+      btn.disabled = true;
+      btn.textContent = 'Salvataggio...';
+
+      const payload = {
+        keychain_standard: parseFloat(document.getElementById('inputKeychainStandard').value) || 4.90,
+        keychain_complex: parseFloat(document.getElementById('inputKeychainComplex').value) || 6.90,
+        extra_line2: parseFloat(document.getElementById('inputExtraLine2').value) || 2.00,
+        desk_sign: parseFloat(document.getElementById('inputDeskSign').value) || 9.90,
+        shipping_fixed: parseFloat(document.getElementById('inputShippingFixed').value) || 5.00,
+        promo_3x2_enabled: document.getElementById('checkPromo3x2').checked
+      };
+
+      try {
+        const resp = await fetch('/api/admin/pricing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Pin': currentPin
+          },
+          body: JSON.stringify(payload)
+        });
+        if (resp.ok) {
+          notice.style.display = 'inline';
+          setTimeout(() => { notice.style.display = 'none'; }, 3500);
+        } else {
+          alert("Errore durante il salvataggio del listino prezzi.");
+        }
+      } catch (err) {
+        alert("Errore salvataggio: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Salva Modifiche Listino';
+      }
+    }
+
+    // Carica ordini
+    async function loadOrders() {
+      const tbody = document.getElementById('ordersTableBody');
+      try {
+        const resp = await fetch('/api/admin/orders', {
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+        const orders = await resp.json();
+        if (!orders || orders.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Nessun ordine presente nel database.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = orders.map(ord => {
+          const itemsHtml = (ord.items || []).map(it => `
+            <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 6px;">
+              <div><strong>${it.product_title}</strong>: "${it.custom_text_line1}" (Font: ${it.font_id}) ${it.icon_id && it.icon_id !== 'none' ? `<span style="color:var(--primary);">[Icona: ${it.icon_id} (${it.icon_position === 'left' ? '⬅️ Sinistra' : '➡️ Destra'})]</span>` : ''}</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Base: <span style="display:inline-block;width:8px;height:8px;background:${it.base_color_hex};border-radius:50%;"></span> ${it.base_color_name} | 
+                Scritta: <span style="display:inline-block;width:8px;height:8px;background:${it.text_color_hex};border-radius:50%;"></span> ${it.text_color_name}
+                ${it.has_custom_icon_color ? ` | Icona (T2): <span style="display:inline-block;width:8px;height:8px;background:${it.icon_color_hex};border-radius:50%;"></span> ${it.icon_color_hex}` : ''}
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Forma: ${it.base_style === 'contour' ? '🏷️ Sagomata sul Testo' : '🔲 Rettangolare'} | Foro: ${it.hole_position === 'left' ? '⬅️ Sinistra' : (it.hole_position === 'right' ? '➡️ Destra' : '⬆️ In Alto')}
+              </div>
+              <a href="/api/admin/items/${it.id}/download-3mf" class="btn-3mf" target="_blank" download>
+                📥 Scarica 3MF per Snapmaker U1
+              </a>
+            </div>
+          `).join('');
+
+          return `
+            <tr>
+              <td>
+                <strong>#${ord.order_number}</strong><br>
+                <small style="color: var(--text-muted);">${new Date(ord.created_at).toLocaleString('it-IT')}</small>
+              </td>
+              <td>
+                <strong>${ord.customer_name}</strong><br>
+                📞 <span style="color:var(--warning);">${ord.customer_phone}</span> 
+                <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.customer_phone}')">Copia</span><br>
+                ✉️ ${ord.customer_email}<br>
+                📍 ${ord.shipping_address}, ${ord.shipping_zip} ${ord.shipping_city} (${ord.shipping_province})
+                <span class="copy-chip" onclick="navigator.clipboard.writeText('${ord.shipping_address}, ${ord.shipping_zip} ${ord.shipping_city} (${ord.shipping_province})')">Copia Indirizzo</span>
+              </td>
+              <td>${itemsHtml}</td>
+              <td>
+                <strong style="color: var(--success); font-size: 16px;">${ord.total_amount.toFixed(2).replace('.', ',')} €</strong><br>
+                <small style="color: var(--text-muted);">${ord.payment_status === 'paid' ? '✅ Pagato PayPal' : ord.payment_status}</small>
+              </td>
+              <td>
+                <select class="tab-btn" onchange="updateOrderStatus('${ord.id}', this.value)" style="padding: 4px 8px; font-size: 13px;">
+                  <option value="da_stampare" ${ord.order_status === 'da_stampare' ? 'selected' : ''}>🟡 Da Stampare</option>
+                  <option value="in_stampa" ${ord.order_status === 'in_stampa' ? 'selected' : ''}>🔵 In Stampa</option>
+                  <option value="spedito" ${ord.order_status === 'spedito' ? 'selected' : ''}>🟢 Spedito (Invia Email)</option>
+                </select>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color: var(--danger); text-align: center;">Errore nel recupero degli ordini: ${e.message}</td></tr>`;
+      }
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      let tracking = "";
+      if (newStatus === 'spedito') {
+        tracking = prompt("Inserisci il codice di tracciamento / Lettera di Vettura BRT o SDA (opzionale):", "") || "";
+      }
+      try {
+        const resp = await fetch(`/api/admin/orders/${orderId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Pin': currentPin
+          },
+          body: JSON.stringify({ status: newStatus, tracking_number: tracking })
+        });
+        if (resp.ok) {
+          alert(`Stato aggiornato a: ${newStatus.toUpperCase()}`);
+          loadOrders();
+        }
+      } catch (e) {
+        alert("Errore aggiornamento stato: " + e.message);
+      }
+    }
+
+    // Carica filamenti
+    async function loadFilaments() {
+      const grid = document.getElementById('filamentGrid');
+      try {
+        const resp = await fetch('/api/admin/filaments', {
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+        const filaments = await resp.json();
+        grid.innerHTML = filaments.map(fil => {
+          const bg = fil.secondary_hex_color 
+            ? `background: linear-gradient(135deg, ${fil.hex_color} 50%, ${fil.secondary_hex_color} 50%)`
+            : `background: ${fil.hex_color}`;
+
+          return `
+            <div class="filament-card">
+              <div class="filament-info">
+                <div class="color-preview" style="${bg}"></div>
+                <div>
+                  <div class="filament-name">${fil.name}</div>
+                  <div class="filament-meta">${fil.group_name} | SKU: ${fil.sku}</div>
+                </div>
+              </div>
+              <label class="switch" title="Disponibile / Esaurito">
+                <input type="checkbox" ${fil.is_available ? 'checked' : ''} onchange="toggleFilament('${fil.id}')">
+                <span class="slider"></span>
+              </label>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        grid.innerHTML = `<p style="color: var(--danger);">Errore nel caricamento filamenti: ${e.message}</p>`;
+      }
+    }
+
+    async function toggleFilament(filId) {
+      try {
+        await fetch(`/api/admin/filaments/${filId}/toggle`, {
+          method: 'POST',
+          headers: { 'X-Admin-Pin': currentPin }
+        });
+      } catch (e) {
+        alert("Errore modifica disponibilità filamento: " + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

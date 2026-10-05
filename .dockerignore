@@ -11,6 +11,9 @@ venv/
 scratch/
 Verifica_*
 PROGETTI DA VERIFICARE/
+PROGETTI DEFINITIVI/
+.env
+*.env
 *.gcode
 *.log
 *.3mf
