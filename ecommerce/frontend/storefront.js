@@ -25,7 +25,13 @@ export class SnapmakerStorefront {
       textFilamentId: null,
       textColorName: 'SnapSpeed PLA Cool White',
       textColorHex: '#D9DFE5',
-      textGroupName: 'SnapSpeed PLA'
+      textGroupName: 'SnapSpeed PLA',
+      iconFilamentId: null,
+      iconColorName: 'SnapSpeed PLA Red',
+      iconColorHex: '#E72F1D',
+      iconGroupName: 'SnapSpeed PLA',
+      symbolColor: '#E72F1D',
+      hasCustomIconColor: false
     };
 
     this.curatedFonts = [
@@ -259,6 +265,15 @@ export class SnapmakerStorefront {
           this.currentConfig.baseSecondaryHex = swatch.dataset.secondaryHex || null;
           this.currentConfig.baseColorName = swatch.dataset.name;
           this.currentConfig.baseGroupName = swatch.dataset.group;
+        } else if (target === 'icon') {
+          this.currentConfig.iconFilamentId = swatch.dataset.id;
+          this.currentConfig.iconSku = swatch.dataset.sku;
+          this.currentConfig.iconColorHex = swatch.dataset.hex;
+          this.currentConfig.symbolColor = swatch.dataset.hex;
+          this.currentConfig.iconSecondaryHex = swatch.dataset.secondaryHex || null;
+          this.currentConfig.iconColorName = swatch.dataset.name;
+          this.currentConfig.iconGroupName = swatch.dataset.group;
+          this.currentConfig.hasCustomIconColor = true;
         } else {
           this.currentConfig.textFilamentId = swatch.dataset.id;
           this.currentConfig.textSku = swatch.dataset.sku;
@@ -266,6 +281,10 @@ export class SnapmakerStorefront {
           this.currentConfig.textSecondaryHex = swatch.dataset.secondaryHex || null;
           this.currentConfig.textColorName = swatch.dataset.name;
           this.currentConfig.textGroupName = swatch.dataset.group;
+          if (!this.currentConfig.hasCustomIconColor) {
+            this.currentConfig.iconColorHex = swatch.dataset.hex;
+            this.currentConfig.symbolColor = swatch.dataset.hex;
+          }
         }
         this.updateLivePriceBadge();
         this.refresh3DPreview();
@@ -312,6 +331,10 @@ export class SnapmakerStorefront {
       textFilamentId: this.currentConfig.textFilamentId,
       textColorName: this.currentConfig.textColorName,
       textColorHex: this.currentConfig.textColorHex,
+      iconColorName: this.currentConfig.hasCustomIconColor ? this.currentConfig.iconColorName : this.currentConfig.textColorName,
+      iconColorHex: this.currentConfig.hasCustomIconColor ? this.currentConfig.iconColorHex : this.currentConfig.textColorHex,
+      symbolColor: this.currentConfig.hasCustomIconColor ? (this.currentConfig.symbolColor || this.currentConfig.iconColorHex) : this.currentConfig.textColorHex,
+      hasCustomIconColor: this.currentConfig.hasCustomIconColor,
       // Salva parametri completi per generatore nativo Snapmaker 3MF
       generatorParams: {
         generator: this.currentConfig.productType,
@@ -321,8 +344,13 @@ export class SnapmakerStorefront {
         text_line2: this.currentConfig.textLine2,
         font_family: this.currentConfig.fontId,
         icon_id: this.currentConfig.iconId,
+        custom_icon_color: this.currentConfig.hasCustomIconColor,
+        has_custom_icon_color: this.currentConfig.hasCustomIconColor,
+        extruder_icon: this.currentConfig.hasCustomIconColor ? 2 : 1,
         base_color: this.currentConfig.baseColorHex,
-        text_color: this.currentConfig.textColorHex
+        text_color: this.currentConfig.textColorHex,
+        icon_color: this.currentConfig.hasCustomIconColor ? this.currentConfig.iconColorHex : this.currentConfig.textColorHex,
+        symbolColor: this.currentConfig.hasCustomIconColor ? (this.currentConfig.symbolColor || this.currentConfig.iconColorHex) : this.currentConfig.textColorHex
       }
     };
 

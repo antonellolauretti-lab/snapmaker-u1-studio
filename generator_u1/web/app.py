@@ -686,9 +686,16 @@ def generate_3mf(params: Dict[str, Any]):
     temp_dir = Path(tempfile.gettempdir())
     out_path = temp_dir / filename
 
+    fil_colors = params.get("filament_colors")
+    if not fil_colors:
+        b_col = params.get("base_color", "#080A0D")
+        t_col = params.get("text_color", "#D9DFE5")
+        i_col = params.get("symbolColor") or params.get("icon_color") or "#E72F1D"
+        fil_colors = [b_col, t_col, i_col, "#F8F81C"]
+
     packager = Snapmaker3MFPackager(
         project_name=proj_name,
-        filament_colors=params.get("filament_colors"),
+        filament_colors=fil_colors,
         enable_prime_tower=False,
         enable_support=False,
         enable_brim=False

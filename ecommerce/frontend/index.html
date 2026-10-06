@@ -1079,7 +1079,7 @@
           </button>
           <button type="button" class="btn-choice btn-product-type" data-product="desk_sign" data-type="desksign" id="tabDeskSign">
             <span class="btn-prod-title">🏛️ Targhetta da Tavolo</span>
-            <span class="btn-prod-price">(<span id="labelPriceDesksign">6,90 €</span>)</span>
+            <span class="btn-prod-price">(da <span id="labelPriceDesksign">6,90 €</span>)</span>
           </button>
         </div>
       </div>
@@ -1512,7 +1512,7 @@
         id: currentConfig.iconFilamentId,
         sku: currentConfig.iconSku,
         name: currentConfig.iconColorName,
-        color: currentConfig.iconColorHex,
+        color: currentConfig.iconColorHex || currentConfig.symbolColor || '#E72F1D',
         secondaryColor: currentConfig.iconSecondaryHex,
         isDual: Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')))
       } : textDef;
@@ -2033,6 +2033,25 @@
         document.getElementById('btnIconColorSame').classList.remove('active');
         document.getElementById('wrapIconSwatches').style.display = 'block';
         currentConfig.hasCustomIconColor = true;
+        // Se il colore dell'icona coincide con il colore del testo, seleziona automaticamente un colore di contrasto
+        if (currentConfig.iconColorHex.toLowerCase() === currentConfig.textColorHex.toLowerCase()) {
+          const contrast = availableFilaments.find(f => 
+            f.hex_color.toLowerCase() !== currentConfig.textColorHex.toLowerCase() && 
+            f.hex_color.toLowerCase() !== currentConfig.baseColorHex.toLowerCase()
+          ) || availableFilaments.find(f => f.hex_color.toLowerCase() !== currentConfig.textColorHex.toLowerCase());
+          if (contrast) {
+            currentConfig.iconFilamentId = contrast.id;
+            currentConfig.iconSku = contrast.sku;
+            currentConfig.iconColorHex = contrast.hex_color;
+            currentConfig.iconSecondaryHex = contrast.secondary_hex_color || null;
+            currentConfig.iconColorName = contrast.name;
+            currentConfig.iconGroupName = contrast.group_name;
+            currentConfig.symbolColor = contrast.hex_color;
+            currentConfig.iconColor = contrast.hex_color;
+            document.getElementById('iconColorLabel').textContent = `${contrast.name} (${contrast.group_name})`;
+            renderSwatches();
+          }
+        }
         updateLivePrice();
         if (viewer) {
           viewer.updateColors(getViewerPalette());
@@ -2088,6 +2107,10 @@
             currentConfig.textColorName = name;
             currentConfig.textGroupName = group;
             document.getElementById('textColorLabel').textContent = `${name} (${group})`;
+            if (!currentConfig.hasCustomIconColor) {
+              currentConfig.iconColorHex = hex;
+              currentConfig.symbolColor = hex;
+            }
           } else if (type === 'icon') {
             currentConfig.iconFilamentId = filId;
             currentConfig.iconSku = sku;
@@ -2097,6 +2120,10 @@
             currentConfig.iconGroupName = group;
             currentConfig.symbolColor = hex;
             currentConfig.iconColor = hex;
+            currentConfig.hasCustomIconColor = true;
+            document.getElementById('btnIconColorCustom')?.classList.add('active');
+            document.getElementById('btnIconColorSame')?.classList.remove('active');
+            document.getElementById('wrapIconSwatches').style.display = 'block';
             document.getElementById('iconColorLabel').textContent = `${name} (${group})`;
           }
 

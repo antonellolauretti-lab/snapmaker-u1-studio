@@ -181,9 +181,16 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     # Simbolo / Icona 3D
     icon_name = params.get("icon_name") or params.get("icon_id") or "none"
     icon_position = str(params.get("icon_position", "right")).lower()
-    extruder_icon = int(params.get("extruder_icon", 2))
-    if extruder_icon == -1:
+    has_custom_icon_color = bool(
+        params.get("has_custom_icon_color") or 
+        params.get("hasCustomIconColor") or 
+        params.get("custom_icon_color") or 
+        (int(params.get("extruder_icon", 1)) == 2)
+    )
+    if has_custom_icon_color:
         extruder_icon = 2
+    else:
+        extruder_icon = extruder_line1
 
     # Cornice / Bordo (utilizzato per stile 'rectangle')
     border_enabled = bool(params.get("border_enabled", True))
@@ -268,15 +275,27 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         y1 = h2 + line_spacing
         y2 = 0.0
         mid_y = h_text_content / 2.0
-        y_icon = mid_y - (ih / 2.0)
+        y_icon = max(0.0, mid_y - (ih / 2.0))
     else:
         y1 = 0.0
         y2 = 0.0
-        y_icon = (h1 - ih) / 2.0
+        y_icon = max(0.0, (h1 - ih) / 2.0)
 
     t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
     t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2) if (line2_enabled and t2_norm is not None) else None
     icon_local = affinity.translate(icon_norm, xoff=x_icon, yoff=y_icon) if (icon_norm is not None) else None
+
+    # Fissaggio robusto del testo sul binario:
+    # Rimuovi i singoli 'dentini' isolati: crea un raccordo continuo lungo tutta la quota orizzontale
+    # inferiore delle lettere dell'ultima riga, saldando la scritta direttamente al basamento
+    if line2_enabled and t2_local is not None:
+        b_minx, b_miny, b_maxx, b_maxy = t2_local.bounds
+        text_weld_runner = sg.box(b_minx - 0.5, -2.5, b_maxx + 0.5, 1.8)
+        t2_local = unary_union([t2_local, text_weld_runner]).buffer(0)
+    else:
+        b_minx, b_miny, b_maxx, b_maxy = t1_local.bounds
+        text_weld_runner = sg.box(b_minx - 0.5, -2.5, b_maxx + 0.5, 1.8)
+        t1_local = unary_union([t1_local, text_weld_runner]).buffer(0)
 
     # Unione elementi in rilievo frontale
     fg_items = [t1_local]
@@ -292,23 +311,52 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         # ==============================================================================
         # 1. TARGHETTA DA TAVOLO SAGOMATA SUL TESTO CON BASAMENTO/BINARIO D'APPOGGIO
         # ==============================================================================
-        # Profilo sagomato attorno a testo e simbolo (con morphological closing)
-        close_r = max(3.5, font_size_line1 * 0.25)
+        contour_pad = max(3.5, padding_y)
+        all_fg_bounds = fg_union.bounds
+        overall_minx, overall_miny, overall_maxx, overall_maxy = all_fg_bounds
+
+        # Profilo sagomato attorno a testo e simbolo
+        close_r = max(4.0, font_size_line1 * 0.3)
         closed_fg = fg_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
-        contour_pad = max(3.0, padding_y)
-        contour_2d = closed_fg.buffer(contour_pad, resolution=16).buffer(0)
-        contour_2d = contour_2d.buffer(0.5, resolution=16).buffer(-0.5, resolution=16)
+        contour_raw = closed_fg.buffer(contour_pad, resolution=16).buffer(0)
 
-        c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
+        # Elementi di supporto e fusione monolitica:
+        fuse_elements = [contour_raw]
 
-        # Raccordo continuo orizzontale lungo tutta la coordinata Y inferiore per eliminare qualsiasi vuoto d'aria sotto le lettere
-        bottom_bridge_h = max(6.0, contour_pad * 2.2)
-        bottom_bridge_box = sg.box(c_minx - 1.0, c_miny, c_maxx + 1.0, c_miny + bottom_bridge_h)
-        contour_2d = unary_union([contour_2d, bottom_bridge_box]).buffer(0)
+        # A) Se è presente un'icona laterale (a destra o sinistra):
+        if icon_local is not None:
+            ix_min, iy_min, ix_max, iy_max = icon_local.bounds
+            # 1. Pilastro/pedistallo solido verticale sotto l'icona fino al basamento inferiore (elimina fluttuazioni)
+            icon_column = sg.box(ix_min - contour_pad, -contour_pad - 4.0, ix_max + contour_pad, iy_min + 1.5)
+            fuse_elements.append(icon_column)
+
+            # 2. Ponte orizzontale solido di raccordo tra il corpo del testo e l'icona
+            if icon_position == "left":
+                bridge_conn = sg.box(ix_min, min(0.0, iy_min), x_text_start + 2.0, iy_max + contour_pad)
+            else:
+                bridge_conn = sg.box(x_text_start + w_text_content - 2.0, min(0.0, iy_min), ix_max, iy_max + contour_pad)
+            fuse_elements.append(bridge_conn)
+
+        # B) Basamento/Fondazione orizzontale continua lungo tutta la larghezza dell'assieme
+        # Garantisce appoggio continuo e chiusura completa di qualsiasi fessura tra lettere e binario
+        bot_foundation_h = max(6.0, contour_pad * 2.2)
+        bottom_foundation = sg.box(overall_minx - contour_pad, -contour_pad - 4.0, overall_maxx + contour_pad, bot_foundation_h)
+        fuse_elements.append(bottom_foundation)
+
+        contour_fused = unary_union(fuse_elements).buffer(0)
+        # Rimuovi eventuali fori/fessure interne residue per garantire una placca d'appoggio monolitica
+        if hasattr(contour_fused, 'exterior') and contour_fused.exterior is not None:
+            contour_2d = sg.Polygon(contour_fused.exterior.coords)
+        elif contour_fused.geom_type == 'MultiPolygon':
+            outers = [sg.Polygon(p.exterior.coords) for p in contour_fused.geoms if not p.is_empty]
+            contour_2d = unary_union(outers).buffer(0)
+        else:
+            contour_2d = contour_fused
 
         c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
         w_contour = c_maxx - c_minx
         h_contour = c_maxy - c_miny
+        x_contour_center = (c_minx + c_maxx) / 2.0
 
         # Allinea in modo che la base della sagoma inizi a v = 0
         v_offset = -c_miny
@@ -345,7 +393,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         mesh_rail = trimesh.creation.extrude_polygon(rail_poly_yz, height=w_rail)
         T_rail = np.array([
-            [0.0, 0.0, 1.0, -w_rail / 2.0],
+            [0.0, 0.0, 1.0, x_contour_center - w_rail / 2.0],
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0]
@@ -458,7 +506,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         poly_bracket = sg.Polygon([p_bracket_bot_front, p_bracket_bot_rear, p_bracket_top])
 
         sub_stand_meshes = [mesh_base_raw]
-        bracket_w = 5.0
+        bracket_w = 8.0
         bracket_positions = [-w_face * 0.32, w_face * 0.32]
         if w_face > 110.0:
             bracket_positions.append(0.0)
@@ -473,6 +521,23 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             ], dtype=float)
             mb.apply_transform(Tb)
             sub_stand_meshes.append(mb)
+
+        # Piede stabilizzatore posteriore a terra (profilo basso 2.5 mm a basso consumo che unisce i piedi a Z=0)
+        p_tie_bot_front = (y_rear_foot - 5.0, 0.0)
+        p_tie_bot_rear = (y_rear_foot, 0.0)
+        p_tie_top_rear = (y_rear_foot, 2.5)
+        p_tie_top_front = (y_rear_foot - 5.0, 2.5)
+        poly_tie = sg.Polygon([p_tie_bot_front, p_tie_bot_rear, p_tie_top_rear, p_tie_top_front])
+        w_tie = w_face * 0.75
+        m_tie = trimesh.creation.extrude_polygon(poly_tie, height=w_tie)
+        T_tie = np.array([
+            [0.0, 0.0, 1.0, -w_tie / 2.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=float)
+        m_tie.apply_transform(T_tie)
+        sub_stand_meshes.append(m_tie)
 
         mesh_stand_total = trimesh.util.concatenate(sub_stand_meshes)
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_stand_total, extruder=extruder_base))

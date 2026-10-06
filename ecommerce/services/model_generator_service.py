@@ -40,14 +40,28 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
     # Risolvi colori
     base_hex = item_data.get("base_color_hex") or params.get("base_color", "#080A0D")
     text_hex = item_data.get("text_color_hex") or params.get("text_color", "#D9DFE5")
-    icon_hex = item_data.get("icon_color_hex") or params.get("icon_color") or text_hex
+    icon_hex = (
+        item_data.get("symbolColor") or 
+        item_data.get("icon_color_hex") or 
+        item_data.get("icon_color") or 
+        params.get("symbolColor") or 
+        params.get("icon_color") or 
+        text_hex
+    )
     
-    # Se l'icona ha colore personalizzato diverso dal testo, assegna T2 (Estrusore 2)
+    # Se l'icona ha colore personalizzato, assegna T2 (Estrusore 2)
     has_custom_icon = bool(
         item_data.get("has_custom_icon_color") or 
+        item_data.get("hasCustomIconColor") or 
+        params.get("has_custom_icon_color") or 
+        params.get("hasCustomIconColor") or 
         params.get("custom_icon_color") or 
         (icon_hex.lower() != text_hex.lower() and (item_data.get("icon_id") or params.get("icon_name")) not in ("none", "", None))
     )
+
+    params["has_custom_icon_color"] = has_custom_icon
+    params["symbolColor"] = icon_hex
+    params["icon_color"] = icon_hex
 
     if has_custom_icon:
         params["extruder_icon"] = 2
