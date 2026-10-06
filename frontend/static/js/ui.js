@@ -1556,8 +1556,8 @@ document.addEventListener("DOMContentLoaded", () => {
         line_spacing: kcLineSpacingInput ? parseFloat(kcLineSpacingInput.value) : 3.5,
         extruder_line2: extruderLine2Select ? parseInt(extruderLine2Select.value) : -1,
         base_style: document.querySelector('input[name="baseStyle"]:checked')?.value || "rectangle",
-        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
-        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,
+        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 3.2,
+        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.4,
         text_mode: document.querySelector('input[name="textMode"]:checked')?.value || "embossed",
         corner_radius: cornerRadiusInput ? parseFloat(cornerRadiusInput.value) : 4.0,
         padding_x: paddingXInput ? parseFloat(paddingXInput.value) : 5.0,
@@ -1989,8 +1989,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const rBaseRec = document.querySelector('input[name="baseStyle"][value="rectangle"]');
     if (rBaseRec) rBaseRec.checked = true;
     if (baseThicknessInput) {
-      baseThicknessInput.value = "2.4";
-      if (baseThicknessVal) baseThicknessVal.textContent = "2.4 mm";
+      baseThicknessInput.value = "3.2";
+      if (baseThicknessVal) baseThicknessVal.textContent = "3.2 mm";
     }
     if (cornerRadiusInput) {
       cornerRadiusInput.value = "4";
@@ -3115,8 +3115,8 @@ document.addEventListener("DOMContentLoaded", () => {
         line_spacing: lineSpacing,
         extruder_line2: extruderLine2,
         base_style: baseStyle,
-        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
-        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,
+        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 3.2,
+        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.4,
         text_mode: textMode,
         corner_radius: cornerRadiusInput ? parseFloat(cornerRadiusInput.value) : 4.0,
         padding_x: paddingXInput ? parseFloat(paddingXInput.value) : 5.0,

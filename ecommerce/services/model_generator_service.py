@@ -100,6 +100,8 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
             params["hole_position"] = item_data.get("hole_position")
         icon_pos = item_data.get("icon_position") or params.get("icon_position") or "right"
         params["icon_position"] = icon_pos
+        params["base_thickness"] = float(item_data.get("base_thickness") or params.get("base_thickness") or 3.2)
+        params["text_thickness"] = float(item_data.get("text_thickness") or params.get("text_thickness") or 1.4)
 
         parts = generate_keychain_parts(params)
         filename = f"{clean_order}_{clean_text}_Keychain_U1.3mf"

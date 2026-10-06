@@ -49,14 +49,14 @@
       "type": "number",
       "minimum": 1.2,
       "maximum": 8.0,
-      "default": 2.4,
+      "default": 3.2,
       "description": "Spessore in Z della base in mm"
     },
     "text_thickness": {
       "type": "number",
       "minimum": 0.6,
       "maximum": 5.0,
-      "default": 1.2,
+      "default": 1.4,
       "description": "Altezza del testo (in rilievo o profondità di intaglio) in mm"
     },
     "text_mode": {

@@ -335,8 +335,10 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     font_size = float(params.get("font_size", 14.0))
     letter_spacing = float(params.get("letter_spacing", 0.0))
     base_style = params.get("base_style", "rectangle")
-    base_thickness = float(params.get("base_thickness", 2.4))
-    text_thickness = float(params.get("text_thickness", 1.2))
+    base_thickness = float(params.get("base_thickness", 3.2))
+    if base_thickness < 3.0:
+        base_thickness = 3.2
+    text_thickness = float(params.get("text_thickness", 1.4))
     text_mode = params.get("text_mode", "embossed")
     corner_radius = float(params.get("corner_radius", 4.0))
     padding_x = float(params.get("padding_x", 5.0))
@@ -445,83 +447,135 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     fg_minx, fg_miny, fg_maxx, fg_maxy = foreground_union.bounds
     fg_mid_y = (fg_miny + fg_maxy) / 2.0
 
-    # 7. Creazione del Contorno della Base e dell'Asola Anello
+    # 7. Helper per creazione Contorno Base e Asola Anello
     hole_radius = hole_diameter / 2.0
     hole_wall = max(3.0, hole_radius * 1.0)
     outer_radius = hole_radius + hole_wall
 
-    if base_style == "contour":
-        font_h = fg_maxy - fg_miny
-        min_structural_h = max(8.5, min(14.0, font_h * 0.50))
+    def _generate_base_contour_and_hole(fg_u: Any, current_fs: float):
+        fg_u_minx, fg_u_miny, fg_u_maxx, fg_u_maxy = fg_u.bounds
+        fg_u_mid_y = (fg_u_miny + fg_u_maxy) / 2.0
 
-        # Morphological closing per colmare gole profonde tra lettere e righe sovrapposte
-        close_r = max(4.0, font_size * 0.30)
-        closed_fg = foreground_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
+        if base_style == "contour":
+            font_h = fg_u_maxy - fg_u_miny
+            min_structural_h = max(8.5, min(14.0, font_h * 0.50))
 
-        # Ponte strutturale centrale lungo l'asse X che collega l'intero corpo del portachiavi
-        spine_y0 = fg_mid_y - (min_structural_h / 2.0)
-        spine_y1 = fg_mid_y + (min_structural_h / 2.0)
-        spine_box = sg.box(fg_minx + padding_y, spine_y0, fg_maxx - padding_y, spine_y1)
+            # Morphological closing per colmare gole profonde tra lettere e righe sovrapposte
+            close_r = max(4.0, current_fs * 0.30)
+            closed_fg = fg_u.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
 
-        base_contour = unary_union([
-            closed_fg.buffer(padding_y, resolution=16),
-            spine_box
-        ]).buffer(0)
-        base_contour = base_contour.buffer(0.8, resolution=16).buffer(-0.8, resolution=16)
+            # Ponte strutturale centrale lungo l'asse X che collega l'intero corpo del portachiavi
+            spine_y0 = fg_u_mid_y - (min_structural_h / 2.0)
+            spine_y1 = fg_u_mid_y + (min_structural_h / 2.0)
+            spine_box = sg.box(fg_u_minx + padding_y, spine_y0, fg_u_maxx - padding_y, spine_y1)
+
+            b_contour = unary_union([
+                closed_fg.buffer(padding_y, resolution=16),
+                spine_box
+            ]).buffer(0)
+            b_contour = b_contour.buffer(0.8, resolution=16).buffer(-0.8, resolution=16)
+
+            if hole_enabled:
+                if hole_position == "left":
+                    hx = fg_u_minx - hole_radius - (hole_wall * 0.2)
+                    hy = fg_u_mid_y
+                    hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
+                    bridge = sg.box(hx, hy - outer_radius * 0.75, fg_u_minx + padding_x, hy + outer_radius * 0.75)
+                    b_contour = unary_union([b_contour, hole_ear, bridge])
+                elif hole_position == "right":
+                    hx = fg_u_maxx + hole_radius + (hole_wall * 0.2)
+                    hy = fg_u_mid_y
+                    hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
+                    bridge = sg.box(fg_u_maxx - padding_x, hy - outer_radius * 0.75, hx, hy + outer_radius * 0.75)
+                    b_contour = unary_union([b_contour, hole_ear, bridge])
+                else:  # top
+                    hx = (fg_u_minx + fg_u_maxx) / 2.0
+                    hy = fg_u_maxy + hole_radius + (hole_wall * 0.2)
+                    hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
+                    bridge = sg.box(hx - outer_radius * 0.75, fg_u_mid_y, hx + outer_radius * 0.75, hy)
+                    b_contour = unary_union([b_contour, hole_ear, bridge])
+        else:
+            x_left_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "left") else padding_x
+            x_right_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "right") else padding_x
+            y_top_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "top") else padding_y
+
+            x0 = fg_u_minx - x_left_extra
+            x1 = fg_u_maxx + x_right_extra
+            y0 = fg_u_miny - padding_y
+            y1 = fg_u_maxy + y_top_extra
+
+            r = min(corner_radius, (x1 - x0) / 4.0, (y1 - y0) / 4.0)
+            inner_box = sg.box(x0 + r, y0 + r, x1 - r, y1 - r)
+            b_contour = inner_box.buffer(r, resolution=16)
+
+            if hole_enabled:
+                if hole_position == "left":
+                    hx = x0 + hole_radius + hole_wall
+                    hy = fg_u_mid_y
+                elif hole_position == "right":
+                    hx = x1 - (hole_radius + hole_wall)
+                    hy = fg_u_mid_y
+                else:
+                    hx = (fg_u_minx + fg_u_maxx) / 2.0
+                    hy = y1 - (hole_radius + hole_wall)
+
+        b_contour = _ensure_single_connected_polygon(b_contour, bridge_width=outer_radius * 1.2)
 
         if hole_enabled:
-            if hole_position == "left":
-                hx = fg_minx - hole_radius - (hole_wall * 0.2)
-                hy = fg_mid_y
-                hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
-                bridge = sg.box(hx, hy - outer_radius * 0.75, fg_minx + padding_x, hy + outer_radius * 0.75)
-                base_contour = unary_union([base_contour, hole_ear, bridge])
-            elif hole_position == "right":
-                hx = fg_maxx + hole_radius + (hole_wall * 0.2)
-                hy = fg_mid_y
-                hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
-                bridge = sg.box(fg_maxx - padding_x, hy - outer_radius * 0.75, hx, hy + outer_radius * 0.75)
-                base_contour = unary_union([base_contour, hole_ear, bridge])
-            else:  # top
-                hx = (fg_minx + fg_maxx) / 2.0
-                hy = fg_maxy + hole_radius + (hole_wall * 0.2)
-                hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=32)
-                bridge = sg.box(hx - outer_radius * 0.75, fg_mid_y, hx + outer_radius * 0.75, hy)
-                base_contour = unary_union([base_contour, hole_ear, bridge])
-    else:
-        x_left_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "left") else padding_x
-        x_right_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "right") else padding_x
-        y_top_extra = (hole_radius * 2 + hole_wall * 2) if (hole_enabled and hole_position == "top") else padding_y
+            h_geom = sg.Point(hx, hy).buffer(hole_radius, resolution=32)
+            b_2d = b_contour.difference(h_geom)
+            b_2d = _ensure_single_connected_polygon(b_2d, bridge_width=outer_radius * 1.2)
+        else:
+            b_2d = b_contour
 
-        x0 = fg_minx - x_left_extra
-        x1 = fg_maxx + x_right_extra
-        y0 = fg_miny - padding_y
-        y1 = fg_maxy + y_top_extra
+        return b_2d
 
-        r = min(corner_radius, (x1 - x0) / 4.0, (y1 - y0) / 4.0)
-        inner_box = sg.box(x0 + r, y0 + r, x1 - r, y1 - r)
-        base_contour = inner_box.buffer(r, resolution=16)
+    base_2d = _generate_base_contour_and_hole(foreground_union, font_size)
 
-        if hole_enabled:
-            if hole_position == "left":
-                hx = x0 + hole_radius + hole_wall
-                hy = fg_mid_y
-            elif hole_position == "right":
-                hx = x1 - (hole_radius + hole_wall)
-                hy = fg_mid_y
-            else:
-                hx = (fg_minx + fg_maxx) / 2.0
-                hy = y1 - (hole_radius + hole_wall)
+    # 8. Auto-scaling su lunghezza X (lunghezza massima 80.0 mm / 8,0 cm)
+    MAX_KEYCHAIN_LENGTH = 80.0
+    bx0, _, bx1, _ = base_2d.bounds
+    initial_total_width = bx1 - bx0
 
-    base_contour = _ensure_single_connected_polygon(base_contour, bridge_width=outer_radius * 1.2)
+    if initial_total_width > MAX_KEYCHAIN_LENGTH:
+        fg_w0 = fg_maxx - fg_minx
+        w_fixed = initial_total_width - fg_w0
+        # Calcolo scala analitica proporzionale lungo X e Y per non eccedere 80.0 mm
+        scale_factor = (MAX_KEYCHAIN_LENGTH - w_fixed) / fg_w0 if fg_w0 > 0 else (MAX_KEYCHAIN_LENGTH / initial_total_width)
+        scale_factor = max(0.25, min(scale_factor, 1.0))
 
-    # 8. Applicazione del Foro
-    if hole_enabled:
-        hole_geom = sg.Point(hx, hy).buffer(hole_radius, resolution=32)
-        base_2d = base_contour.difference(hole_geom)
-        base_2d = _ensure_single_connected_polygon(base_2d, bridge_width=outer_radius * 1.2)
-    else:
-        base_2d = base_contour
+        text1_2d = affinity.scale(text1_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if text2_2d is not None:
+            text2_2d = affinity.scale(text2_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if icon_2d is not None:
+            icon_2d = affinity.scale(icon_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+
+        foreground_items = [text1_2d]
+        if text2_2d is not None:
+            foreground_items.append(text2_2d)
+        if icon_2d is not None:
+            foreground_items.append(icon_2d)
+        foreground_union = unary_union(foreground_items)
+
+        base_2d = _generate_base_contour_and_hole(foreground_union, font_size * scale_factor)
+
+        # Controllo di clamp di sicurezza per micro-tolleranze
+        bw0, _, bw1, _ = base_2d.bounds
+        current_w = bw1 - bw0
+        if current_w > MAX_KEYCHAIN_LENGTH:
+            clamp_scale = MAX_KEYCHAIN_LENGTH / current_w
+            text1_2d = affinity.scale(text1_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            if text2_2d is not None:
+                text2_2d = affinity.scale(text2_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            if icon_2d is not None:
+                icon_2d = affinity.scale(icon_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            foreground_items = [text1_2d]
+            if text2_2d is not None:
+                foreground_items.append(text2_2d)
+            if icon_2d is not None:
+                foreground_items.append(icon_2d)
+            foreground_union = unary_union(foreground_items)
+            base_2d = _generate_base_contour_and_hole(foreground_union, font_size * scale_factor * clamp_scale)
 
     # 9. Centratura delle geometrie in (0, 0)
     bx0, by0, bx1, by1 = base_2d.bounds

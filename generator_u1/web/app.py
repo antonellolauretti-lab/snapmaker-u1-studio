@@ -577,6 +577,11 @@ def preview_model(params: Dict[str, Any]):
             if fp2:
                 params["font_path_line2"] = fp2
 
+        if not params.get("base_thickness") or float(params.get("base_thickness", 0)) < 3.0:
+            params["base_thickness"] = 3.2
+        if not params.get("text_thickness"):
+            params["text_thickness"] = 1.4
+
         try:
             parts = generate_keychain_parts(params)
         except Exception as e:
@@ -658,6 +663,11 @@ def generate_3mf(params: Dict[str, Any]):
             fp2 = _resolve_font_path(params, font_key="font_family_line2", path_key="font_path_line2")
             if fp2:
                 params["font_path_line2"] = fp2
+
+        if not params.get("base_thickness") or float(params.get("base_thickness", 0)) < 3.0:
+            params["base_thickness"] = 3.2
+        if not params.get("text_thickness"):
+            params["text_thickness"] = 1.4
 
         try:
             parts = generate_keychain_parts(params)

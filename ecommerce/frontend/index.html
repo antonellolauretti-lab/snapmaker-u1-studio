@@ -1818,6 +1818,7 @@
         const extruderIcon = currentConfig.hasCustomIconColor ? 2 : 1;
         const iconColor = currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex;
 
+        const isDeskSign = currentConfig.productType === 'desk_sign';
         const payload = {
           generator: currentConfig.productType,
           text: currentConfig.textLine1,
@@ -1825,6 +1826,8 @@
           line2_enabled: currentConfig.line2Enabled,
           text_line2: currentConfig.textLine2,
           base_style: currentConfig.baseStyle,
+          base_thickness: isDeskSign ? 3.0 : 3.2,
+          text_thickness: 1.4,
           hole_position: currentConfig.holePosition,
           font_family: currentConfig.fontId,
           font_family_line1: currentConfig.fontId,
@@ -1850,9 +1853,11 @@
             viewer.updateGeometry(data, getViewerPalette(), 0, 1);
             
             if (data.dimensions) {
-              const wCm = (data.dimensions.width / 10).toFixed(1).replace('.', ',');
+              const maxW = isDeskSign ? data.dimensions.width : Math.min(data.dimensions.width, 80.0);
+              const wCm = (maxW / 10).toFixed(1).replace('.', ',');
               const hCm = (data.dimensions.height / 10).toFixed(1).replace('.', ',');
-              const dMm = Number(data.dimensions.depth || 4.0).toFixed(1).replace('.', ',');
+              const defaultDepth = isDeskSign ? 24.0 : 4.6;
+              const dMm = Number(data.dimensions.depth || defaultDepth).toFixed(1).replace('.', ',');
               document.getElementById('viewerBadgeDimensions').textContent = 
                 `Dimensioni: ${wCm} × ${hCm} cm • Spessore: ${dMm} mm`;
             }
@@ -2139,6 +2144,8 @@
             line2_enabled: currentConfig.line2Enabled,
             text_line2: currentConfig.textLine2,
             base_style: currentConfig.baseStyle,
+            base_thickness: currentConfig.productType === 'desk_sign' ? 3.0 : 3.2,
+            text_thickness: 1.4,
             hole_position: currentConfig.holePosition,
             font_family: currentConfig.fontId,
             padding_y: 2.0,

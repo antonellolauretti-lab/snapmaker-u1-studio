@@ -21,22 +21,22 @@ const DEFAULT_CURATED_FONTS = [
   { id: "Bangers", name: "Bangers", desc: "Fumetto Comic Bold", category: "display", family: "'Bangers', cursive" },
   { id: "Permanent Marker", name: "Permanent Marker", desc: "Tratto Pennarello Autentico", category: "script", family: "'Permanent Marker', cursive" },
   { id: "Orbitron", name: "Orbitron", desc: "Futuristico Sci-Fi Mecha", category: "display", family: "'Orbitron', sans-serif" },
-  { id: "Montserrat", name: "Montserrat", desc: "Geometrico Moderno Bold", category: "sans-serif", family: "'Montserrat', sans-serif" },
+  { id: "Montserrat", name: "Montserrat Black", desc: "Geometrico Moderno Black 900", category: "sans-serif", family: "'Montserrat', sans-serif" },
   { id: "Poppins", name: "Poppins", desc: "Geometrico Pulito e Morbido", category: "sans-serif", family: "'Poppins', sans-serif" },
   { id: "Roboto", name: "Roboto", desc: "Standard Tecnico Bilanciato", category: "sans-serif", family: "'Roboto', sans-serif" },
   { id: "Oswald", name: "Oswald", desc: "Display Dinamico", category: "display", family: "'Oswald', sans-serif" },
-  { id: "Playfair Display", name: "Playfair Display", desc: "Serif Elegante Tradizionale", category: "serif", family: "'Playfair Display', serif" },
-  { id: "Cinzel", name: "Cinzel", desc: "Classico Romano Scolpito", category: "serif", family: "'Cinzel', serif" },
+  { id: "Playfair Display", name: "Playfair Display Bold", desc: "Serif Elegante Bold 700", category: "serif", family: "'Playfair Display', serif" },
+  { id: "Cinzel", name: "Cinzel Bold", desc: "Classico Romano Scolpito Bold 700", category: "serif", family: "'Cinzel', serif" },
   { id: "Ubuntu", name: "Ubuntu", desc: "Humanist Moderno", category: "sans-serif", family: "'Ubuntu', sans-serif" },
   { id: "Arial", name: "Arial", desc: "Sans-Serif Standard", category: "sans-serif", family: "Arial, sans-serif" },
   { id: "Arial Black", name: "Arial Black", desc: "Ultra-Spesso Massiccio", category: "sans-serif", family: "'Arial Black', sans-serif" },
   { id: "Impact", name: "Impact", desc: "Massiccio Classico", category: "display", family: "Impact, sans-serif" },
-  { id: "Segoe UI", name: "Segoe UI", desc: "Geometrico Interfaccia", category: "sans-serif", family: "'Segoe UI', sans-serif" },
-  { id: "Dancing Script", name: "Dancing Script", desc: "Corsivo Elegante Fluido", category: "script", family: "'Dancing Script', cursive" },
-  { id: "Caveat", name: "Caveat", desc: "Corsivo Scrittura a Mano", category: "script", family: "'Caveat', cursive" },
+  { id: "Segoe UI", name: "Segoe UI", desc: "Geometrico Interfaccia Bold", category: "sans-serif", family: "'Segoe UI', 'Montserrat', sans-serif" },
+  { id: "Dancing Script", name: "Dancing Script Bold", desc: "Corsivo Elegante Fluido Bold", category: "script", family: "'Dancing Script', cursive" },
+  { id: "Caveat", name: "Caveat Bold", desc: "Corsivo Scrittura a Mano Bold", category: "script", family: "'Caveat', cursive" },
   { id: "Great Vibes", name: "Great Vibes", desc: "Calligrafico Tradizionale", category: "script", family: "'Great Vibes', cursive" },
-  { id: "Segoe Script", name: "Segoe Script", desc: "Corsivo Continuo Saldato", category: "script", family: "'Segoe Script', cursive" },
-  { id: "Georgia", name: "Georgia", desc: "Serif Classico", category: "serif", family: "Georgia, serif" },
+  { id: "Segoe Script", name: "Segoe Script", desc: "Corsivo Continuo Saldato", category: "script", family: "'Segoe Script', 'Dancing Script', cursive" },
+  { id: "Georgia", name: "Georgia Bold", desc: "Serif Classico Bold", category: "serif", family: "Georgia, 'Playfair Display', serif" },
   { id: "Consolas", name: "Consolas", desc: "Monospazio Tecnico", category: "monospace", family: "Consolas, monospace" },
 ];
 
@@ -1556,8 +1556,8 @@ document.addEventListener("DOMContentLoaded", () => {
         line_spacing: kcLineSpacingInput ? parseFloat(kcLineSpacingInput.value) : 3.5,
         extruder_line2: extruderLine2Select ? parseInt(extruderLine2Select.value) : -1,
         base_style: document.querySelector('input[name="baseStyle"]:checked')?.value || "rectangle",
-        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
-        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,
+        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 3.2,
+        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.4,
         text_mode: document.querySelector('input[name="textMode"]:checked')?.value || "embossed",
         corner_radius: cornerRadiusInput ? parseFloat(cornerRadiusInput.value) : 4.0,
         padding_x: paddingXInput ? parseFloat(paddingXInput.value) : 5.0,
@@ -1989,8 +1989,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const rBaseRec = document.querySelector('input[name="baseStyle"][value="rectangle"]');
     if (rBaseRec) rBaseRec.checked = true;
     if (baseThicknessInput) {
-      baseThicknessInput.value = "2.4";
-      if (baseThicknessVal) baseThicknessVal.textContent = "2.4 mm";
+      baseThicknessInput.value = "3.2";
+      if (baseThicknessVal) baseThicknessVal.textContent = "3.2 mm";
     }
     if (cornerRadiusInput) {
       cornerRadiusInput.value = "4";
@@ -3115,8 +3115,8 @@ document.addEventListener("DOMContentLoaded", () => {
         line_spacing: lineSpacing,
         extruder_line2: extruderLine2,
         base_style: baseStyle,
-        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 2.4,
-        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.2,
+        base_thickness: baseThicknessInput ? parseFloat(baseThicknessInput.value) : 3.2,
+        text_thickness: textThicknessInput ? parseFloat(textThicknessInput.value) : 1.4,
         text_mode: textMode,
         corner_radius: cornerRadiusInput ? parseFloat(cornerRadiusInput.value) : 4.0,
         padding_x: paddingXInput ? parseFloat(paddingXInput.value) : 5.0,
