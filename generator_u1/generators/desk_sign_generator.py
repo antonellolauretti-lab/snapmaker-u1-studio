@@ -174,14 +174,16 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     font_size_line2 = float(params.get("font_size_line2", font_size_line1 * 0.65))
     letter_spacing_line2 = float(params.get("letter_spacing_line2", 0.0))
     thickness_line2 = float(params.get("thickness_line2", 1.2))
-    extruder_line2 = int(params.get("extruder_line2", 2))
+    extruder_line2 = int(params.get("extruder_line2", -1))
+    if extruder_line2 == -1:
+        extruder_line2 = extruder_line1
 
     # Simbolo / Icona 3D
     icon_name = params.get("icon_name") or params.get("icon_id") or "none"
     icon_position = str(params.get("icon_position", "right")).lower()
     extruder_icon = int(params.get("extruder_icon", 2))
     if extruder_icon == -1:
-        extruder_icon = extruder_line1
+        extruder_icon = 2
 
     # Cornice / Bordo (utilizzato per stile 'rectangle')
     border_enabled = bool(params.get("border_enabled", True))
@@ -298,6 +300,13 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         contour_2d = contour_2d.buffer(0.5, resolution=16).buffer(-0.5, resolution=16)
 
         c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
+
+        # Raccordo continuo orizzontale lungo tutta la coordinata Y inferiore per eliminare qualsiasi vuoto d'aria sotto le lettere
+        bottom_bridge_h = max(6.0, contour_pad * 2.2)
+        bottom_bridge_box = sg.box(c_minx - 1.0, c_miny, c_maxx + 1.0, c_miny + bottom_bridge_h)
+        contour_2d = unary_union([contour_2d, bottom_bridge_box]).buffer(0)
+
+        c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
         w_contour = c_maxx - c_minx
         h_contour = c_maxy - c_miny
 
@@ -311,21 +320,28 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         # Parametri Geometrici Inclinazione e Binario d'Appoggio (Standing Footing)
         tilt_angle_deg = float(params.get("tilt_angle", 76.0)) # Angolo ergonomico da scrivania
         tilt_angle = np.radians(tilt_angle_deg)
-        rail_h = 5.5               # Spessore/altezza del basamento (mm)
+        rail_h = 6.0               # Spessore/altezza del basamento (mm)
         y_front = -8.0             # Sporgenza frontale del basamento sul tavolo (mm)
-        y_back = 14.0              # Sporgenza posteriore del basamento sul tavolo (mm)
-        w_rail = max(w_contour + 14.0, 68.0) # Larghezza basamento (supera la sagoma del testo)
-        plate_thickness = max(base_thickness, 2.6)
+        y_back = 18.0              # Sporgenza posteriore del basamento sul tavolo (mm)
+        w_rail = max(w_contour + 16.0, 72.0) # Larghezza basamento (supera la sagoma del testo)
+        plate_thickness = max(base_thickness, 3.2)
+        y_anchor = 0.0
+        z_anchor = rail_h - 2.0    # Incastro solido nel basamento
 
-        # 1. Mesh Basamento/Binario Orizzontale Solido da Appoggio (Footing Rail)
-        # Profilo trasversale YZ con appoggio piatto su Z = 0
+        # 1. Mesh Basamento/Binario Orizzontale Solido da Appoggio con Gusset Posteriore Continuo
+        # Profilo trasversale YZ con appoggio piatto su Z = 0 e sostegno continuo lungo la schiena della targa
+        h_gusset = min(h_contour * 0.45, 14.0)
+        back_y = y_anchor - plate_thickness * np.sin(tilt_angle) + h_gusset * np.cos(tilt_angle)
+        back_z = z_anchor + plate_thickness * np.cos(tilt_angle) + h_gusset * np.sin(tilt_angle)
+
         p_front_bot = (y_front, 0.0)
-        p_front_top = (y_front, 3.2)
+        p_front_top = (y_front, 3.5)
         p_front_lip = (-2.0, rail_h)
-        p_rear_top = (y_back - 3.0, rail_h)
+        p_back_gusset = (back_y, back_z)
+        p_rear_top = (y_back - 3.5, rail_h + 1.0)
         p_rear_chamf = (y_back, 2.5)
         p_rear_bot = (y_back, 0.0)
-        rail_poly_yz = sg.Polygon([p_front_bot, p_front_top, p_front_lip, p_rear_top, p_rear_chamf, p_rear_bot])
+        rail_poly_yz = sg.Polygon([p_front_bot, p_front_top, p_front_lip, p_back_gusset, p_rear_top, p_rear_chamf, p_rear_bot])
 
         mesh_rail = trimesh.creation.extrude_polygon(rail_poly_yz, height=w_rail)
         T_rail = np.array([
@@ -338,8 +354,6 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # 2. Mesh Placca Sagomata Inclinata (Backplate)
         mesh_plate = _extrude_geometry(contour_2d_aligned, height=plate_thickness)
-        y_anchor = 0.0
-        z_anchor = rail_h - 1.5 # Incastro solido nel basamento
         M_plate = np.array([
             [1.0, 0.0, 0.0, 0.0],
             [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), y_anchor],
@@ -348,28 +362,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         ], dtype=float)
         mesh_plate.apply_transform(M_plate)
 
-        # 3. Nervature Posteriori di Rinforzo Triangolari (Supporti antiribaltamento)
-        sub_base_meshes = [mesh_rail, mesh_plate]
-        rib_w = 3.0
-        rib_h = min(h_contour * 0.45, 18.0)
-        if rib_h > 4.0:
-            p_rib_bot = (0.0, rail_h - 1.0)
-            p_rib_rear = (y_back - 2.5, rail_h - 1.0)
-            p_rib_top = (rib_h * np.cos(tilt_angle), rail_h - 1.5 + rib_h * np.sin(tilt_angle))
-            rib_poly_yz = sg.Polygon([p_rib_bot, p_rib_rear, p_rib_top])
-            if rib_poly_yz.area > 1.0:
-                for rib_x in [-w_contour * 0.28, w_contour * 0.28]:
-                    m_rib = trimesh.creation.extrude_polygon(rib_poly_yz, height=rib_w)
-                    T_rib = np.array([
-                        [0.0, 0.0, 1.0, rib_x - rib_w / 2.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 1.0]
-                    ], dtype=float)
-                    m_rib.apply_transform(T_rib)
-                    sub_base_meshes.append(m_rib)
-
-        mesh_base_total = trimesh.util.concatenate(sub_base_meshes)
+        mesh_base_total = trimesh.util.concatenate([mesh_rail, mesh_plate])
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=extruder_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
@@ -431,22 +424,20 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             border_2d = outer_box.difference(inner_box)
 
         # Angolo di inclinazione ergonomico da scrivania
-        wedge_angle_deg = float(params.get("wedge_angle", 68.0))
+        wedge_angle_deg = float(params.get("wedge_angle", 70.0))
         wedge_angle = np.radians(wedge_angle_deg)
         h_lip = min(base_thickness, 2.5)
-        t_land = 3.0  # Appiattimento superiore per solidità
-        d_base = h_face * np.cos(wedge_angle) + t_land
-        y0 = -d_base / 2.0
+        t_land = 3.0  # Spessore/appiattimento superiore placca
+        y0 = -6.0
 
-        p_front_bot = (y0, 0.0)
-        p_front_top = (y0, h_lip)
+        p_front_bot = (y0 - 3.0, 0.0)
+        p_front_top = (y0 - 3.0, h_lip)
         p_face_top = (y0 + h_face * np.cos(wedge_angle), h_lip + h_face * np.sin(wedge_angle))
-        p_rear_top = (y0 + h_face * np.cos(wedge_angle) + t_land, h_lip + h_face * np.sin(wedge_angle))
-        p_rear_bot = (y0 + h_face * np.cos(wedge_angle) + t_land, 0.0)
+        p_rear_top = (p_face_top[0] + t_land, p_face_top[1])
+        p_rear_plate_bot = (y0 + 3.0 + 3.5 * np.sin(wedge_angle), 0.0)
 
-        poly_yz = sg.Polygon([p_front_bot, p_front_top, p_face_top, p_rear_top, p_rear_bot])
-
-        mesh_base_raw = trimesh.creation.extrude_polygon(poly_yz, height=w_face)
+        poly_plate_yz = sg.Polygon([p_front_bot, p_front_top, p_face_top, p_rear_top, p_rear_plate_bot])
+        mesh_base_raw = trimesh.creation.extrude_polygon(poly_plate_yz, height=w_face)
         T_base = np.array([
             [0.0, 0.0, 1.0, -w_face / 2.0],
             [1.0, 0.0, 0.0, 0.0],
@@ -454,7 +445,37 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
         mesh_base_raw.apply_transform(T_base)
-        parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_raw, extruder=extruder_base))
+
+        # Supporto posteriore a staffe triangolari a sbalzo (profondità a terra 28 mm, anti-ribaltamento)
+        total_depth_target = 28.0  # Richiesto: almeno 25-30 mm per stabilità ottimale
+        y_rear_foot = p_front_bot[0] + total_depth_target
+        v_attach = h_face * 0.65
+        attach_y = y0 + v_attach * np.cos(wedge_angle) + 2.5
+        attach_z = h_lip + v_attach * np.sin(wedge_angle) - 1.0
+        p_bracket_bot_front = (p_rear_plate_bot[0] - 2.0, 0.0)
+        p_bracket_bot_rear = (y_rear_foot, 0.0)
+        p_bracket_top = (attach_y, attach_z)
+        poly_bracket = sg.Polygon([p_bracket_bot_front, p_bracket_bot_rear, p_bracket_top])
+
+        sub_stand_meshes = [mesh_base_raw]
+        bracket_w = 5.0
+        bracket_positions = [-w_face * 0.32, w_face * 0.32]
+        if w_face > 110.0:
+            bracket_positions.append(0.0)
+
+        for bx in bracket_positions:
+            mb = trimesh.creation.extrude_polygon(poly_bracket, height=bracket_w)
+            Tb = np.array([
+                [0.0, 0.0, 1.0, bx - bracket_w / 2.0],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ], dtype=float)
+            mb.apply_transform(Tb)
+            sub_stand_meshes.append(mb)
+
+        mesh_stand_total = trimesh.util.concatenate(sub_stand_meshes)
+        parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_stand_total, extruder=extruder_base))
 
         M_face = np.array([
             [1.0, 0.0, 0.0, 0.0],

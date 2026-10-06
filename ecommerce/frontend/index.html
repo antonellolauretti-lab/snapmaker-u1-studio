@@ -1484,7 +1484,8 @@
       iconColorHex: '#E72F1D',
       iconSecondaryHex: null,
       iconColorName: 'SnapSpeed PLA Red',
-      iconGroupName: 'SnapSpeed PLA'
+      iconGroupName: 'SnapSpeed PLA',
+      symbolColor: '#E72F1D'
     };
 
     // Helper per palette Three.js con supporto Dual-Color shader
@@ -1836,9 +1837,11 @@
           icon_id: currentConfig.iconId,
           icon_position: currentConfig.iconPosition,
           extruder_icon: extruderIcon,
+          has_custom_icon_color: currentConfig.hasCustomIconColor,
           base_color: currentConfig.baseColorHex,
           text_color: currentConfig.textColorHex,
-          icon_color: iconColor
+          icon_color: iconColor,
+          symbolColor: iconColor
         };
 
         try {
@@ -2019,6 +2022,9 @@
         document.getElementById('wrapIconSwatches').style.display = 'none';
         currentConfig.hasCustomIconColor = false;
         updateLivePrice();
+        if (viewer) {
+          viewer.updateColors(getViewerPalette());
+        }
         request3DPreview();
       });
 
@@ -2028,6 +2034,9 @@
         document.getElementById('wrapIconSwatches').style.display = 'block';
         currentConfig.hasCustomIconColor = true;
         updateLivePrice();
+        if (viewer) {
+          viewer.updateColors(getViewerPalette());
+        }
         request3DPreview();
       });
 
@@ -2086,6 +2095,8 @@
             currentConfig.iconSecondaryHex = secHex;
             currentConfig.iconColorName = name;
             currentConfig.iconGroupName = group;
+            currentConfig.symbolColor = hex;
+            currentConfig.iconColor = hex;
             document.getElementById('iconColorLabel').textContent = `${name} (${group})`;
           }
 
@@ -2137,6 +2148,7 @@
           textGroupName: currentConfig.textGroupName,
           iconColorName: currentConfig.hasCustomIconColor ? currentConfig.iconColorName : currentConfig.textColorName,
           iconColorHex: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
+          symbolColor: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
           generatorParams: {
             generator: currentConfig.productType,
             text: currentConfig.textLine1,
@@ -2153,10 +2165,12 @@
             icon_id: currentConfig.iconId,
             icon_position: currentConfig.iconPosition,
             custom_icon_color: currentConfig.hasCustomIconColor,
+            has_custom_icon_color: currentConfig.hasCustomIconColor,
             extruder_icon: currentConfig.hasCustomIconColor ? 2 : 1,
             base_color: currentConfig.baseColorHex,
             text_color: currentConfig.textColorHex,
-            icon_color: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex
+            icon_color: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
+            symbolColor: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex
           }
         });
 

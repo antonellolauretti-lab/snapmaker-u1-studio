@@ -4,1015 +4,2963 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>GadgetPoint.it | Portachiavi e Gadget 3D Personalizzati</title>
-  <meta name="description" content="Studio Parametrico 3D per Snapmaker U1 - Portachiavi e Targhette Multicolore 4 Ugelli">
-  <meta name="api-base-url" content="https://snapmaker-u1-backend.onrender.com">
+  <meta name="description" content="Configura e acquista online portachiavi e targhette personalizzate stampate in 3D multicolore con GadgetPoint.it.">
 
-  <!-- Apple iOS & PWA Optimization -->
+  <!-- PWA & Mobile Web App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="GadgetPoint">
   <meta name="application-name" content="GadgetPoint">
-  <meta name="theme-color" content="#121316">
-  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png?v=printer">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png?v=printer">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png?v=printer">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon.png?v=printer">
+
   <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#2563eb">
 
+  <!-- Google Fonts Completi (Curati e Ottimizzati) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Caveat:wght@700&family=Cinzel:wght@700&family=Dancing+Script:wght@700&family=Great+Vibes&family=Lobster&family=Montserrat:wght@700;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Caveat:wght@700&family=Cinzel:wght@700;900&family=Dancing+Script:wght@700&family=Great+Vibes&family=Lobster&family=Montserrat:wght@800;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
 
-  <!-- Header -->
-  <header class="app-header">
-    <div class="brand">
-      <div class="brand-badge">GADGETPOINT</div>
-      <div>
-        <h1>Generatore Parametrico Snapmaker U1</h1>
-        <div class="brand-subtitle">Portachiavi & Targhette Multicolore 4 Ugelli</div>
-      </div>
-    </div>
-
-    <div class="header-product-switcher">
-      <button type="button" class="header-tab active" id="headerTabKeychain">
-        🏷️ Portachiavi
-      </button>
-      <button type="button" class="header-tab" id="headerTabDeskSign">
-        🏛️ Targhetta da Tavolo
-      </button>
-    </div>
-
-    <div class="header-badges">
-      <button type="button" id="btnApiSettings" class="feature-pill btn-api-pill" title="Configura l'endpoint del backend (Render / Local)">
-        <span class="api-status-dot" id="apiStatusDot"></span>
-        <span id="apiStatusLabel">API: Connessione...</span>
-      <a href="/" class="feature-pill" style="text-decoration: none; color: #fff; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8;" title="Torna alla vetrina e-commerce">🏪 Storefront</a>
-      <a href="/admin" class="feature-pill" style="text-decoration: none; color: #fff;" title="Pannello amministrazione">🔐 Admin</a>
-      <span class="feature-pill">⚡ 4 Tool Independent Dock</span>
-      <span class="feature-pill">🛡️ Zero Prime Tower</span>
-      <span class="feature-pill">🔲 Piatto PEI Testurizzato</span>
-    </div>
-  </header>
-
-  <!-- Main App Layout -->
-  <main class="app-main">
-    
-    <!-- Sidebar / Drawer Configurator -->
-    <aside class="sidebar">
-      <div class="sidebar-content" id="sidebarContent">
-
-        <!-- Selettore Prodotto a Tab -->
-        <div class="product-tabs">
-          <button type="button" class="product-tab active" data-product="keychain" id="tabKeychain">
-            🏷️ Portachiavi
-          </button>
-          <button type="button" class="product-tab" data-product="desk_sign" id="tabDeskSign">
-            🏛️ Targhetta da Tavolo
-          </button>
-        </div>
-
-        <!-- Indicatore e Azione Modello Predefinito (Template Fisso) -->
-        <div class="template-header-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 11px;">
-          <div style="display: flex; align-items: center; gap: 7px;">
-            <span id="templateStatusDot" style="width: 7px; height: 7px; border-radius: 50%; background: #757575; display: inline-block;"></span>
-            <span id="templateStatusText" style="color: var(--text-dim); font-size: 11px; font-weight: 500;">Modello: Default di Fabbrica</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <button type="button" id="btnTopReloadTemplate" class="btn-text-action" style="font-size: 11px; color: var(--text-dim); font-weight: 500; display: none;" title="Ripristina parametri e palette dal modello predefinito salvato">
-              ↺ Ricarica
-            </button>
-            <button type="button" id="btnTopSaveTemplate" class="btn-text-action" style="font-size: 11px; color: var(--accent-snapmaker); font-weight: 600;" title="Salva font, misure, stile base, colori ed estrusori come modello predefinito">
-              📌 Salva Modello
-            </button>
-          </div>
-        </div>
-        
-        <!-- ========================================== -->
-        <!-- SEZIONI ESCLUSIVE PORTACHIAVI (KEYCHAIN)   -->
-        <!-- ========================================== -->
-
-        <!-- Sezione 1 (Portachiavi): Testo & Font -->
-        <div class="param-section only-keychain">
-          <div class="section-title">
-            <span>1. Testo & Tipografia</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="textInput">Scritta Principale (Riga 1)</label>
-            <input type="text" id="textInput" value="ANTONELLO" maxlength="26" placeholder="Es. Nome o testo...">
-          </div>
-          
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <label class="form-label" for="fontSelect" style="margin: 0;">Carattere Tipografico</label>
-              <button type="button" id="btnUploadFont" class="btn-text-action">📂 Carica .ttf / .otf</button>
-              <input type="file" id="fontFileInput" accept=".ttf,.otf" style="display: none;">
-            </div>
-            <select id="fontSelect">
-              <option value="Anton">Caricamento font in corso...</option>
-            </select>
-            <div id="fontUploadStatus" style="font-size: 11px; color: #2ed573; display: none; margin-top: 2px;"></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">
-              <span>Altezza Caratteri (Riga 1)</span>
-              <span class="val-badge" id="fontSizeVal">14 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="fontSizeInput" min="8" max="28" step="0.5" value="14">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Spaziatura Lettere (Tracking)</span>
-              <span class="val-badge" id="letterSpacingVal">0 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="letterSpacingInput" min="-1" max="6" step="0.2" value="0">
-            </div>
-          </div>
-
-          <!-- Seconda Riga Portachiavi (Toggle & Opzioni Multi-riga) -->
-          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-subtle);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 12px; font-weight: 600; color: var(--text-main);">➕ Testo su 2 Righe (Es. Nome + Cognome)</span>
-              <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
-                <input type="checkbox" id="kcLine2Toggle"> Attivo
-              </label>
-            </div>
-
-            <div id="kcLine2Wrap" style="display: none; flex-direction: column; gap: 10px;">
-              <div class="form-group">
-                <label class="form-label" for="kcText2Input">Seconda Riga (Sottotitolo / Cognome)</label>
-                <input type="text" id="kcText2Input" value="LAURETTI" maxlength="28" placeholder="Es. Cognome o data...">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Dimensione Seconda Riga</span>
-                  <span class="val-badge" id="kcFontSize2Val">10.5 mm</span>
-                </label>
-                <div class="range-wrap">
-                  <input type="range" id="kcFontSize2Input" min="6" max="22" step="0.5" value="10.5">
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Interlinea / Spazio tra le Righe</span>
-                  <span class="val-badge" id="kcLineSpacingVal">3.5 mm</span>
-                </label>
-                <div class="range-wrap">
-                  <input type="range" id="kcLineSpacingInput" min="1.5" max="8.0" step="0.5" value="3.5">
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="extruderLine2Select">Estrusore Seconda Riga</label>
-                <select id="extruderLine2Select" class="tool-select">
-                  <option value="-1" selected>Uguale a Riga 1 (Estrusore Testo)</option>
-                  <option value="0">Estrusore 1</option>
-                  <option value="1">Estrusore 2</option>
-                  <option value="2">Estrusore 3</option>
-                  <option value="3">Estrusore 4</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sezione 2 (Portachiavi): Icona / Simbolo Sagomato -->
-        <div class="param-section only-keychain">
-          <div class="section-title">
-            <span>2. Icona & Simbolo 3D</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="iconSelect">Scegli Simbolo Vettoriale / 3D</label>
-            <select id="iconSelect">
-              <option value="none" selected>❌ Nessuna Icona</option>
-            </select>
-          </div>
-
-          <div id="iconOptionsWrap" style="display: none; flex-direction: column; gap: 10px;">
-            <div class="form-group">
-              <label class="form-label">Posizione Icona</label>
-              <div class="radio-group">
-                <label>
-                  <input type="radio" name="iconPos" value="left" checked>
-                  <span>Sinistra</span>
-                </label>
-                <label>
-                  <input type="radio" name="iconPos" value="right">
-                  <span>Destra</span>
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="extruderIconSelect">Estrusore Icona (Supporto 3° Colore U1)</label>
-              <select id="extruderIconSelect" class="tool-select">
-                <option value="-1" selected>Uguale al Testo</option>
-                <option value="0">Estrusore 1</option>
-                <option value="1">Estrusore 2</option>
-                <option value="2">Estrusore 3</option>
-                <option value="3">Estrusore 4</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sezione 3 (Portachiavi): Geometria Base -->
-        <div class="param-section only-keychain">
-          <div class="section-title">
-            <span>3. Geometria Base</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Profilo Contorno</label>
-            <div class="radio-group">
-              <label>
-                <input type="radio" name="baseStyle" value="rectangle" checked>
-                <span>Rettangolo</span>
-              </label>
-              <label>
-                <input type="radio" name="baseStyle" value="contour">
-                <span>Sagomato</span>
-              </label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Spessore Base (Z)</span>
-              <span class="val-badge" id="baseThicknessVal">3.2 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="baseThicknessInput" min="1.4" max="5.0" step="0.2" value="3.2">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Raggio Raccordi Angoli</span>
-              <span class="val-badge" id="cornerRadiusVal">4 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="cornerRadiusInput" min="1" max="10" step="0.5" value="4">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Margine Orizzontale (X)</span>
-              <span class="val-badge" id="paddingXVal">5 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="paddingXInput" min="2" max="14" step="0.5" value="5">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Margine Verticale (Y)</span>
-              <span class="val-badge" id="paddingYVal">4.5 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="paddingYInput" min="2" max="12" step="0.5" value="4.5">
-            </div>
-          </div>
-        </div>
-
-        <!-- Sezione 4 (Portachiavi): Lavorazione Testo -->
-        <div class="param-section only-keychain">
-          <div class="section-title">
-            <span>4. Lavorazione Testo</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Stile Estrusione</label>
-            <div class="radio-group">
-              <label>
-                <input type="radio" name="textMode" value="embossed" checked>
-                <span>Rilievo</span>
-              </label>
-              <label>
-                <input type="radio" name="textMode" value="debossed">
-                <span>Inciso</span>
-              </label>
-              <label>
-                <input type="radio" name="textMode" value="flush">
-                <span>A filo PEI</span>
-              </label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Altezza Lavorazione Testo</span>
-              <span class="val-badge" id="textThicknessVal">1.2 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="textThicknessInput" min="0.6" max="2.4" step="0.2" value="1.2">
-            </div>
-          </div>
-        </div>
-
-        <!-- Sezione 5 (Portachiavi): Foro Anello -->
-        <div class="param-section only-keychain">
-          <div class="section-title">
-            <span>5. Foro Anello Portachiavi</span>
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
-              <input type="checkbox" id="holeToggle" checked> Attivo
-            </label>
-          </div>
-          <div id="holeOptionsWrap" style="display: flex; flex-direction: column; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Posizione</label>
-              <div class="radio-group">
-                <label>
-                  <input type="radio" name="holePos" value="left" checked>
-                  <span>Sinistra</span>
-                </label>
-                <label>
-                  <input type="radio" name="holePos" value="right">
-                  <span>Destra</span>
-                </label>
-                <label>
-                  <input type="radio" name="holePos" value="top">
-                  <span>Alto</span>
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                <span>Diametro Foro Passante</span>
-                <span class="val-badge" id="holeDiameterVal">5 mm</span>
-              </label>
-              <div class="range-wrap">
-                <input type="range" id="holeDiameterInput" min="3.5" max="8.0" step="0.5" value="5">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- SEZIONI ESCLUSIVE TARGHETTA DA TAVOLO      -->
-        <!-- ========================================== -->
-
-        <!-- Sezione Base Targhetta -->
-        <div class="param-section only-desksign">
-          <div class="section-title">
-            <span>1. Struttura Base Targhetta</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Profilo Strutturale</label>
-            <div class="radio-group">
-              <label>
-                <input type="radio" name="dsBaseMode" value="wedge" checked>
-                <span>Wedge (Cuneo 3D)</span>
-              </label>
-              <label>
-                <input type="radio" name="dsBaseMode" value="flat">
-                <span>Flat (Piatta)</span>
-              </label>
-            </div>
-          </div>
-          <div class="form-group" id="dsWedgeAngleGroup">
-            <label class="form-label">
-              <span>Angolo di Lettura (Inclinazione)</span>
-              <span class="val-badge" id="dsWedgeAngleVal">45°</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="dsWedgeAngleInput" min="25" max="75" step="5" value="45">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Spessore Base / Labbro Frontale</span>
-              <span class="val-badge" id="dsBaseThicknessVal">2.4 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="dsBaseThicknessInput" min="1.5" max="6.0" step="0.3" value="2.4">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Margine Orizzontale (X)</span>
-              <span class="val-badge" id="dsPaddingXVal">6 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="dsPaddingXInput" min="3" max="18" step="0.5" value="6">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <span>Margine Verticale (Y)</span>
-              <span class="val-badge" id="dsPaddingYVal">5 mm</span>
-            </label>
-            <div class="range-wrap">
-              <input type="range" id="dsPaddingYInput" min="3" max="14" step="0.5" value="5">
-            </div>
-          </div>
-        </div>
-
-        <!-- Sezione Riga 1: Titolo Principale -->
-        <div class="param-section only-desksign">
-          <div class="section-title">
-            <span>2. Riga 1 (Titolo Principale)</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="dsText1Input">Testo Principale</label>
-            <input type="text" id="dsText1Input" value="CHARIZARD" maxlength="32" placeholder="Es. Nome o Titolo...">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="dsFont1Select">Font Riga 1</label>
-            <select id="dsFont1Select">
-              <option value="Arial">Caricamento...</option>
-            </select>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="form-group">
-              <label class="form-label">
-                <span>Altezza Carattere</span>
-                <span class="val-badge" id="dsFontSize1Val">14 mm</span>
-              </label>
-              <div class="range-wrap">
-                <input type="range" id="dsFontSize1Input" min="8" max="28" step="0.5" value="14">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                <span>Rilievo (Z)</span>
-                <span class="val-badge" id="dsThickness1Val">1.2 mm</span>
-              </label>
-              <div class="range-wrap">
-                <input type="range" id="dsThickness1Input" min="0.6" max="2.5" step="0.2" value="1.2">
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="dsExtruderLine1Select">Estrusore Riga 1</label>
-            <select id="dsExtruderLine1Select" class="tool-select">
-              <option value="0">Estrusore 1</option>
-              <option value="1" selected>Estrusore 2</option>
-              <option value="2">Estrusore 3</option>
-              <option value="3">Estrusore 4</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Sezione Riga 2: Sottotitolo / Dettagli -->
-        <div class="param-section only-desksign">
-          <div class="section-title">
-            <span>3. Riga 2 (Sottotitolo)</span>
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
-              <input type="checkbox" id="dsLine2Toggle" checked> Attivo
-            </label>
-          </div>
-          <div id="dsLine2Wrap" style="display: flex; flex-direction: column; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label" for="dsText2Input">Testo Secondario</label>
-              <input type="text" id="dsText2Input" value="BASE SET 1999" maxlength="36" placeholder="Es. Ruolo o Sottotitolo...">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="dsFont2Select">Font Riga 2</label>
-              <select id="dsFont2Select">
-                <option value="Arial">Caricamento...</option>
-              </select>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Altezza Carattere</span>
-                  <span class="val-badge" id="dsFontSize2Val">7.5 mm</span>
-                </label>
-                <div class="range-wrap">
-                  <input type="range" id="dsFontSize2Input" min="5" max="18" step="0.5" value="7.5">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Spazio tra Righe</span>
-                  <span class="val-badge" id="dsLineSpacingVal">3.5 mm</span>
-                </label>
-                <div class="range-wrap">
-                  <input type="range" id="dsLineSpacingInput" min="1.5" max="10" step="0.5" value="3.5">
-                </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                <span>Spessore Rilievo Riga 2</span>
-                <span class="val-badge" id="dsThickness2Val">1.0 mm</span>
-              </label>
-              <div class="range-wrap">
-                <input type="range" id="dsThickness2Input" min="0.6" max="2.5" step="0.2" value="1.0">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="dsExtruderLine2Select">Estrusore Riga 2</label>
-              <select id="dsExtruderLine2Select" class="tool-select">
-                <option value="0">Estrusore 1</option>
-                <option value="1">Estrusore 2</option>
-                <option value="2" selected>Estrusore 3</option>
-                <option value="3">Estrusore 4</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sezione Cornice & Allineamento -->
-        <div class="param-section only-desksign">
-          <div class="section-title">
-            <span>4. Cornice Decorativa & Stile</span>
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: none;">
-              <input type="checkbox" id="dsBorderToggle" checked> Attivo
-            </label>
-          </div>
-          <div id="dsBorderWrap" style="display: flex; flex-direction: column; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Allineamento Testo</label>
-              <div class="radio-group">
-                <label>
-                  <input type="radio" name="dsTextAlign" value="left">
-                  <span>Sinistra</span>
-                </label>
-                <label>
-                  <input type="radio" name="dsTextAlign" value="center" checked>
-                  <span>Centro</span>
-                </label>
-                <label>
-                  <input type="radio" name="dsTextAlign" value="right">
-                  <span>Destra</span>
-                </label>
-              </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Larghezza Bordo</span>
-                  <span class="val-badge" id="dsBorderWidthVal">2 mm</span>
-                </label>
-                <div class="range-wrap">
-                  <input type="range" id="dsBorderWidthInput" min="1.0" max="4.5" step="0.5" value="2.0">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">
-                  <span>Rilievo Cornice (Z)</span>
-                  <span class="val-badge" id="dsBorderThicknessVal">1 mm</span>
-                </label>
-                <div class="range-wrap">
-                  <input type="range" id="dsBorderThicknessInput" min="0.4" max="2.0" step="0.2" value="1.0">
-                </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">
-                <span>Raggio Raccordi Cornice</span>
-                <span class="val-badge" id="dsCornerRadiusVal">3 mm</span>
-              </label>
-              <div class="range-wrap">
-                <input type="range" id="dsCornerRadiusInput" min="0" max="8" step="0.5" value="3">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="dsExtruderBorderSelect">Estrusore Cornice Decorativa</label>
-              <select id="dsExtruderBorderSelect" class="tool-select">
-                <option value="0">Estrusore 1</option>
-                <option value="1">Estrusore 2</option>
-                <option value="2">Estrusore 3</option>
-                <option value="3" selected>Estrusore 4</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- SEZIONE COMUNE: ESTRUSORI & PALETTE U1     -->
-        <!-- ========================================== -->
-        <div class="param-section">
-          <div class="section-title">
-            <span>Estrusori & Palette U1</span>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <button type="button" id="btnSwapExtruders12" class="btn-swap-extruders" title="Inverti i colori tra Estrusore 1 e Estrusore 2 (Base ⇄ Testo)">
-                <span>🔀 Inverti 1 ⇄ 2</span>
-              </button>
-              <button type="button" id="btnOpenSyncModal" class="btn-sync-u1-lan" title="Connetti la stampante Snapmaker U1 per rilevare in tempo reale i 4 colori RFID">
-                <span>📡 Connetti Stampante U1</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Assegnazione Estrusori ai Componenti -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; margin-bottom: 12px;">
-            <div class="form-group">
-              <label class="form-label" for="extruderBaseSelect">Estrusore Base</label>
-              <select id="extruderBaseSelect" class="tool-select">
-                <option value="0" selected>Estrusore 1</option>
-                <option value="1">Estrusore 2</option>
-                <option value="2">Estrusore 3</option>
-                <option value="3">Estrusore 4</option>
-              </select>
-            </div>
-            <div class="form-group only-keychain" id="extruderTextWrap">
-              <label class="form-label" for="extruderTextSelect">Estrusore Testo</label>
-              <select id="extruderTextSelect" class="tool-select">
-                <option value="0">Estrusore 1</option>
-                <option value="1" selected>Estrusore 2</option>
-                <option value="2">Estrusore 3</option>
-                <option value="3">Estrusore 4</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Colori Assegnati ai 4 Estrusori U1 con Slot Rapidi -->
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" style="margin: 0;">Colori 4 Slot Estrusori U1</label>
-              <span style="font-size: 10.5px; color: var(--text-dim);">Scelta rapida o selettore</span>
-            </div>
-            <div class="palette-grid">
-              <div class="tool-slot">
-                <div class="tool-badge-row">
-                  <span class="tool-badge">Slot 1</span>
-                  <div class="color-input-wrap" id="wrapColorT0" title="Seleziona filamento Slot 1">
-                    <input type="color" id="colorT0" value="#080A0D" title="Estrusore 1">
-                  </div>
-                </div>
-                <select class="quick-color-select" id="quickColorT0" title="Filamento Snapmaker Slot 1">
-                  <optgroup label="SnapSpeed PLA (Solidi)">
-                    <option value="34062" data-hex="#080A0D" selected>⚫ Black (#080A0D)</option>
-                    <option value="34073" data-hex="#D9DFE5">⚪ Cool White (#D9DFE5)</option>
-                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
-                    <option value="34065" data-hex="#E72F1D">🔴 Red (#E72F1D)</option>
-                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
-                    <option value="34112" data-hex="#F8F81C">🟡 Bright Yellow (#F8F81C)</option>
-                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
-                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
-                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
-                  </optgroup>
-                  <optgroup label="Silk Dual-Color PLA (Seta)">
-                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
-                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
-                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
-                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
-                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
-                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
-                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
-                  </optgroup>
-                  <optgroup label="PETG HF / Translucent & TPU">
-                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
-                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
-                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
-                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
-                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
-                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              <div class="tool-slot">
-                <div class="tool-badge-row">
-                  <span class="tool-badge">Slot 2</span>
-                  <div class="color-input-wrap" id="wrapColorT1" title="Seleziona filamento Slot 2">
-                    <input type="color" id="colorT1" value="#D9DFE5" title="Estrusore 2">
-                  </div>
-                </div>
-                <select class="quick-color-select" id="quickColorT1" title="Filamento Snapmaker Slot 2">
-                  <optgroup label="SnapSpeed PLA (Solidi)">
-                    <option value="34062" data-hex="#080A0D">⚫ Black (#080A0D)</option>
-                    <option value="34073" data-hex="#D9DFE5" selected>⚪ Cool White (#D9DFE5)</option>
-                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
-                    <option value="34065" data-hex="#E72F1D">🔴 Red (#E72F1D)</option>
-                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
-                    <option value="34112" data-hex="#F8F81C">🟡 Bright Yellow (#F8F81C)</option>
-                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
-                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
-                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
-                  </optgroup>
-                  <optgroup label="Silk Dual-Color PLA (Seta)">
-                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
-                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
-                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
-                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
-                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
-                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
-                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
-                  </optgroup>
-                  <optgroup label="PETG HF / Translucent & TPU">
-                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
-                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
-                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
-                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
-                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
-                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              <div class="tool-slot">
-                <div class="tool-badge-row">
-                  <span class="tool-badge">Slot 3</span>
-                  <div class="color-input-wrap" id="wrapColorT2" title="Seleziona filamento Slot 3">
-                    <input type="color" id="colorT2" value="#E72F1D" title="Estrusore 3">
-                  </div>
-                </div>
-                <select class="quick-color-select" id="quickColorT2" title="Filamento Snapmaker Slot 3">
-                  <optgroup label="SnapSpeed PLA (Solidi)">
-                    <option value="34062" data-hex="#080A0D">⚫ Black (#080A0D)</option>
-                    <option value="34073" data-hex="#D9DFE5">⚪ Cool White (#D9DFE5)</option>
-                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
-                    <option value="34065" data-hex="#E72F1D" selected>🔴 Red (#E72F1D)</option>
-                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
-                    <option value="34112" data-hex="#F8F81C">🟡 Bright Yellow (#F8F81C)</option>
-                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
-                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
-                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
-                  </optgroup>
-                  <optgroup label="Silk Dual-Color PLA (Seta)">
-                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
-                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
-                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
-                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
-                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
-                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
-                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
-                  </optgroup>
-                  <optgroup label="PETG HF / Translucent & TPU">
-                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
-                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
-                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
-                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
-                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
-                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              <div class="tool-slot">
-                <div class="tool-badge-row">
-                  <span class="tool-badge">Slot 4</span>
-                  <div class="color-input-wrap" id="wrapColorT3" title="Seleziona filamento Slot 4">
-                    <input type="color" id="colorT3" value="#F8F81C" title="Estrusore 4">
-                  </div>
-                </div>
-                <select class="quick-color-select" id="quickColorT3" title="Filamento Snapmaker Slot 4">
-                  <optgroup label="SnapSpeed PLA (Solidi)">
-                    <option value="34062" data-hex="#080A0D">⚫ Black (#080A0D)</option>
-                    <option value="34073" data-hex="#D9DFE5">⚪ Cool White (#D9DFE5)</option>
-                    <option value="34061" data-hex="#E2DEDB">◽ Pearl White (#E2DEDB)</option>
-                    <option value="34065" data-hex="#E72F1D">🔴 Red (#E72F1D)</option>
-                    <option value="34064" data-hex="#003776">🔵 Blue (#003776)</option>
-                    <option value="34112" data-hex="#F8F81C" selected>🟡 Bright Yellow (#F8F81C)</option>
-                    <option value="34067" data-hex="#F97429">🟠 Orange (#F97429)</option>
-                    <option value="34068" data-hex="#2D9E59">🟢 Green (#2D9E59)</option>
-                    <option value="34074" data-hex="#F24574">🌺 Magenta (#F24574)</option>
-                  </optgroup>
-                  <optgroup label="Silk Dual-Color PLA (Seta)">
-                    <option value="34202" data-hex="#D9A63A" data-secondary="#CC434F">✨ Sunset Ember (Gold/Red)</option>
-                    <option value="34203" data-hex="#D9A63A" data-secondary="#9675CD">✨ Aurora Gold (Gold/Purple)</option>
-                    <option value="34204" data-hex="#D9A63A" data-secondary="#C4C7D9">✨ Solar Alloy (Gold/Silver)</option>
-                    <option value="34205" data-hex="#ECED17" data-secondary="#44ADE5">✨ Mint Lemonade (Yellow/Blue)</option>
-                    <option value="34206" data-hex="#44ADE5" data-secondary="#18CCAF">✨ Sea Glass (Blue/Teal)</option>
-                    <option value="34207" data-hex="#C4C7D9" data-secondary="#44ADE5">✨ Ice Lake (Silver/Blue)</option>
-                    <option value="34208" data-hex="#CBF914" data-secondary="#D623AA">✨ City Billboard (Lime/Magenta)</option>
-                  </optgroup>
-                  <optgroup label="PETG HF / Translucent & TPU">
-                    <option value="34157" data-hex="#16171B">⬛ PETG HF Black (#16171B)</option>
-                    <option value="34176" data-hex="#000000">⬛ TPU 95A HF Black (#000000)</option>
-                    <option value="34220" data-hex="#537A37">🧪 PETG Trans. Green (#537A37)</option>
-                    <option value="34222" data-hex="#FB8D02">🧪 PETG Trans. Orange (#FB8D02)</option>
-                    <option value="34223" data-hex="#E68FBD">🧪 PETG Trans. Pink (#E68FBD)</option>
-                    <option value="34218" data-hex="#338CC4">🧪 PETG Trans. Blue (#338CC4)</option>
-                  </optgroup>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Preset Rapidi Filamenti & Preset Personali -->
-          <div class="form-group" style="margin-top: 14px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-              <label class="form-label" style="margin: 0;">Preset Ufficiali</label>
-              <button type="button" id="btnSaveCustomPreset" class="btn-save-preset" title="Salva la combinazione filamenti corrente come preset personale">
-                <span>➕ Salva Setup</span>
-              </button>
-            </div>
-            <div class="presets-row">
-              <button type="button" class="preset-btn" data-preset="snapmaker" title="SnapSpeed U1 Original (Nero, Bianco, Rosso, Giallo)">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9DFE5 25% 50%, #E72F1D 50% 75%, #F8F81C 75%);"></span>
-                Official U1
-              </button>
-              <button type="button" class="preset-btn" data-preset="sunset" title="Sunset Ember & Gold (Nero, Sunset Ember, Arancio, Rosso)">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9A63A 25% 50%, #F97429 50% 75%, #E72F1D 75%);"></span>
-                Sunset Gold
-              </button>
-              <button type="button" class="preset-btn" data-preset="silk_trio" title="Silk Elegance (Nero, Aurora Gold, Sea Glass, Ice Lake)">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9A63A 25% 50%, #44ADE5 50% 75%, #C4C7D9 75%);"></span>
-                Silk Trio
-              </button>
-              <button type="button" class="preset-btn" data-preset="contrast" title="Tech Contrast (Nero, Bianco, Blu, Verde)">
-                <span class="swatch-strip" style="background: linear-gradient(90deg, #080A0D 25%, #D9DFE5 25% 50%, #003776 50% 75%, #2D9E59 75%);"></span>
-                Tech Contrast
-              </button>
-            </div>
-
-            <!-- I Miei Preset Personali (Salvati in LocalStorage) -->
-            <div id="userPresetsWrap" style="margin-top: 10px; display: none;">
-              <div style="font-size: 10.5px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">
-                I Miei Preset Personali
-              </div>
-              <div id="userPresetsRow" class="presets-row" style="flex-wrap: wrap;"></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Action Footer -->
-      <div class="sidebar-footer">
-        <div class="dimensions-badge">
-          <span>Ingombro Totale:</span>
-          <span style="font-family: monospace; font-weight: 600; color: #fff;">
-            <span id="dimWidth">-- mm</span> × <span id="dimHeight">-- mm</span> × <span id="dimDepth">-- mm</span>
-          </span>
-        </div>
-
-        <div class="template-actions-box">
-          <button type="button" id="btnSaveDefaultTemplate" class="btn-save-template" title="Congela e salva tutte le impostazioni correnti (font, dimensioni, sagoma, lavorazione, foro, colori ed estrusori) come tuo Modello Predefinito">
-            <span>📌 Salva come Modello Predefinito</span>
-          </button>
-        </div>
-
-        <button id="btnGenerate" class="btn-generate">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          SCARICA 3MF PER SNAPMAKER U1
-        </button>
-
-        <div style="display: flex; justify-content: center; align-items: center; margin-top: 2px;">
-          <button type="button" id="btnResetDefaults" class="btn-reset-link" title="Azzera la configurazione salvata e ripristina tutti i parametri e la palette ai valori di fabbrica originali">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-            </svg>
-            <span>↺ Ripristina Default di Fabbrica</span>
-          </button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- 3D Canvas Viewport -->
-    <div class="viewer-container" id="canvas-container">
-      
-      <!-- Floating Camera Toolbar -->
-      <div class="viewer-toolbar">
-        <button class="tool-btn" id="btnResetView" title="Vista Assonometrica">Assonometrica</button>
-        <button class="tool-btn" id="btnTopView" title="Vista Superiore">Dall'Alto</button>
-        <button class="tool-btn" id="btnFrontView" title="Vista Frontale">Frontale</button>
-        <button class="tool-btn" id="btnWireframe" title="Toggle Wireframe">Wireframe</button>
-      </div>
-
-      <!-- Floating Status Indicator -->
-      <div class="status-pill" id="statusPill">
-        <div class="status-dot"></div>
-        <span id="statusText">Pronto per la stampa</span>
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- Modal Sincronizzazione Snapmaker U1 -->
-  <div id="syncPrinterModal" class="modal-backdrop" style="display: none;">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 16px;">📡</span>
-          <h3 id="syncModalTitle" style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Connessione Snapmaker U1</h3>
-        </div>
-        <button type="button" class="modal-close" id="btnCloseSyncModal" aria-label="Chiudi">&times;</button>
-      </div>
-
-      <!-- VISTA CLOUD (Vercel HTTPS / iPhone / Dispositivi Remoti) -->
-      <div id="syncModalCloudSection" style="display: none; padding: 18px 20px;">
-        <!-- Card Informativa ed Operativa -->
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
-          <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
-            <span style="font-size: 22px; line-height: 1;">🌐</span>
-            <div style="font-size: 12px; line-height: 1.5; color: var(--text-main);">
-              <strong style="color: #fff; font-size: 13px; display: block; margin-bottom: 4px;">Sincronizzazione RFID U1</strong>
-              La lettura automatica RFID diretta richiede la connessione locale. Per sincronizzare i 4 estrusori in 1 clic, usa lo studio locale su PC oppure seleziona i colori dai selettori rapidi della palette.
-            </div>
-          </div>
-
-          <div style="background: rgba(0, 168, 255, 0.06); border: 1px solid rgba(0, 168, 255, 0.25); border-radius: 6px; padding: 10px 12px; font-size: 11.5px; line-height: 1.5; color: #d0f0fd;">
-            <strong style="color: #4cd3ff; display: block; margin-bottom: 3px;">💡 Per leggere i tag RFID in automatico dalla stampante (LAN):</strong>
-            1. Sul PC di casa avvia il file <code>AVVIA_STUDIO_U1.bat</code> presente nella cartella del progetto.<br>
-            2. Apri il browser all'indirizzo <code>http://localhost:8000</code> (dove il rilevamento Wi-Fi è pienamente attivo).
-          </div>
-        </div>
-
-        <!-- Opzioni Rapide Senza Errori per Vercel -->
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
-          <!-- Opzione A: Carica / Esporta Setup JSON -->
-          <div style="display: flex; gap: 8px;">
-            <button type="button" id="btnUploadPrinterConfig" class="btn-modal-action" style="flex: 1; background: rgba(255, 212, 0, 0.12); border: 1px solid var(--accent-snapmaker); color: #ffd400; padding: 10px 12px; font-weight: 600; font-size: 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <span>📁 Carica Setup (.json)</span>
-            </button>
-            <input type="file" id="printerConfigFileInput" accept=".json" style="display: none;">
-
-            <button type="button" id="btnExportPrinterConfig" class="btn-modal-cancel" style="padding: 10px 12px; font-size: 12px; white-space: nowrap;" title="Esporta la combinazione attuale dei 4 estrusori in formato JSON">
-              <span>💾 Esporta Setup</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="modal-footer" style="padding: 0; margin-top: 10px; border: none; display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" class="btn-modal-cancel" id="btnCancelSyncModalCloud">Chiudi</button>
-          <button type="button" class="btn-modal-action" id="btnContinueWithPalette" style="font-weight: 700;">
-            <span>✓ Usa Slot Rapidi & Preset</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- VISTA LOCALE (Localhost / LAN: Studio PC) -->
-      <div id="syncModalLocalSection" style="display: none; padding: 16px 20px;">
-        <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.4;">
-          Interroga in tempo reale la tua <strong>Snapmaker U1</strong> sulla rete locale Wi-Fi per rilevare i colori (tag RFID) caricati nei 4 estrusori:
-        </p>
-
-        <div class="form-group" style="margin-bottom: 10px;">
-          <label class="form-label" for="printerIpInput">
-            <span>Indirizzo IP Snapmaker U1</span>
-            <span style="color: var(--accent-snapmaker);">*</span>
-          </label>
-          <input type="text" id="printerIpInput" placeholder="Es. 192.168.1.150" value="" style="font-family: monospace; font-size: 13px;">
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-          <div class="form-group">
-            <label class="form-label" for="printerPortInput">Porta di Controllo</label>
-            <input type="text" id="printerPortInput" placeholder="8080" value="8080" style="font-family: monospace; font-size: 13px;">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="printerTokenInput">Token API (opzionale)</label>
-            <input type="text" id="printerTokenInput" placeholder="Opzionale / vuoto" style="font-size: 12px;">
-          </div>
-        </div>
-
-        <div class="modal-guide-box" style="margin: 0 0 10px 0;">
-          <strong style="color: #fff; display: block; margin-bottom: 4px;">💡 Come trovare l'IP sul touchscreen U1:</strong>
-          1. Tocca l'icona <strong>Impostazioni (⚙️)</strong> ➔ <strong>Wi-Fi</strong>.<br>
-          2. Tocca la rete connessa e leggi l'<strong>Indirizzo IP</strong> (es. <code>192.168.1.150</code>).
-        </div>
-
-        <!-- Risultato Scansione -->
-        <div id="syncResultStatus" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 11.5px; line-height: 1.4; margin-bottom: 10px;"></div>
-
-        <div class="modal-footer" style="padding: 10px 0 0 0; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" class="btn-modal-cancel" id="btnCancelSyncModalLocal">Chiudi</button>
-          <button type="button" class="btn-modal-action" id="btnExecuteSync" style="font-weight: 700; padding: 10px 16px;">
-            <span>⚡ Rileva Colori RFID</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Salva Preset Personale -->
-  <div id="savePresetModal" class="modal-backdrop" style="display: none;">
-    <div class="modal-dialog" style="max-width: 380px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 16px;">💾</span>
-          <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #fff;">Salva Preset Personale</h3>
-        </div>
-        <button type="button" class="modal-close" id="btnCloseSavePresetModal" aria-label="Chiudi">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
-          Assegna un nome per memorizzare i 4 colori attuali della palette nei tuoi preset personali:
-        </p>
-        <div id="savePresetPreviewStrip" style="height: 16px; border-radius: 4px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.2);"></div>
-        <div class="form-group">
-          <label class="form-label" for="customPresetNameInput">Nome Preset</label>
-          <input type="text" id="customPresetNameInput" placeholder="Es. Nero + Oro Silk, Setup Portachiavi..." maxlength="30">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-modal-cancel" id="btnCancelSavePresetModal">Annulla</button>
-        <button type="button" class="btn-modal-action" id="btnConfirmSavePreset">
-          <span>Salva Preset</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Container per Notifiche Toast & Cold-Start Alerts -->
-  <div id="studioToastContainer" class="studio-toast-container"></div>
-
-  <!-- Scripts (Locali) -->
+  <!-- Three.js, OrbitControls e Viewer 3D -->
   <script src="/static/js/libs/three.min.js"></script>
   <script src="/static/js/libs/OrbitControls.js"></script>
   <script src="/static/js/viewer.js"></script>
-  <script src="/static/js/ui.js"></script>
+
+  <style>
+    /* Font-Face Fallback e Varianti Heavy/Bold per Stampa 3D FDM */
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: normal;
+      font-weight: 900;
+      src: url('/fonts/Montserrat-Black.ttf') format('truetype'), url('/fonts/Montserrat.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype'), url('/fonts/Playfair_Display.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/fonts/Cinzel-Bold.ttf') format('truetype'), url('/fonts/Cinzel.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Segoe UI';
+      font-style: normal;
+      font-weight: 700;
+      src: local('Segoe UI Bold'), local('Segoe UI'), url('/fonts/Montserrat-Black.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Georgia';
+      font-style: normal;
+      font-weight: 700;
+      src: local('Georgia Bold'), local('Georgia'), url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
+    }
+
+    :root {
+      --bg-dark: #0c0d10;
+      --bg-surface: #14161b;
+      --bg-card: #1c1f26;
+      --bg-card-hover: #242934;
+      --border-subtle: #2b303c;
+      --border-focus: #38bdf8;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.25);
+      --accent: #f59e0b;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; overflow-x: hidden; padding-top: 0 !important; }
+
+    /* Supporto per Notch e Dynamic Island - Solo sul banner più in alto */
+    .promo-banner,
+    .top-bar-container,
+    .top-banner,
+    .promo-top-bar {
+      padding-top: max(8px, env(safe-area-inset-top, 0px)) !important;
+      padding-bottom: 8px !important;
+    }
+
+    /* Top Banner Promozionale */
+    .promo-top-bar {
+      background: linear-gradient(90deg, #0284c7, #2563eb, #7c3aed);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding-left: 16px;
+      padding-right: 16px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      letter-spacing: 0.3px;
+    }
+    .promo-top-bar span { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* Header */
+    header {
+      background: rgba(20, 22, 27, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-group { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #000;
+      font-weight: 900;
+      font-size: 15px;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      letter-spacing: 1px;
+    }
+    .brand-title { font-size: 17px; font-weight: 800; color: #fff; }
+    .brand-subtitle { font-size: 11px; color: var(--text-muted); }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-nav-link {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-decoration: none;
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+    .btn-nav-link:hover { color: #fff; border-color: var(--primary); }
+
+    .btn-cart {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-cart:hover { border-color: var(--primary); background: var(--bg-card-hover); }
+    .cart-badge {
+      background: var(--primary);
+      color: #000;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    /* Layout Principale a 2 Colonne */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 490px 1fr;
+      min-height: calc(100vh - 100px);
+    }
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Colonna Sinistra: Configuratore */
+    .config-panel {
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-subtle);
+      padding: 24px;
+      overflow-y: auto;
+      height: calc(100vh - 100px);
+    }
+    @media (max-width: 1024px) {
+      .config-panel { height: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .config-group, .config-section { margin-bottom: 22px; }
+    body.product-desk-sign #groupHolePosition { display: none !important; }
+
+    /* Button Tabs */
+    .tab-grid-2, .toggle-group-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tab-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    
+    .btn-choice, .btn-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-choice:hover, .btn-toggle:hover { border-color: var(--primary); color: #fff; }
+    .btn-choice.active, .btn-toggle.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .btn-product-type, .tab-grid-2 .btn-product-type, .tab-grid-2 .btn-choice.btn-product-type {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 6px;
+      text-align: center;
+      white-space: nowrap;
+      width: 100%;
+      min-height: 52px;
+    }
+
+    .btn-prod-title {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      display: block;
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    .btn-prod-price, .price-badge-sub {
+      font-size: 11.5px;
+      font-weight: 600;
+      opacity: 0.85;
+      margin-top: 3px;
+      white-space: nowrap;
+      display: block;
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    /* Input Testo */
+    .text-input-field {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #fff;
+      padding: 11px 13px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .text-input-field:focus { border-color: var(--border-focus); }
+    .text-input-field:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    /* Font Grid Scrollabile */
+    .font-scroll-container {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      padding: 6px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .font-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .font-card:hover { border-color: var(--primary); background: var(--bg-card-hover); }
+    .font-card.active { border-color: var(--primary); background: rgba(56, 189, 248, 0.12); }
+    .font-card-name { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+    .font-card-preview, .font-preview-text {
+      font-size: 15px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
+      line-height: 1.2;
+    }
+    /* Stili calibrati per mostrare l'ingrossamento reale anche nelle anteprime 2D */
+    .font-card[data-font="Montserrat"] .font-card-preview {
+      font-weight: 900 !important;
+      -webkit-text-stroke: 0.35px currentColor;
+    }
+    .font-card[data-font="Cinzel"] .font-card-preview,
+    .font-card[data-font="Playfair Display"] .font-card-preview,
+    .font-card[data-font="Georgia"] .font-card-preview,
+    .font-card[data-font="Segoe UI"] .font-card-preview {
+      font-weight: 800 !important;
+      -webkit-text-stroke: 0.28px currentColor;
+    }
+    .font-card[data-font="Dancing Script"] .font-card-preview,
+    .font-card[data-font="Caveat"] .font-card-preview,
+    .font-card[data-font="Great Vibes"] .font-card-preview,
+    .font-card[data-font="Segoe Script"] .font-card-preview {
+      font-weight: 700 !important;
+      -webkit-text-stroke: 0.35px currentColor;
+      text-shadow: 0 0 0.5px currentColor;
+    }
+
+    /* Selettore Icone con Categorie */
+    .icon-category-select {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 8px;
+      outline: none;
+    }
+    .icon-grid-container {
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+      gap: 6px;
+    }
+    .icon-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .icon-card:hover { border-color: var(--primary); background: var(--bg-card-hover); }
+    .icon-card.active { border-color: var(--primary); background: #0284c7; color: #fff; }
+    .icon-card svg { width: 22px; height: 22px; fill: currentColor; }
+    .icon-card-label { font-size: 10px; margin-top: 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+    /* Swatches Colori Dinamici */
+    .color-swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+      gap: 7px;
+      margin-top: 6px;
+    }
+    .swatch-item {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      border: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s, border-color 0.15s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .swatch-item:hover { transform: scale(1.1); }
+    .swatch-item.active { border-color: #fff; transform: scale(1.08); box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+    .swatch-check {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .color-label-preview { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
+
+    /* Barra Prezzo e Aggiungi al Carrello */
+    .cta-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .price-tag { font-size: 26px; font-weight: 900; color: var(--success); }
+    .price-type { font-size: 11px; color: var(--text-muted); }
+    .btn-add {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: none;
+      padding: 12px 22px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4); }
+
+    /* Colonna Destra: 3D Canvas Three.js */
+    .viewer-panel {
+      position: relative;
+      background: radial-gradient(circle at center, #1b202a 0%, #0e1014 100%);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 100px);
+      overflow: hidden;
+    }
+    @media (max-width: 1024px) {
+      .viewer-panel { height: 440px; }
+    }
+    #webglContainer { width: 100%; height: 100%; }
+
+    .viewer-overlay-tools {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    .tool-btn {
+      background: rgba(28, 31, 38, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .tool-btn:hover { border-color: var(--primary); }
+
+    .viewer-bottom-badge {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(28, 31, 38, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-subtle);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-muted);
+      z-index: 10;
+    }
+
+    /* Drawer Laterale Carrello */
+    .cart-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .cart-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .cart-drawer {
+      position: fixed;
+      top: 0;
+      right: -540px;
+      width: 520px;
+      max-width: 94vw;
+      height: 100vh;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-subtle);
+      box-shadow: -8px 0 24px rgba(0,0,0,0.6);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cart-drawer-overlay.open .cart-drawer { right: 0; }
+
+    .drawer-header {
+      padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-surface);
+      position: sticky;
+      top: 0;
+      z-index: 1002;
+    }
+    .drawer-title { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .btn-close-drawer {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .btn-close-drawer:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .cart-item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      position: relative;
+    }
+    .cart-item-card.is-omaggio {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.05);
+    }
+    .omaggio-badge {
+      display: inline-block;
+      background: var(--success);
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+    .cart-item-title { font-size: 14px; font-weight: 700; color: #fff; }
+    .cart-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    .cart-item-price { font-size: 15px; font-weight: 800; text-align: right; }
+    .btn-remove-item { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; margin-top: 2px; }
+
+    /* Riepilogo Calcoli e Promo 3x2 */
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-top: 14px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+    .summary-row.promo {
+      color: var(--success);
+      font-weight: 700;
+      background: rgba(34, 197, 94, 0.1);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .summary-row.total {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 10px;
+      font-size: 17px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    /* Form Dati Spedizione */
+    .checkout-form { margin-top: 16px; }
+    .form-group { margin-bottom: 10px; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 3px; display: block; }
+    .form-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #fff;
+      padding: 9px 11px;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--border-focus); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* Stile Placeholder sfumato e trasparente per evitare sensazione di precompilato */
+    #checkoutDrawer input::placeholder,
+    #checkoutDrawer textarea::placeholder,
+    .checkout-form input::placeholder,
+    .checkout-form textarea::placeholder,
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.25) !important;
+      font-style: italic !important;
+    }
+
+    #paypal-button-container { margin-top: 14px; }
+
+    /* Pulsante Sviluppatore / Test Checkout */
+    .btn-test-checkout {
+      width: 100%;
+      background: rgba(245, 158, 11, 0.12);
+      color: #f59e0b;
+      border: 1px dashed #f59e0b;
+      padding: 11px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .btn-test-checkout:hover {
+      background: rgba(245, 158, 11, 0.22);
+      border-color: #fbbf24;
+      color: #fbbf24;
+    }
+
+    /* Schermata Ordine Confermato */
+    .order-success-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 13, 16, 0.96);
+      z-index: 2000;
+      padding: 32px;
+      overflow-y: auto;
+    }
+    .success-card {
+      max-width: 580px;
+      margin: 40px auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      text-align: center;
+    }
+
+    /* Modal Informativo Trasparenza Dual-Color */
+    .custom-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 13, 16, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInModal 0.2s ease-out;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .custom-modal-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px var(--primary-glow);
+      border-radius: var(--radius-lg);
+      max-width: 480px;
+      width: 100%;
+      padding: 28px 24px;
+      text-align: center;
+      animation: popInModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popInModal {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .custom-modal-box .modal-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+    .custom-modal-box .modal-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.2px;
+    }
+    .custom-modal-box .modal-text {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .custom-modal-box .modal-text strong {
+      color: #f1f5f9;
+    }
+    .custom-modal-box .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .custom-modal-box .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #0284c7);
+      color: #0c0d10;
+      border: none;
+      padding: 13px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .custom-modal-box .btn-primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .custom-modal-box .btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      padding: 11px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .custom-modal-box .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-color: #475569;
+    }
+
+    /* ==============================================================================
+       OTTIMIZZAZIONE RESPONSIVE MOBILE SOTTO I 900px
+       ============================================================================== */
+    @media (max-width: 900px) {
+      /* Layout principale: da affiancato (grid 2 colonne) a verticale */
+      .main-layout, .studio-container, .app-layout, .main-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        overflow-x: hidden;
+      }
+
+      /* Canvas 3D: visibile in alto con altezza calibrata touch (es. 42vh o 320px) */
+      .viewport-container, #canvasContainer, .viewer-pane, .viewer-panel {
+        order: -1;
+        width: 100% !important;
+        height: 40vh !important;
+        min-height: 280px !important;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #0f172a;
+        border-bottom: 1px solid #1e293b;
+      }
+
+      /* Pannello di configurazione scorrevole sotto l'anteprima 3D */
+      .sidebar-controls, .controls-pane, .config-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 16px 12px 100px 12px !important; /* padding bottom extra per pulsante fisso */
+        overflow-y: visible !important;
+        height: auto !important;
+      }
+
+      /* Header e Barra promo: compatti su schermi piccoli */
+      .top-banner, .promo-top-bar {
+        font-size: 11px !important;
+        padding: calc(6px + env(safe-area-inset-top, 0px)) 8px 6px 8px !important;
+        text-align: center;
+      }
+      header {
+        padding: 10px 12px !important;
+      }
+      .brand-title {
+        font-size: 16px !important;
+      }
+      .brand-subtitle {
+        display: none !important; /* Nascondi sottotitolo lungo per non affollare la barra mobile */
+      }
+      .header-actions {
+        gap: 6px !important;
+      }
+      .btn-nav-link {
+        font-size: 11px !important;
+        padding: 5px 8px !important;
+      }
+      .btn-cart {
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+      }
+
+      /* Griglie di opzioni (Font, Simboli, Colori): touch-friendly */
+      .tab-grid-2 {
+        gap: 6px !important;
+      }
+      .tab-grid-2 .btn-choice, .btn-product-type {
+        min-height: 48px !important;
+        padding: 6px 4px !important;
+      }
+      .btn-prod-title {
+        font-size: 12px !important;
+      }
+      .btn-prod-price {
+        font-size: 11px !important;
+      }
+
+      .font-selector-grid, .symbols-grid, .font-scroll-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      /* Swatch palette colori: dimensione adatta al tocco delle dita (minimo 36x36px) */
+      .color-palette-grid, .color-swatches-grid {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+      }
+      .color-swatch, .swatch-item {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+      }
+
+      /* Barra d'azione inferiore fissa su mobile con prezzo e "Aggiungi al Carrello" */
+      .mobile-bottom-bar, .cta-box {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #0f172a;
+        border-top: 1px solid #334155;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        border-radius: 0;
+        margin-top: 0;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 100;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+      }
+      .mobile-bottom-bar .price-tag, .cta-box .price-tag {
+        font-size: 22px;
+      }
+      .mobile-bottom-bar .btn-add, .cta-box .btn-add {
+        padding: 10px 18px;
+        font-size: 14px;
+      }
+
+      /* Drawer Carrello a schermo intero su mobile */
+      .cart-drawer {
+        width: 100% !important;
+        max-width: 100% !important;
+        right: -100%;
+        height: 100% !important;
+        height: 100dvh !important;
+      }
+      .drawer-header {
+        padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
+        padding-bottom: 14px !important;
+      }
+      .drawer-body {
+        padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .cart-drawer-overlay.open .cart-drawer {
+        right: 0 !important;
+      }
+    }
+
+    /* Smart PWA Install Banner */
+    .pwa-install-banner {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(37, 99, 235, 0.3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #f8fafc;
+      animation: pwaSlideUp 0.35s ease-out;
+    }
+    @keyframes pwaSlideUp {
+      from { transform: translate(-50%, 100%); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    .pwa-icon-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 11px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 242, 254, 0.25), 0 2px 6px rgba(0, 0, 0, 0.6);
+    }
+    .pwa-banner-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .pwa-banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.2;
+    }
+    .pwa-banner-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+    .pwa-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-pwa-install {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-pwa-install:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    .btn-pwa-close {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-pwa-close:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Banner Promozionale -->
+  <div class="promo-top-bar">
+    <span class="top-banner-text">
+      🚚 Spedizione Fissa Corriere Espresso (BRT / SDA): <strong id="bannerShippingPrice">5,00 €</strong> per l'intero ordine
+      <span id="bannerPromoSeparator"> • </span>
+      <span id="bannerPromoText">🎉 <strong>PROMO 3x2:</strong> Ogni 3 pezzi personalizzati, il 3° è <strong>100% IN OMAGGIO!</strong></span>
+    </span>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-group">
+      <div class="brand-logo">GP</div>
+      <div>
+        <div class="brand-title">GadgetPoint.it</div>
+        <div class="brand-subtitle">Portachiavi & Targhette Personalizzate 3D Multicolore</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn-cart" id="btnHeaderCart">
+        🛒 Carrello <span class="cart-badge" id="cartHeaderBadge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout Principale -->
+  <main class="main-grid">
+
+    <!-- Colonna 1: Configuratore Cliente -->
+    <section class="config-panel">
+
+      <!-- Selezione Modello -->
+      <div class="config-group" style="margin-bottom: 16px;">
+        <div class="tab-grid-2">
+          <button type="button" class="btn-choice btn-product-type active" data-product="keychain" data-type="keychain" id="tabKeychain">
+            <span class="btn-prod-title">🏷️ Portachiavi</span>
+            <span class="btn-prod-price">(da <span id="labelPriceKeychain">2,90 €</span>)</span>
+          </button>
+          <button type="button" class="btn-choice btn-product-type" data-product="desk_sign" data-type="desksign" id="tabDeskSign">
+            <span class="btn-prod-title">🏛️ Targhetta da Tavolo</span>
+            <span class="btn-prod-price">(<span id="labelPriceDesksign">6,90 €</span>)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. Testo Personalizzato -->
+      <div class="config-group">
+        <div class="section-title">1. Testo Personalizzato</div>
+        <input type="text" id="textLine1" class="text-input-field" maxlength="18" placeholder="TUO NOME" value="TUO NOME">
+        
+        <label class="checkbox-row checkbox-label" id="wrapLine2Toggle" for="line2Toggle">
+          <input type="checkbox" id="line2Toggle">
+          <span>Aggiungi una seconda riga (+<span id="labelPriceExtraLine">2,00 €</span>)</span>
+        </label>
+        
+        <div id="wrapLine2Input" style="margin-top: 8px; display: none;">
+          <input type="text" id="textLine2" class="text-input-field" maxlength="22" placeholder="Es. Junior Engineer" disabled>
+        </div>
+      </div>
+
+      <!-- 2. Stile Carattere (Font Tipografico) -->
+      <div class="config-group">
+        <div class="section-title">2. Stile Carattere (Font Tipografico)</div>
+        <div class="font-scroll-container" id="fontGrid">
+          <!-- Popolato dinamicamente con tutti i font incorporati -->
+        </div>
+      </div>
+
+      <!-- 3. Simbolo / Icona 3D (Catalogo Vettoriale) -->
+      <div class="config-group" id="groupIcon">
+        <div class="section-title">3. Simbolo / Icona 3D (Catalogo Vettoriale)</div>
+        
+        <select class="icon-category-select" id="iconCategorySelect">
+          <option value="all">📂 Tutte le Categorie (50+ Simboli)</option>
+          <option value="forme">Forme Classiche (Cuore, Stella, Corona...)</option>
+          <option value="animali">Animali (Zampa, Cane, Gatto...)</option>
+          <option value="gaming">Gaming & Geek (Gamepad, Trofeo...)</option>
+          <option value="musica">Musica & Arte (Nota, Chitarra, Cuffie...)</option>
+          <option value="sport">Sport & Hobby (Calcio, Bici, Montagna...)</option>
+          <option value="veicoli">Veicoli & Motori (Auto, Moto, Aereo...)</option>
+          <option value="simboli">Simboli & Natura (Fuoco, Ancora, Albero...)</option>
+        </select>
+
+        <div class="icon-grid-container" id="iconGrid">
+          <!-- Caricato dinamicamente con tracciati SVG razor-sharp -->
+        </div>
+      </div>
+
+      <!-- 4. POSIZIONE DEL SIMBOLO -->
+      <div class="config-section" id="section-icon-position">
+        <label class="section-title">4. POSIZIONE DEL SIMBOLO</label>
+        <div class="toggle-group-row">
+          <button type="button" class="btn-toggle" data-icon-pos="left" id="btn-icon-left">
+            <span>⬅️ Sinistra</span>
+          </button>
+          <button type="button" class="btn-toggle active" data-icon-pos="right" id="btn-icon-right">
+            <span>➡️ Destra</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Forma della Base ([ 🔲 Rettangolare ] vs [ 🏷️ Sagomata sul Testo ]) -->
+      <div class="config-group">
+        <div class="section-title">5. Forma della Base</div>
+        <div class="tab-grid-2">
+          <button type="button" class="btn-choice" data-style="rectangle" id="btnBaseRect">
+            🔲 Rettangolare
+          </button>
+          <button type="button" class="btn-choice active" data-style="contour" id="btnBaseContour">
+            🏷️ Sagomata sul Testo
+          </button>
+        </div>
+      </div>
+
+      <!-- 6. Posizione dell'Anello ([ ⬅️ Sinistra ] | [ ⬆️ In Alto ] | [ ➡️ Destra ]) -->
+      <div class="config-group" id="groupHolePosition">
+        <div class="section-title">6. Posizione dell'Anello</div>
+        <div class="tab-grid-3">
+          <button type="button" class="btn-choice active" data-hole="left" id="btnHoleLeft">
+            ⬅️ Sinistra
+          </button>
+          <button type="button" class="btn-choice" data-hole="top" id="btnHoleTop">
+            ⬆️ In Alto
+          </button>
+          <button type="button" class="btn-choice" data-hole="right" id="btnHoleRight">
+            ➡️ Destra
+          </button>
+        </div>
+      </div>
+
+      <!-- 7. Colore della Base (Scelta dai filamenti disponibili) -->
+      <div class="config-group">
+        <div class="section-title">7. Colore della Base</div>
+        <div class="color-swatches-grid" id="baseSwatches"></div>
+        <div class="color-label-preview" id="baseColorLabel">Caricamento colori disponibili...</div>
+      </div>
+
+      <!-- 8. Colore del Testo (Scelta dai filamenti disponibili) -->
+      <div class="config-group">
+        <div class="section-title">8. Colore del Testo</div>
+        <div class="color-swatches-grid" id="textSwatches"></div>
+        <div class="color-label-preview" id="textColorLabel">Caricamento colori disponibili...</div>
+      </div>
+
+      <!-- 9. Colore del Simbolo / Icona (Uguale al testo oppure Personalizzato a 3 colori) -->
+      <div class="config-group" id="groupIconColor" style="display: none;">
+        <div class="section-title">9. Colore del Simbolo / Icona</div>
+        <div class="tab-grid-2" style="margin-bottom: 8px;">
+          <button type="button" class="btn-choice active" id="btnIconColorSame">
+            🎨 Uguale al Testo (2 Colori)
+          </button>
+          <button type="button" class="btn-choice" id="btnIconColorCustom">
+            🌈 Personalizzato (3 Colori)
+          </button>
+        </div>
+        <div id="wrapIconSwatches" style="display: none;">
+          <div class="color-swatches-grid" id="iconSwatches"></div>
+          <div class="color-label-preview" id="iconColorLabel">Caricamento colori...</div>
+        </div>
+      </div>
+
+      <!-- Barra Prezzo e Aggiungi -->
+      <div class="cta-box mobile-bottom-bar">
+        <div>
+          <div class="price-type" id="priceTypeDesc">Portachiavi Personalizzato</div>
+          <div class="price-tag" id="livePriceTag">4,90 €</div>
+        </div>
+        <button type="button" class="btn-add" id="btnAddToCart">
+          🛒 Aggiungi al Carrello
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Colonna 2: 3D Live Viewer Three.js -->
+    <section class="viewer-panel">
+      <div class="viewer-overlay-tools">
+        <button type="button" class="tool-btn" id="btnResetView" title="Reimposta vista isometrica">🔄 Vista 3D</button>
+        <button type="button" class="tool-btn" id="btnTopView" title="Vista ortogonale dall'alto">📐 Vista Piatta</button>
+      </div>
+
+      <div id="webglContainer"></div>
+
+      <div class="viewer-bottom-badge" id="viewerBadgeDimensions">
+        Dimensioni: -- × -- cm • Spessore: -- mm
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Drawer Carrello & Checkout -->
+  <div class="cart-drawer-overlay" id="cartOverlay">
+    <div class="cart-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">🛒 Il Tuo Carrello (<span id="cartCountTitle">0</span>)</div>
+        <button type="button" class="btn-close-drawer" id="btnCloseCart">&times;</button>
+      </div>
+
+      <div class="drawer-body">
+        
+        <!-- Lista Articoli -->
+        <div id="cartItemsContainer"></div>
+
+        <!-- Box Codice Coupon Sconto -->
+        <div class="coupon-box" id="couponBox" style="margin: 14px 0; background: var(--bg-card); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: 12px;">
+          <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;">
+            <span>🎟️ Hai un Codice Coupon?</span>
+            <span id="couponActiveBadge" style="display: none; font-size: 11px; background: rgba(34, 197, 94, 0.15); color: var(--success); padding: 2px 6px; border-radius: 4px; font-weight: 800;">ATTIVO</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputCouponCode" placeholder="Inserisci codice sconto" style="flex: 1; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; text-transform: uppercase; font-family: monospace; font-size: 14px; letter-spacing: 0.5px;">
+            <button type="button" id="btnApplyCoupon" class="btn-choice" style="padding: 9px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; border-color: var(--primary);">Applica</button>
+          </div>
+          <div id="couponFeedback" style="font-size: 12px; margin-top: 6px; display: none;"></div>
+        </div>
+
+        <!-- Box Calcoli & Promo 3x2 / Coupon -->
+        <div class="summary-card" id="cartSummaryCard" style="display: none;">
+          <div class="summary-row">
+            <span>Subtotale articoli:</span>
+            <span id="sumSubtotal">0,00 €</span>
+          </div>
+
+          <div class="summary-row promo" id="sumPromoRow" style="display: none;">
+            <span id="sumPromoLabel">🎉 Promo 3x2:</span>
+            <span id="sumPromoVal">-0,00 €</span>
+          </div>
+
+          <div class="summary-row promo" id="sumCouponRow" style="display: none; color: var(--primary);">
+            <span>
+              🎟️ Sconto Coupon (<span id="sumCouponCode"></span>)
+              <button type="button" id="btnRemoveCoupon" style="background: none; border: none; color: var(--danger); font-size: 11px; cursor: pointer; text-decoration: underline; margin-left: 4px;" title="Rimuovi coupon">Rimuovi</button>:
+            </span>
+            <span id="sumCouponVal">-0,00 €</span>
+          </div>
+
+          <div class="summary-row">
+            <span id="sumShippingLabel">Corriere espresso (BRT / SDA):</span>
+            <span id="sumShipping">4,90 €</span>
+          </div>
+
+          <div class="summary-row total">
+            <span>Totale Ordine:</span>
+            <span id="sumTotal" style="color: var(--success);">4,90 €</span>
+          </div>
+        </div>
+
+        <!-- Form Dati Spedizione & Modalità di Consegna -->
+        <form id="checkoutForm" class="checkout-form" style="display: none;" onsubmit="return false;">
+          <!-- Selezione Consegna -->
+          <div class="section-title" style="margin-top: 14px;">1. Modalità di Ricezione</div>
+          <div class="delivery-options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+            <label class="delivery-card active" id="cardDeliveryShipping" style="cursor: pointer; border: 1.5px solid var(--primary); background: rgba(56, 189, 248, 0.08); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;">
+              <input type="radio" name="deliveryMethod" id="radioDeliveryShipping" value="shipping" checked style="margin-top: 3px;">
+              <div>
+                <div style="font-weight: 700; font-size: 13px; color: #fff;">🚚 Spedizione BRT/SDA</div>
+                <div style="font-size: 11px; color: var(--text-muted);" id="labelShippingCost">Consegna tracciata (<span id="labelShippingVal">4,90 €</span>)</div>
+              </div>
+            </label>
+            <label class="delivery-card" id="cardDeliveryPickup" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;">
+              <input type="radio" name="deliveryMethod" id="radioDeliveryPickup" value="pickup" style="margin-top: 3px;">
+              <div>
+                <div style="font-weight: 700; font-size: 13px; color: #fff;">🤝 Ritiro a Mano</div>
+                <div style="font-size: 11px; color: var(--success); font-weight: 700;">Gratuito (0,00 €)</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="section-title" id="secTitleDatiCliente">2. Dati Cliente</div>
+
+          <div class="form-group">
+            <label class="form-label">Nome e Cognome *</label>
+            <input type="text" id="custName" class="form-input" required placeholder="Mario Rossi">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email (per conferma) *</label>
+              <input type="email" id="custEmail" class="form-input" required placeholder="mario.rossi@email.it">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cellulare (per avviso) *</label>
+              <input type="tel" id="custPhone" class="form-input" required placeholder="340 1234567">
+            </div>
+          </div>
+
+          <!-- Campi Indirizzo solo per Consegna con Corriere -->
+          <div id="shippingAddressFields">
+            <div class="form-group">
+              <label class="form-label">Indirizzo Completo (Via e Numero Civico) *</label>
+              <input type="text" id="custAddress" class="form-input" required placeholder="Via Roma 12">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">CAP *</label>
+                <input type="text" id="custZip" class="form-input" required maxlength="5" placeholder="00100">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Città *</label>
+                <input type="text" id="custCity" class="form-input" required placeholder="Roma">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Provincia (Sigla) *</label>
+                <input type="text" id="custProvince" class="form-input" required maxlength="2" placeholder="RM" style="text-transform: uppercase;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Note Spedizione (opzionali)</label>
+                <input type="text" id="custNotes" class="form-input" placeholder="Es. Citofono Rossi, Scala B">
+              </div>
+            </div>
+          </div>
+
+          <!-- Box Informativo per Ritiro in Sede -->
+          <div id="pickupNoticeBox" style="display: none; background: rgba(56, 189, 248, 0.08); border: 1px solid var(--primary); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.4;">
+            <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">📍 Ritiro a mano di persona (0,00 €)</div>
+            I tuoi pezzi personalizzati verranno realizzati nel nostro laboratorio di stampa 3D. Ti avviseremo via email e cellulare non appena l'ordine sarà pronto per il ritiro!
+          </div>
+
+          <!-- Scelta Pagamento per Ritiro a Mano (Contanti vs PayPal) -->
+          <div id="pickupPaymentSelector" style="display: none; margin-bottom: 16px;">
+            <div class="section-title">3. Metodo di Pagamento</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <label class="delivery-card active" id="cardPayCash" style="cursor: pointer; border: 1.5px solid var(--success); background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 8px;">
+                <input type="radio" name="paymentChoice" id="radioPayCash" value="cash" checked>
+                <div>
+                  <div style="font-weight: 700; font-size: 13px; color: #fff;">💵 Contanti</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">Al momento del ritiro</div>
+                </div>
+              </label>
+              <label class="delivery-card" id="cardPayPaypal" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 8px;">
+                <input type="radio" name="paymentChoice" id="radioPayPaypal" value="paypal">
+                <div>
+                  <div style="font-weight: 700; font-size: 13px; color: #fff;">💳 PayPal / Carta</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">Pagamento online</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Pulsante Ordine Contanti al Ritiro -->
+          <button type="button" id="btnConfirmCashOrder" class="btn-add" style="display: none; width: 100%; padding: 14px; font-size: 15px; font-weight: 800; background: #22c55e; color: #000; border-radius: 8px; margin-top: 10px; cursor: pointer;">
+            🤝 Conferma Ordine (Paga al Ritiro)
+          </button>
+
+          <!-- Pulsanti Ufficiali PayPal Smart Buttons -->
+          <div id="paypal-button-container"></div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Schermata Ordine Confermato -->
+  <div class="order-success-screen" id="orderSuccessScreen">
+    <div class="success-card">
+      <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+      <h2 style="font-size: 24px; margin-bottom: 8px;" id="succHeaderTitle">Grazie per il tuo acquisto!</h2>
+      <p style="color: var(--text-muted); font-size: 14px;" id="succSubtext">Il tuo ordine è stato registrato ed è pronto per la produzione con GadgetPoint.it.</p>
+      
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin: 20px 0; text-align: left;">
+        <div>Codice Ordine: <strong id="succOrderNum" style="color: var(--primary);">#GP-202610-0001</strong></div>
+        <div style="margin-top: 8px;" id="succBadgeTest"></div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn-add" onclick="window.location.reload()">
+          Crea un altro modello
+        </button>
+        <a href="/admin" id="btnAdminSuccessLink" class="btn-choice" style="display: none; text-decoration:none; padding: 12px 20px;">
+          Apri Gestionale Admin 🔐
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Informativo Dual-Color -->
+  <div id="dualColorNoticeModal" class="custom-modal-backdrop" style="display: none;">
+    <div class="custom-modal-box">
+      <div class="modal-icon">✨</div>
+      <h3 class="modal-title">Nota sulla finitura Silk Dual-Color</h3>
+      <p class="modal-text">
+        Hai selezionato un filamento <strong>bicolore co-estruso</strong>. 
+        La sfumatura e la transizione cromatica sul pezzo reale variano in base all'orientamento dei layer sul piatto di stampa e all'angolatura della luce, rendendo ogni pezzo unico e leggermente diverso dall'anteprima 3D.
+      </p>
+      <div class="modal-actions">
+        <button type="button" id="btnConfirmDualColor" class="btn-primary">Ho capito, aggiungi al carrello</button>
+        <button type="button" id="btnCancelDualColor" class="btn-secondary">Torna alla modifica</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Logica Storefront Reattiva -->
+  <script type="module">
+    import { determineItemPrice, calculateCartSummary, updatePricingSettings, CATALOG_PRICING, PROMO_3X2_ENABLED } from '/ecommerce/cart_engine.js';
+
+    // Helper formattazione valuta italiana standard (virgola e 2 decimali)
+    function formatEur(val) {
+      const num = typeof val === 'number' ? val : (parseFloat(val) || 0);
+      return `${num.toFixed(2).replace('.', ',')} €`;
+    }
+
+    // 1. STATO CONFIGURATORE
+    let availableFilaments = [];
+    let iconsCatalog = [];
+    let fontsCatalog = [];
+    let cart = [];
+    let viewer = null;
+    let paypalClientId = 'sb';
+    let lastCheckoutError = null;
+    let appliedCoupon = null;
+    let selectedDeliveryMethod = 'shipping'; // 'shipping' | 'pickup'
+    let selectedPaymentChoice = 'cash'; // 'cash' | 'paypal' (per ritiro)
+
+    const currentConfig = {
+      productType: 'keychain',
+      textLine1: 'TUO NOME',
+      line2Enabled: false,
+      textLine2: '',
+      baseStyle: 'contour',   // 'rectangle' | 'contour'
+      holePosition: 'left',   // 'left' | 'top' | 'right'
+      fontId: 'Permanent Marker',
+      iconId: 'none',
+      iconPosition: 'right', // 'right' | 'left'
+      hasCustomIconColor: false,
+      baseFilamentId: 'fil-01',
+      baseSku: '34062',
+      baseColorHex: '#080A0D',
+      baseSecondaryHex: null,
+      baseColorName: 'SnapSpeed PLA Black',
+      baseGroupName: 'SnapSpeed PLA',
+      textFilamentId: 'fil-02',
+      textSku: '34073',
+      textColorHex: '#D9DFE5',
+      textSecondaryHex: null,
+      textColorName: 'SnapSpeed PLA Cool White',
+      textGroupName: 'SnapSpeed PLA',
+      iconFilamentId: 'fil-04',
+      iconSku: '34065',
+      iconColorHex: '#E72F1D',
+      iconSecondaryHex: null,
+      iconColorName: 'SnapSpeed PLA Red',
+      iconGroupName: 'SnapSpeed PLA',
+      symbolColor: '#E72F1D'
+    };
+
+    // Helper per palette Three.js con supporto Dual-Color shader
+    function getViewerPalette() {
+      const baseDef = {
+        id: currentConfig.baseFilamentId,
+        sku: currentConfig.baseSku,
+        name: currentConfig.baseColorName,
+        color: currentConfig.baseColorHex,
+        secondaryColor: currentConfig.baseSecondaryHex,
+        isDual: Boolean(currentConfig.baseSecondaryHex || (currentConfig.baseGroupName && currentConfig.baseGroupName.toLowerCase().includes('silk')))
+      };
+
+      const textDef = {
+        id: currentConfig.textFilamentId,
+        sku: currentConfig.textSku,
+        name: currentConfig.textColorName,
+        color: currentConfig.textColorHex,
+        secondaryColor: currentConfig.textSecondaryHex,
+        isDual: Boolean(currentConfig.textSecondaryHex || (currentConfig.textGroupName && currentConfig.textGroupName.toLowerCase().includes('silk')))
+      };
+
+      const iconDef = currentConfig.hasCustomIconColor ? {
+        id: currentConfig.iconFilamentId,
+        sku: currentConfig.iconSku,
+        name: currentConfig.iconColorName,
+        color: currentConfig.iconColorHex,
+        secondaryColor: currentConfig.iconSecondaryHex,
+        isDual: Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')))
+      } : textDef;
+
+      return [baseDef, textDef, iconDef, '#F8F81C'];
+    }
+
+    // 2. INIZIALIZZAZIONE 3D THREE.JS
+    function initViewer() {
+      viewer = new ModelViewer('webglContainer');
+      document.getElementById('btnResetView')?.addEventListener('click', () => {
+        if (viewer) {
+          if (currentConfig.productType === 'desk_sign') {
+            viewer.setDeskSignView();
+          } else {
+            viewer.resetView();
+          }
+        }
+      });
+      document.getElementById('btnTopView')?.addEventListener('click', () => viewer.topView());
+    }
+
+    // 3. RECUPERO RISORSE VIA API
+    async function loadResources() {
+      // A) Filamenti disponibili
+      try {
+        const resp = await fetch('/api/store/filaments');
+        if (resp.ok) {
+          const list = await resp.json();
+          availableFilaments = list.filter(f => f.is_available === true);
+        }
+      } catch (e) {
+        console.error("Errore filamenti:", e);
+      }
+
+      if (availableFilaments.length === 0) {
+        availableFilaments = [
+          { id: 'fil-01', sku: '34062', name: 'SnapSpeed PLA Black', group_name: 'SnapSpeed PLA', hex_color: '#080A0D', secondary_hex_color: null, is_available: true },
+          { id: 'fil-02', sku: '34073', name: 'SnapSpeed PLA Cool White', group_name: 'SnapSpeed PLA', hex_color: '#D9DFE5', secondary_hex_color: null, is_available: true },
+          { id: 'fil-04', sku: '34065', name: 'SnapSpeed PLA Red', group_name: 'SnapSpeed PLA', hex_color: '#E72F1D', secondary_hex_color: null, is_available: true },
+          { id: 'fil-05', sku: '34064', name: 'SnapSpeed PLA Blue', group_name: 'SnapSpeed PLA', hex_color: '#003776', secondary_hex_color: null, is_available: true },
+          { id: 'fil-06', sku: '34112', name: 'SnapSpeed PLA Bright Yellow', group_name: 'SnapSpeed PLA', hex_color: '#F8F81C', secondary_hex_color: null, is_available: true }
+        ];
+      }
+
+      // Sincronizza stato iniziale coi filamenti reali caricati da API
+      const findFil = (sku, id, hexFallback) => {
+        return availableFilaments.find(f => (sku && f.sku === sku) || (id && f.id === id)) ||
+               availableFilaments.find(f => f.hex_color && f.hex_color.toLowerCase() === (hexFallback || '').toLowerCase()) ||
+               availableFilaments[0];
+      };
+
+      const baseFil = findFil(currentConfig.baseSku, currentConfig.baseFilamentId, currentConfig.baseColorHex);
+      if (baseFil) {
+        currentConfig.baseFilamentId = baseFil.id;
+        currentConfig.baseSku = baseFil.sku;
+        currentConfig.baseColorHex = baseFil.hex_color;
+        currentConfig.baseSecondaryHex = baseFil.secondary_hex_color || null;
+        currentConfig.baseColorName = baseFil.name;
+        currentConfig.baseGroupName = baseFil.group_name;
+      }
+
+      const textFil = findFil(currentConfig.textSku, currentConfig.textFilamentId, currentConfig.textColorHex) || availableFilaments[1] || availableFilaments[0];
+      if (textFil) {
+        currentConfig.textFilamentId = textFil.id;
+        currentConfig.textSku = textFil.sku;
+        currentConfig.textColorHex = textFil.hex_color;
+        currentConfig.textSecondaryHex = textFil.secondary_hex_color || null;
+        currentConfig.textColorName = textFil.name;
+        currentConfig.textGroupName = textFil.group_name;
+      }
+
+      const iconFil = findFil(currentConfig.iconSku, currentConfig.iconFilamentId, currentConfig.iconColorHex) || availableFilaments[2] || availableFilaments[0];
+      if (iconFil) {
+        currentConfig.iconFilamentId = iconFil.id;
+        currentConfig.iconSku = iconFil.sku;
+        currentConfig.iconColorHex = iconFil.hex_color;
+        currentConfig.iconSecondaryHex = iconFil.secondary_hex_color || null;
+        currentConfig.iconColorName = iconFil.name;
+        currentConfig.iconGroupName = iconFil.group_name;
+      }
+
+      // B) Font Incorporati dallo Studio
+      try {
+        const respF = await fetch('/api/fonts');
+        if (respF.ok) {
+          fontsCatalog = await respF.json();
+        }
+      } catch (e) {
+        console.warn("Fallback font locali:", e);
+      }
+      if (!fontsCatalog || fontsCatalog.length === 0) {
+        fontsCatalog = [
+          { id: 'Montserrat', name: 'Montserrat Black', family: "'Montserrat', sans-serif" },
+          { id: 'Bebas Neue', name: 'Bebas Neue', family: "'Bebas Neue', sans-serif" },
+          { id: 'Pacifico', name: 'Pacifico Script', family: "'Pacifico', cursive" },
+          { id: 'Lobster', name: 'Lobster Vintage', family: "'Lobster', cursive" },
+          { id: 'Bangers', name: 'Bangers Comic', family: "'Bangers', cursive" },
+          { id: 'Bungee', name: 'Bungee 3D', family: "'Bungee', cursive" },
+          { id: 'Orbitron', name: 'Orbitron Tech', family: "'Orbitron', sans-serif" },
+          { id: 'Poppins', name: 'Poppins Clean', family: "'Poppins', sans-serif" },
+          { id: 'Playfair Display', name: 'Playfair Display Bold', family: "'Playfair Display', serif" },
+          { id: 'Cinzel', name: 'Cinzel Bold', family: "'Cinzel', serif" },
+          { id: 'Dancing Script', name: 'Dancing Script Bold', family: "'Dancing Script', cursive" },
+          { id: 'Caveat', name: 'Caveat Bold', family: "'Caveat', cursive" },
+          { id: 'Great Vibes', name: 'Great Vibes', family: "'Great Vibes', cursive" },
+          { id: 'Impact', name: 'Impact Massiccio', family: "Impact, sans-serif" }
+        ];
+      }
+
+      // C) Catalogo Icone 50+ SVG
+      try {
+        const respI = await fetch('/api/icons');
+        if (respI.ok) {
+          iconsCatalog = await respI.json();
+        }
+      } catch (e) {
+        console.warn("Fallback icone locali:", e);
+      }
+      if (!iconsCatalog || iconsCatalog.length === 0) {
+        iconsCatalog = [
+          { id: 'none', name: 'Nessuna', category: 'forme', d: '', viewBox: '0 0 512 512' },
+          { id: 'cuore', name: 'Cuore', category: 'forme', d: 'M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z', viewBox: '0 0 512 512' },
+          { id: 'stella', name: 'Stella', category: 'forme', d: 'M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z', viewBox: '0 0 576 512' }
+        ];
+      }
+
+      // D) Listino Prezzi & Promozioni Dinamiche
+      try {
+        const respP = await fetch('/api/store/pricing');
+        if (respP.ok) {
+          const pricingData = await respP.json();
+          updatePricingSettings(pricingData);
+          if (pricingData.paypal_client_id) {
+            paypalClientId = pricingData.paypal_client_id;
+          }
+
+          // Sincronizza dinamicamente spedizione nel banner superiore e nel carrello
+          const bannerShip = document.getElementById('bannerShippingPrice');
+          if (bannerShip && pricingData.shipping_fixed !== undefined) {
+            bannerShip.textContent = formatEur(pricingData.shipping_fixed);
+          }
+          const lblShipVal = document.getElementById('labelShippingVal');
+          if (lblShipVal && pricingData.shipping_fixed !== undefined) {
+            lblShipVal.textContent = formatEur(pricingData.shipping_fixed);
+          }
+
+          // Sincronizza stato promo 3x2 nel banner superiore
+          const promoSep = document.getElementById('bannerPromoSeparator');
+          const promoTxt = document.getElementById('bannerPromoText');
+          if (promoTxt && promoSep) {
+            const isPromoActive = Boolean(pricingData.promo_3x2_enabled);
+            promoSep.style.display = isPromoActive ? 'inline' : 'none';
+            promoTxt.style.display = isPromoActive ? 'inline' : 'none';
+          }
+
+          // Sincronizza etichette di prezzo sui pulsanti del prodotto e riga 2
+          const lblKeychain = document.getElementById('labelPriceKeychain');
+          if (lblKeychain && pricingData.keychain_standard !== undefined) {
+            lblKeychain.textContent = formatEur(pricingData.keychain_standard);
+          }
+          const lblDeskSign = document.getElementById('labelPriceDesksign');
+          if (lblDeskSign && pricingData.desk_sign !== undefined) {
+            lblDeskSign.textContent = formatEur(pricingData.desk_sign);
+          }
+          const lblExtra = document.getElementById('labelPriceExtraLine');
+          if (lblExtra) {
+            const extraVal = pricingData.extra_line2 !== undefined 
+              ? pricingData.extra_line2 
+              : ((pricingData.keychain_complex && pricingData.keychain_standard) 
+                  ? (pricingData.keychain_complex - pricingData.keychain_standard) 
+                  : 2.00);
+            lblExtra.textContent = formatEur(extraVal);
+          }
+
+          updateLivePrice();
+        }
+      } catch (e) {
+        console.warn("Caricamento listino dinamico:", e);
+      }
+
+      renderSwatches();
+      renderFontGrid();
+      renderIconsGrid();
+      updateLivePrice();
+    }
+
+    // 4. RENDERING SWATCHES
+    function renderSwatches() {
+      const baseGrid = document.getElementById('baseSwatches');
+      const textGrid = document.getElementById('textSwatches');
+      const iconGrid = document.getElementById('iconSwatches');
+
+      const buildHtml = (type, currentFilId, currentSku, currentHex) => {
+        return availableFilaments.map(fil => {
+          const isSel = (currentFilId && fil.id === currentFilId) ||
+                        (currentSku && fil.sku === currentSku) ||
+                        (!currentFilId && !currentSku && fil.hex_color.toLowerCase() === (currentHex || '').toLowerCase());
+          const bg = fil.secondary_hex_color 
+            ? `background: linear-gradient(135deg, ${fil.hex_color} 50%, ${fil.secondary_hex_color} 50%)`
+            : `background: ${fil.hex_color}`;
+
+          return `
+            <div class="swatch-item ${isSel ? 'active' : ''}" 
+                 data-type="${type}" 
+                 data-id="${fil.id || ''}"
+                 data-sku="${fil.sku || ''}"
+                 data-hex="${fil.hex_color}" 
+                 data-secondary-hex="${fil.secondary_hex_color || ''}"
+                 data-name="${fil.name}" 
+                 data-group="${fil.group_name}" 
+                 style="${bg}" 
+                 title="${fil.name} (${fil.group_name})">
+              ${isSel ? '<span class="swatch-check">✓</span>' : ''}
+            </div>
+          `;
+        }).join('');
+      };
+
+      if (baseGrid) baseGrid.innerHTML = buildHtml('base', currentConfig.baseFilamentId, currentConfig.baseSku, currentConfig.baseColorHex);
+      if (textGrid) textGrid.innerHTML = buildHtml('text', currentConfig.textFilamentId, currentConfig.textSku, currentConfig.textColorHex);
+      if (iconGrid) iconGrid.innerHTML = buildHtml('icon', currentConfig.iconFilamentId, currentConfig.iconSku, currentConfig.iconColorHex);
+
+      document.getElementById('baseColorLabel').textContent = `${currentConfig.baseColorName} (${currentConfig.baseGroupName})`;
+      document.getElementById('textColorLabel').textContent = `${currentConfig.textColorName} (${currentConfig.textGroupName})`;
+      document.getElementById('iconColorLabel').textContent = `${currentConfig.iconColorName} (${currentConfig.iconGroupName})`;
+    }
+
+    // 5. RENDERING FONT GRID
+    function renderFontGrid() {
+      const grid = document.getElementById('fontGrid');
+      if (!grid) return;
+      const userText = currentConfig.textLine1.trim();
+      grid.innerHTML = fontsCatalog.map(f => {
+        const familyStr = f.family || `'${f.id}', sans-serif`;
+        const previewText = userText || f.name;
+        return `
+          <div class="font-card ${currentConfig.fontId === f.id ? 'active' : ''}" data-font="${f.id}">
+            <div class="font-card-name">${f.name}</div>
+            <div class="font-card-preview font-preview-text" data-font-name="${f.name}" style="font-family: ${familyStr};">${previewText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateFontPreviews() {
+      const userText = currentConfig.textLine1.trim();
+      document.querySelectorAll('#fontGrid .font-card-preview').forEach(el => {
+        const fallback = el.dataset.fontName || 'Font';
+        el.textContent = userText || fallback;
+      });
+    }
+
+    // 6. RENDERING ICON GRID
+    function renderIconsGrid() {
+      const grid = document.getElementById('iconGrid');
+      const catSelect = document.getElementById('iconCategorySelect');
+      const catFilter = catSelect ? catSelect.value : 'all';
+
+      const filtered = iconsCatalog.filter(ic => {
+        if (catFilter === 'all') return true;
+        return (ic.category || '').toLowerCase().includes(catFilter);
+      });
+
+      // Assicurati che 'none' sia sempre primo
+      const list = [{ id: 'none', name: 'Nessuna', d: '', viewBox: '0 0 512 512' }, ...filtered.filter(i => i.id !== 'none')];
+
+      grid.innerHTML = list.map(ic => {
+        const isSel = currentConfig.iconId === ic.id;
+        const svgContent = ic.d ? `<svg viewBox="${ic.viewBox || '0 0 512 512'}"><path d="${ic.d}"/></svg>` : `<span style="font-size: 16px;">🚫</span>`;
+        return `
+          <div class="icon-card ${isSel ? 'active' : ''}" data-icon="${ic.id}" title="${ic.name}">
+            ${svgContent}
+            <div class="icon-card-label">${ic.name}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 7. CALCOLO PREZZO DINAMICO
+    function updateLivePrice() {
+      const price = determineItemPrice(currentConfig);
+      document.getElementById('livePriceTag').textContent = `${price.toFixed(2).replace('.', ',')} €`;
+      
+      let desc = 'Portachiavi Standard';
+      if (currentConfig.productType === 'desk_sign') {
+        desc = 'Targhetta da Tavolo Professionale';
+      } else if (price > 4.90) {
+        const reasons = [];
+        if (currentConfig.line2Enabled) reasons.push('2 righe');
+        if (currentConfig.hasCustomIconColor) reasons.push('3 Colori');
+        else if (currentConfig.iconId !== 'none') reasons.push('Simbolo 3D');
+        if (currentConfig.baseGroupName.includes('Silk') || currentConfig.textGroupName.includes('Silk')) reasons.push('Silk Seta');
+        desc = `Portachiavi Complesso (${reasons.join(', ') || 'personalizzato'})`;
+      }
+      document.getElementById('priceTypeDesc').textContent = desc;
+    }
+
+    // 8. RICHIESTA ANTEPRIMA 3D TRAMITE API
+    let previewDebounce = null;
+    function request3DPreview() {
+      clearTimeout(previewDebounce);
+      previewDebounce = setTimeout(async () => {
+        const extruderIcon = currentConfig.hasCustomIconColor ? 2 : 1;
+        const iconColor = currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex;
+
+        const isDeskSign = currentConfig.productType === 'desk_sign';
+        const payload = {
+          generator: currentConfig.productType,
+          text: currentConfig.textLine1,
+          text_line1: currentConfig.textLine1,
+          line2_enabled: currentConfig.line2Enabled,
+          text_line2: currentConfig.textLine2,
+          base_style: currentConfig.baseStyle,
+          base_thickness: isDeskSign ? 3.0 : 3.2,
+          text_thickness: 1.4,
+          hole_position: currentConfig.holePosition,
+          font_family: currentConfig.fontId,
+          font_family_line1: currentConfig.fontId,
+          padding_y: 2.0,
+          icon_name: currentConfig.iconId,
+          icon_id: currentConfig.iconId,
+          icon_position: currentConfig.iconPosition,
+          extruder_icon: extruderIcon,
+          has_custom_icon_color: currentConfig.hasCustomIconColor,
+          base_color: currentConfig.baseColorHex,
+          text_color: currentConfig.textColorHex,
+          icon_color: iconColor,
+          symbolColor: iconColor
+        };
+
+        try {
+          const resp = await fetch('/api/preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            // Palette a 4 estrusori fisici Snapmaker U1 con supporto Dual-Color shader
+            viewer.updateGeometry(data, getViewerPalette(), 0, 1);
+            
+            if (data.dimensions) {
+              const maxW = isDeskSign ? data.dimensions.width : Math.min(data.dimensions.width, 80.0);
+              const wCm = (maxW / 10).toFixed(1).replace('.', ',');
+              const hCm = (data.dimensions.height / 10).toFixed(1).replace('.', ',');
+              const defaultDepth = isDeskSign ? 24.0 : 4.6;
+              const dMm = Number(data.dimensions.depth || defaultDepth).toFixed(1).replace('.', ',');
+              document.getElementById('viewerBadgeDimensions').textContent = 
+                `Dimensioni: ${wCm} × ${hCm} cm • Spessore: ${dMm} mm`;
+            }
+          }
+        } catch (e) {
+          console.warn("Anteprima 3D:", e);
+        }
+      }, 200);
+    }
+
+    // 9. EVENTI CONFIGURATORE
+    function setupEvents() {
+      // Tipo Prodotto
+      document.getElementById('tabKeychain')?.addEventListener('click', () => {
+        document.getElementById('tabKeychain').classList.add('active');
+        document.getElementById('tabDeskSign').classList.remove('active');
+        document.body.classList.remove('product-desk-sign');
+        document.body.classList.add('product-keychain');
+        document.getElementById('groupHolePosition').style.display = 'block';
+        document.getElementById('groupIcon').style.display = 'block';
+        document.getElementById('section-icon-position').style.display = 'block';
+        if (currentConfig.iconId !== 'none') {
+          document.getElementById('groupIconColor').style.display = 'block';
+        } else {
+          document.getElementById('groupIconColor').style.display = 'none';
+        }
+        currentConfig.productType = 'keychain';
+        if (viewer) viewer.resetView();
+        updateLivePrice();
+        request3DPreview();
+      });
+
+      document.getElementById('tabDeskSign')?.addEventListener('click', () => {
+        document.getElementById('tabDeskSign').classList.add('active');
+        document.getElementById('tabKeychain').classList.remove('active');
+        document.body.classList.add('product-desk-sign');
+        document.body.classList.remove('product-keychain');
+        document.getElementById('groupHolePosition').style.display = 'none';
+        document.getElementById('groupIcon').style.display = 'block';
+        document.getElementById('section-icon-position').style.display = 'block';
+        if (currentConfig.iconId !== 'none') {
+          document.getElementById('groupIconColor').style.display = 'block';
+        } else {
+          document.getElementById('groupIconColor').style.display = 'none';
+        }
+        currentConfig.productType = 'desk_sign';
+        currentConfig.baseStyle = 'contour';
+        document.getElementById('btnBaseContour')?.classList.add('active');
+        document.getElementById('btnBaseRect')?.classList.remove('active');
+        if (viewer) viewer.setDeskSignView();
+        updateLivePrice();
+        request3DPreview();
+      });
+
+      // Posizione del Simbolo (Destra / Sinistra)
+      document.getElementById('btn-icon-right')?.addEventListener('click', () => {
+        document.getElementById('btn-icon-right').classList.add('active');
+        document.getElementById('btn-icon-left').classList.remove('active');
+        currentConfig.iconPosition = 'right';
+        request3DPreview();
+      });
+
+      document.getElementById('btn-icon-left')?.addEventListener('click', () => {
+        document.getElementById('btn-icon-left').classList.add('active');
+        document.getElementById('btn-icon-right').classList.remove('active');
+        currentConfig.iconPosition = 'left';
+        request3DPreview();
+      });
+
+      // Forma della Base
+      document.getElementById('btnBaseRect')?.addEventListener('click', () => {
+        document.getElementById('btnBaseRect').classList.add('active');
+        document.getElementById('btnBaseContour').classList.remove('active');
+        currentConfig.baseStyle = 'rectangle';
+        request3DPreview();
+      });
+
+      document.getElementById('btnBaseContour')?.addEventListener('click', () => {
+        document.getElementById('btnBaseContour').classList.add('active');
+        document.getElementById('btnBaseRect').classList.remove('active');
+        currentConfig.baseStyle = 'contour';
+        request3DPreview();
+      });
+
+      // Posizione Foro Anello
+      ['left', 'top', 'right'].forEach(pos => {
+        const btn = document.getElementById('btnHole' + pos.charAt(0).toUpperCase() + pos.slice(1));
+        btn?.addEventListener('click', () => {
+          document.querySelectorAll('#groupHolePosition .btn-choice').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentConfig.holePosition = pos;
+          request3DPreview();
+        });
+      });
+
+      // Testi
+      document.getElementById('textLine1')?.addEventListener('input', (e) => {
+        currentConfig.textLine1 = e.target.value.toUpperCase();
+        updateFontPreviews();
+        request3DPreview();
+      });
+
+      document.getElementById('line2Toggle')?.addEventListener('change', (e) => {
+        currentConfig.line2Enabled = e.target.checked;
+        const input2 = document.getElementById('textLine2');
+        document.getElementById('wrapLine2Input').style.display = e.target.checked ? 'block' : 'none';
+        if (input2) input2.disabled = !e.target.checked;
+        updateLivePrice();
+        request3DPreview();
+      });
+
+      document.getElementById('textLine2')?.addEventListener('input', (e) => {
+        currentConfig.textLine2 = e.target.value;
+        updateLivePrice();
+        request3DPreview();
+      });
+
+      // Selezione Font
+      document.getElementById('fontGrid')?.addEventListener('click', (e) => {
+        const card = e.target.closest('.font-card');
+        if (card) {
+          document.querySelectorAll('.font-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          currentConfig.fontId = card.dataset.font;
+          request3DPreview();
+        }
+      });
+
+      // Filtro Categoria Icone
+      document.getElementById('iconCategorySelect')?.addEventListener('change', () => {
+        renderIconsGrid();
+      });
+
+      // Selezione Icona
+      document.getElementById('iconGrid')?.addEventListener('click', (e) => {
+        const card = e.target.closest('.icon-card');
+        if (card) {
+          document.querySelectorAll('.icon-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          currentConfig.iconId = card.dataset.icon;
+
+          const groupIconColor = document.getElementById('groupIconColor');
+          if (currentConfig.iconId !== 'none') {
+            if (groupIconColor) groupIconColor.style.display = 'block';
+          } else {
+            if (groupIconColor) groupIconColor.style.display = 'none';
+            currentConfig.hasCustomIconColor = false;
+          }
+
+          updateLivePrice();
+          request3DPreview();
+        }
+      });
+
+      // Colore Icona: Uguale al Testo vs Personalizzato
+      document.getElementById('btnIconColorSame')?.addEventListener('click', () => {
+        document.getElementById('btnIconColorSame').classList.add('active');
+        document.getElementById('btnIconColorCustom').classList.remove('active');
+        document.getElementById('wrapIconSwatches').style.display = 'none';
+        currentConfig.hasCustomIconColor = false;
+        updateLivePrice();
+        if (viewer) {
+          viewer.updateColors(getViewerPalette());
+        }
+        request3DPreview();
+      });
+
+      document.getElementById('btnIconColorCustom')?.addEventListener('click', () => {
+        document.getElementById('btnIconColorCustom').classList.add('active');
+        document.getElementById('btnIconColorSame').classList.remove('active');
+        document.getElementById('wrapIconSwatches').style.display = 'block';
+        currentConfig.hasCustomIconColor = true;
+        updateLivePrice();
+        if (viewer) {
+          viewer.updateColors(getViewerPalette());
+        }
+        request3DPreview();
+      });
+
+      // Swatches Click (Base, Testo, Icona)
+      document.addEventListener('click', (e) => {
+        const swatch = e.target.closest('.swatch-item');
+        if (swatch) {
+          const type = swatch.dataset.type;
+          const filId = swatch.dataset.id;
+          const sku = swatch.dataset.sku;
+          const hex = swatch.dataset.hex;
+          const secHex = swatch.dataset.secondaryHex || null;
+          const name = swatch.dataset.name;
+          const group = swatch.dataset.group;
+
+          // Rimuovi tassativamente la selezione da TUTTI gli swatch del rispettivo contenitore
+          const containerId = type === 'base' ? 'baseSwatches' : (type === 'text' ? 'textSwatches' : 'iconSwatches');
+          const container = document.getElementById(containerId);
+          if (container) {
+            container.querySelectorAll('.swatch-item').forEach(el => {
+              el.classList.remove('active', 'selected');
+              const chk = el.querySelector('.swatch-check');
+              if (chk) chk.remove();
+            });
+          }
+
+          // Attiva solo l'elemento cliccato
+          swatch.classList.add('active');
+          if (!swatch.querySelector('.swatch-check')) {
+            const chkSpan = document.createElement('span');
+            chkSpan.className = 'swatch-check';
+            chkSpan.textContent = '✓';
+            swatch.appendChild(chkSpan);
+          }
+
+          if (type === 'base') {
+            currentConfig.baseFilamentId = filId;
+            currentConfig.baseSku = sku;
+            currentConfig.baseColorHex = hex;
+            currentConfig.baseSecondaryHex = secHex;
+            currentConfig.baseColorName = name;
+            currentConfig.baseGroupName = group;
+            document.getElementById('baseColorLabel').textContent = `${name} (${group})`;
+          } else if (type === 'text') {
+            currentConfig.textFilamentId = filId;
+            currentConfig.textSku = sku;
+            currentConfig.textColorHex = hex;
+            currentConfig.textSecondaryHex = secHex;
+            currentConfig.textColorName = name;
+            currentConfig.textGroupName = group;
+            document.getElementById('textColorLabel').textContent = `${name} (${group})`;
+          } else if (type === 'icon') {
+            currentConfig.iconFilamentId = filId;
+            currentConfig.iconSku = sku;
+            currentConfig.iconColorHex = hex;
+            currentConfig.iconSecondaryHex = secHex;
+            currentConfig.iconColorName = name;
+            currentConfig.iconGroupName = group;
+            currentConfig.symbolColor = hex;
+            currentConfig.iconColor = hex;
+            document.getElementById('iconColorLabel').textContent = `${name} (${group})`;
+          }
+
+          updateLivePrice();
+          
+          if (viewer) {
+            viewer.updateColors(getViewerPalette());
+          }
+        }
+      });
+
+      function isDualColorConfigured() {
+        const isDualBase = Boolean(currentConfig.baseSecondaryHex || (currentConfig.baseGroupName && currentConfig.baseGroupName.toLowerCase().includes('silk')));
+        const isDualText = Boolean(currentConfig.textSecondaryHex || (currentConfig.textGroupName && currentConfig.textGroupName.toLowerCase().includes('silk')));
+        const isDualIcon = currentConfig.hasCustomIconColor && Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')));
+        return isDualBase || isDualText || isDualIcon;
+      }
+
+      function openDualColorModal() {
+        const modal = document.getElementById('dualColorNoticeModal');
+        if (modal) modal.style.display = 'flex';
+      }
+
+      function closeDualColorModal() {
+        const modal = document.getElementById('dualColorNoticeModal');
+        if (modal) modal.style.display = 'none';
+      }
+
+      function executeAddToCart() {
+        const price = determineItemPrice(currentConfig);
+        cart.push({
+          cartId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          productType: currentConfig.productType,
+          productTitle: currentConfig.productType === 'desk_sign' ? 'Targhetta da Tavolo' : 'Portachiavi Personalizzato',
+          unitPrice: price,
+          customTextLine1: currentConfig.textLine1,
+          customTextLine2: currentConfig.line2Enabled ? currentConfig.textLine2 : '',
+          baseStyle: currentConfig.baseStyle,
+          holePosition: currentConfig.holePosition,
+          fontId: currentConfig.fontId,
+          iconId: currentConfig.iconId,
+          iconPosition: currentConfig.iconPosition,
+          hasCustomIconColor: currentConfig.hasCustomIconColor,
+          baseColorName: currentConfig.baseColorName,
+          baseColorHex: currentConfig.baseColorHex,
+          baseGroupName: currentConfig.baseGroupName,
+          textColorName: currentConfig.textColorName,
+          textColorHex: currentConfig.textColorHex,
+          textGroupName: currentConfig.textGroupName,
+          iconColorName: currentConfig.hasCustomIconColor ? currentConfig.iconColorName : currentConfig.textColorName,
+          iconColorHex: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
+          symbolColor: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
+          generatorParams: {
+            generator: currentConfig.productType,
+            text: currentConfig.textLine1,
+            text_line1: currentConfig.textLine1,
+            line2_enabled: currentConfig.line2Enabled,
+            text_line2: currentConfig.textLine2,
+            base_style: currentConfig.baseStyle,
+            base_thickness: currentConfig.productType === 'desk_sign' ? 3.0 : 3.2,
+            text_thickness: 1.4,
+            hole_position: currentConfig.holePosition,
+            font_family: currentConfig.fontId,
+            padding_y: 2.0,
+            icon_name: currentConfig.iconId,
+            icon_id: currentConfig.iconId,
+            icon_position: currentConfig.iconPosition,
+            custom_icon_color: currentConfig.hasCustomIconColor,
+            has_custom_icon_color: currentConfig.hasCustomIconColor,
+            extruder_icon: currentConfig.hasCustomIconColor ? 2 : 1,
+            base_color: currentConfig.baseColorHex,
+            text_color: currentConfig.textColorHex,
+            icon_color: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
+            symbolColor: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex
+          }
+        });
+
+        renderCartDrawer();
+        openCart();
+      }
+
+      document.getElementById('btnConfirmDualColor')?.addEventListener('click', () => {
+        closeDualColorModal();
+        executeAddToCart();
+      });
+
+      document.getElementById('btnCancelDualColor')?.addEventListener('click', () => {
+        closeDualColorModal();
+      });
+
+      document.getElementById('dualColorNoticeModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'dualColorNoticeModal') {
+          closeDualColorModal();
+        }
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeDualColorModal();
+          closeCart();
+        }
+      });
+
+      // Aggiungi al Carrello
+      document.getElementById('btnAddToCart')?.addEventListener('click', () => {
+        if (!currentConfig.textLine1.trim()) {
+          alert("Inserisci un nome o testo per personalizzare il pezzo!");
+          return;
+        }
+
+        if (isDualColorConfigured()) {
+          openDualColorModal();
+        } else {
+          executeAddToCart();
+        }
+      });
+
+      // Apri/Chiudi Carrello
+      document.getElementById('btnHeaderCart')?.addEventListener('click', openCart);
+      const btnCloseCartEl = document.getElementById('btnCloseCart');
+      if (btnCloseCartEl) {
+        btnCloseCartEl.addEventListener('click', closeCart);
+        btnCloseCartEl.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          closeCart();
+        });
+      }
+      document.getElementById('cartOverlay')?.addEventListener('click', (e) => {
+        if (e.target.id === 'cartOverlay') closeCart();
+      });
+
+      // Pulizia e validazione numerica stringa CAP (mantenendo zeri iniziali come '00040')
+      document.getElementById('custZip')?.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 5);
+      });
+
+      // Gestione Codice Coupon Sconto
+      const btnApplyCoupon = document.getElementById('btnApplyCoupon');
+      const inputCoupon = document.getElementById('inputCouponCode');
+      const couponFeedback = document.getElementById('couponFeedback');
+      const btnRemoveCoupon = document.getElementById('btnRemoveCoupon');
+
+      btnApplyCoupon?.addEventListener('click', async () => {
+        const code = (inputCoupon?.value || '').trim().toUpperCase();
+        if (!code) {
+          if (couponFeedback) {
+            couponFeedback.style.display = 'block';
+            couponFeedback.style.color = 'var(--danger)';
+            couponFeedback.textContent = "Inserisci un codice coupon prima di cliccare su Applica.";
+          }
+          return;
+        }
+
+        const rawSummary = calculateCartSummary(cart, { deliveryMethod: selectedDeliveryMethod });
+        const netSubtotal = Math.max(0, rawSummary.subtotal - rawSummary.promoDiscount);
+
+        try {
+          btnApplyCoupon.disabled = true;
+          btnApplyCoupon.textContent = "...";
+          const resp = await fetch('/api/store/validate-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, subtotal: netSubtotal })
+          });
+          const data = await resp.json();
+          if (resp.ok && data.valid) {
+            appliedCoupon = data;
+            if (couponFeedback) {
+              couponFeedback.style.display = 'block';
+              couponFeedback.style.color = 'var(--success)';
+              couponFeedback.textContent = `✅ ${data.message} (-${formatEur(data.discount_amount)})`;
+            }
+            renderCartDrawer();
+          } else {
+            appliedCoupon = null;
+            if (couponFeedback) {
+              couponFeedback.style.display = 'block';
+              couponFeedback.style.color = 'var(--danger)';
+              couponFeedback.textContent = `❌ ${data.message || "Codice coupon non valido."}`;
+            }
+            renderCartDrawer();
+          }
+        } catch (err) {
+          if (couponFeedback) {
+            couponFeedback.style.display = 'block';
+            couponFeedback.style.color = 'var(--danger)';
+            couponFeedback.textContent = "Errore di connessione durante la verifica del coupon.";
+          }
+        } finally {
+          btnApplyCoupon.disabled = false;
+          btnApplyCoupon.textContent = "Applica";
+        }
+      });
+
+      inputCoupon?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btnApplyCoupon?.click();
+        }
+      });
+
+      btnRemoveCoupon?.addEventListener('click', (e) => {
+        e.preventDefault();
+        appliedCoupon = null;
+        if (inputCoupon) inputCoupon.value = '';
+        if (couponFeedback) {
+          couponFeedback.style.display = 'none';
+          couponFeedback.textContent = '';
+        }
+        renderCartDrawer();
+      });
+
+      // Selezione Consegna (Spedizione vs Ritiro a Mano)
+      const radioShipping = document.getElementById('radioDeliveryShipping');
+      const radioPickup = document.getElementById('radioDeliveryPickup');
+      const cardShipping = document.getElementById('cardDeliveryShipping');
+      const cardPickup = document.getElementById('cardDeliveryPickup');
+      const shippingFields = document.getElementById('shippingAddressFields');
+      const pickupNotice = document.getElementById('pickupNoticeBox');
+      const pickupPaymentSelector = document.getElementById('pickupPaymentSelector');
+      const btnConfirmCash = document.getElementById('btnConfirmCashOrder');
+      const paypalContainer = document.getElementById('paypal-button-container');
+
+      function updateDeliveryUI() {
+        const addrInputs = ['custAddress', 'custZip', 'custCity', 'custProvince'];
+        if (selectedDeliveryMethod === 'pickup') {
+          cardPickup?.classList.add('active');
+          if (cardPickup) { cardPickup.style.borderColor = 'var(--primary)'; cardPickup.style.background = 'rgba(56, 189, 248, 0.08)'; }
+          cardShipping?.classList.remove('active');
+          if (cardShipping) { cardShipping.style.borderColor = 'var(--border-subtle)'; cardShipping.style.background = 'var(--bg-card)'; }
+
+          if (shippingFields) shippingFields.style.display = 'none';
+          if (pickupNotice) pickupNotice.style.display = 'block';
+          if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'block';
+
+          addrInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.required = false;
+          });
+
+          if (selectedPaymentChoice === 'cash') {
+            if (btnConfirmCash) btnConfirmCash.style.display = 'block';
+            if (paypalContainer) paypalContainer.style.display = 'none';
+          } else {
+            if (btnConfirmCash) btnConfirmCash.style.display = 'none';
+            if (paypalContainer) paypalContainer.style.display = 'block';
+          }
+        } else {
+          cardShipping?.classList.add('active');
+          if (cardShipping) { cardShipping.style.borderColor = 'var(--primary)'; cardShipping.style.background = 'rgba(56, 189, 248, 0.08)'; }
+          cardPickup?.classList.remove('active');
+          if (cardPickup) { cardPickup.style.borderColor = 'var(--border-subtle)'; cardPickup.style.background = 'var(--bg-card)'; }
+
+          if (shippingFields) shippingFields.style.display = 'block';
+          if (pickupNotice) pickupNotice.style.display = 'none';
+          if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'none';
+          if (btnConfirmCash) btnConfirmCash.style.display = 'none';
+          if (paypalContainer) paypalContainer.style.display = 'block';
+
+          addrInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.required = true;
+          });
+        }
+      }
+
+      radioShipping?.addEventListener('change', () => {
+        if (radioShipping.checked) {
+          selectedDeliveryMethod = 'shipping';
+          updateDeliveryUI();
+          renderCartDrawer();
+        }
+      });
+
+      radioPickup?.addEventListener('change', () => {
+        if (radioPickup.checked) {
+          selectedDeliveryMethod = 'pickup';
+          updateDeliveryUI();
+          renderCartDrawer();
+        }
+      });
+
+      // Selezione Pagamento per Ritiro (Contanti vs PayPal)
+      const radioCash = document.getElementById('radioPayCash');
+      const radioPaypal = document.getElementById('radioPayPaypal');
+      const cardCash = document.getElementById('cardPayCash');
+      const cardPaypal = document.getElementById('cardPayPaypal');
+
+      radioCash?.addEventListener('change', () => {
+        if (radioCash.checked) {
+          selectedPaymentChoice = 'cash';
+          cardCash?.classList.add('active');
+          if (cardCash) { cardCash.style.borderColor = 'var(--success)'; cardCash.style.background = 'rgba(34, 197, 94, 0.1)'; }
+          cardPaypal?.classList.remove('active');
+          if (cardPaypal) { cardPaypal.style.borderColor = 'var(--border-subtle)'; cardPaypal.style.background = 'var(--bg-card)'; }
+          updateDeliveryUI();
+        }
+      });
+
+      radioPaypal?.addEventListener('change', () => {
+        if (radioPaypal.checked) {
+          selectedPaymentChoice = 'paypal';
+          cardPaypal?.classList.add('active');
+          if (cardPaypal) { cardPaypal.style.borderColor = 'var(--primary)'; cardPaypal.style.background = 'rgba(56, 189, 248, 0.08)'; }
+          cardCash?.classList.remove('active');
+          if (cardCash) { cardCash.style.borderColor = 'var(--border-subtle)'; cardCash.style.background = 'var(--bg-card)'; }
+          updateDeliveryUI();
+          renderCartDrawer();
+        }
+      });
+
+      // Conferma Ordine Contanti al Ritiro
+      btnConfirmCash?.addEventListener('click', async () => {
+        const form = document.getElementById('checkoutForm');
+        const nameEl = document.getElementById('custName');
+        const emailEl = document.getElementById('custEmail');
+        const phoneEl = document.getElementById('custPhone');
+
+        if (!nameEl.value.trim() || !emailEl.value.trim() || !phoneEl.value.trim()) {
+          alert("Per favore compila Nome, Email e Cellulare per poter registrare l'ordine con ritiro a mano.");
+          if (!nameEl.value.trim()) nameEl.focus();
+          else if (!emailEl.value.trim()) emailEl.focus();
+          else phoneEl.focus();
+          return;
+        }
+
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        const customerInfo = {
+          customer_name: nameEl.value.trim(),
+          customer_email: emailEl.value.trim(),
+          customer_phone: phoneEl.value.trim(),
+          shipping_address: "Ritiro a mano di persona",
+          shipping_city: "Laboratorio",
+          shipping_zip: "00000",
+          shipping_province: "RM",
+          order_notes: (document.getElementById('custNotes')?.value || '').trim()
+        };
+
+        const payload = {
+          items: cart,
+          customerInfo,
+          delivery_method: 'pickup',
+          payment_method: 'cash_on_pickup',
+          coupon_code: appliedCoupon ? appliedCoupon.code : null
+        };
+
+        btnConfirmCash.disabled = true;
+        btnConfirmCash.textContent = "Registrazione ordine in corso...";
+
+        try {
+          const resp = await fetch('/api/store/orders/create-pickup-cash', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.detail || "Errore durante la registrazione dell'ordine.");
+          }
+
+          const result = await resp.json();
+          cart = [];
+          appliedCoupon = null;
+          closeCart();
+
+          document.getElementById('succHeaderTitle').textContent = "🎉 Ordine Registrato con Successo!";
+          document.getElementById('succSubtext').textContent = "I tuoi pezzi personalizzati sono in produzione con Snapmaker U1. Ti contatteremo via email e cellulare appena saranno pronti per il ritiro di persona!";
+          document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
+          if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
+          document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--warning);">💵 Contanti al Ritiro</strong> (Totale: <strong>${formatEur(result.total)}</strong>)`;
+          
+          const adminLink = document.getElementById('btnAdminSuccessLink');
+          if (adminLink) {
+            adminLink.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
+          }
+          document.getElementById('orderSuccessScreen').style.display = 'block';
+        } catch (e) {
+          alert("Errore registrazione ordine con ritiro a mano: " + e.message);
+        } finally {
+          btnConfirmCash.disabled = false;
+          btnConfirmCash.textContent = "🤝 Conferma Ordine (Paga al Ritiro)";
+        }
+      });
+
+      // TASTO DI TEST CHECKOUT SENZA PAGAMENTO
+      document.getElementById('btnTestCheckout')?.addEventListener('click', async () => {
+        const form = document.getElementById('checkoutForm');
+        if (form && !form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        const customerInfo = {
+          customer_name: document.getElementById('custName').value.trim() || 'Tester Sviluppatore',
+          customer_email: document.getElementById('custEmail').value.trim() || 'test@snapmaker-studio.it',
+          customer_phone: document.getElementById('custPhone').value.trim() || '340 0000000',
+          shipping_address: selectedDeliveryMethod === 'pickup' ? 'Ritiro a mano' : (document.getElementById('custAddress').value.trim() || 'Via Laboratorio 3D, 1'),
+          shipping_zip: selectedDeliveryMethod === 'pickup' ? '00000' : (document.getElementById('custZip').value.trim() || '00100'),
+          shipping_city: selectedDeliveryMethod === 'pickup' ? 'Laboratorio' : (document.getElementById('custCity').value.trim() || 'Roma'),
+          shipping_province: selectedDeliveryMethod === 'pickup' ? 'RM' : (document.getElementById('custProvince').value.trim().toUpperCase() || 'RM'),
+          order_notes: (document.getElementById('custNotes').value.trim() || '') + ' [TEST SENZA PAGAMENTO]',
+          delivery_method: selectedDeliveryMethod,
+          coupon_code: appliedCoupon ? appliedCoupon.code : null
+        };
+
+        try {
+          const resp = await fetch('/api/store/orders/create-test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: cart,
+              customerInfo,
+              delivery_method: selectedDeliveryMethod,
+              coupon_code: appliedCoupon ? appliedCoupon.code : null
+            })
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.detail || "Errore ordine di test");
+          }
+
+          const result = await resp.json();
+          cart = [];
+          appliedCoupon = null;
+          closeCart();
+
+          document.getElementById('succHeaderTitle').textContent = "🧪 Ordine di Prova Registrato!";
+          document.getElementById('succSubtext').textContent = "L'ordine è stato salvato nel database ed è immediatamente visibile nel gestionale /admin per testare la stampa e il download del 3MF.";
+          document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
+          if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
+          document.getElementById('succBadgeTest').innerHTML = `Stato: <span style="background:#f59e0b;color:#000;font-weight:900;padding:2px 6px;border-radius:4px;font-size:11px;">TEST SENZA TRANSAZIONE</span>`;
+          const adminLinkTest = document.getElementById('btnAdminSuccessLink');
+          if (adminLinkTest) {
+            adminLinkTest.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
+          }
+          document.getElementById('orderSuccessScreen').style.display = 'block';
+        } catch (e) {
+          alert("Errore Test Checkout: " + e.message);
+        }
+      });
+    }
+
+    function openCart() {
+      document.getElementById('cartOverlay')?.classList.add('open');
+    }
+    function closeCart() {
+      document.getElementById('cartOverlay')?.classList.remove('open');
+    }
+
+    // 10. RENDERING CARRELLO CON PROMO 3x2, COUPON & RITIRO A MANO
+    function renderCartDrawer() {
+      const summary = calculateCartSummary(cart, {
+        coupon: appliedCoupon,
+        deliveryMethod: selectedDeliveryMethod
+      });
+
+      document.getElementById('cartHeaderBadge').textContent = summary.itemCount;
+      document.getElementById('cartCountTitle').textContent = summary.itemCount;
+
+      const itemsBox = document.getElementById('cartItemsContainer');
+      const sumCard = document.getElementById('cartSummaryCard');
+      const formCard = document.getElementById('checkoutForm');
+      const couponBox = document.getElementById('couponBox');
+
+      if (summary.itemCount === 0) {
+        itemsBox.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 40px 10px;">
+            <div style="font-size: 40px; margin-bottom: 8px;">🛒</div>
+            <p>Il tuo carrello è vuoto.</p>
+            <small>Configura un portachiavi o una targhetta e aggiungila qui!</small>
+          </div>
+        `;
+        sumCard.style.display = 'none';
+        formCard.style.display = 'none';
+        if (couponBox) couponBox.style.display = 'none';
+        return;
+      }
+
+      if (couponBox) couponBox.style.display = 'block';
+      sumCard.style.display = 'block';
+      formCard.style.display = 'block';
+
+      itemsBox.innerHTML = summary.itemsWithPromo.map((it, idx) => {
+        const iconPosLabel = it.iconPosition === 'left' ? '⬅️ Sinistra' : '➡️ Destra';
+        const iconDesc = it.iconId && it.iconId !== 'none' ? ` - Icona: <em>${it.iconId}</em> (${iconPosLabel})` : '';
+        const iconColDesc = it.hasCustomIconColor ? ` | Icona (T2): <span style="display:inline-block;width:7px;height:7px;background:${it.iconColorHex};border-radius:50%;"></span> ${it.iconColorName}` : '';
+        const shapeDesc = `Forma: ${it.baseStyle === 'contour' ? 'Sagomata' : 'Rettangolare'}`;
+        const holeDesc = it.productType === 'keychain' ? ` | Foro: ${it.holePosition === 'left' ? 'Sinistra' : (it.holePosition === 'right' ? 'Destra' : 'Alto')}` : '';
+
+        return `
+          <div class="cart-item-card ${it.isFreePromo ? 'is-omaggio' : ''}">
+            <div style="flex: 1;">
+              <div class="cart-item-title">
+                ${it.productTitle}
+                ${it.isFreePromo ? '<span class="omaggio-badge">100% OMAGGIO 3x2</span>' : ''}
+              </div>
+              <div class="cart-item-meta">
+                Testo: <strong>${it.customTextLine1}</strong> (Font: ${it.fontId})${iconDesc}
+                ${it.customTextLine2 ? `<br>Riga 2: <em>${it.customTextLine2}</em>` : ''}<br>
+                Base: <span style="display:inline-block;width:7px;height:7px;background:${it.baseColorHex};border-radius:50%;"></span> ${it.baseColorName} | 
+                Scritta: <span style="display:inline-block;width:7px;height:7px;background:${it.textColorHex};border-radius:50%;"></span> ${it.textColorName}${iconColDesc}<br>
+                <small style="color:#71717a;">${shapeDesc}${holeDesc}</small>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div class="cart-item-price">
+                ${it.isFreePromo ? `<s>${formatEur(it.unitPrice)}</s> <span style="color:var(--success);">0,00 €</span>` : formatEur(it.unitPrice)}
+              </div>
+              <button type="button" class="btn-remove-item" data-index="${idx}" title="Elimina">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      itemsBox.querySelectorAll('.btn-remove-item').forEach(b => {
+        b.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index, 10);
+          cart.splice(index, 1);
+          renderCartDrawer();
+        });
+      });
+
+      document.getElementById('sumSubtotal').textContent = formatEur(summary.subtotal);
+      
+      const promoRow = document.getElementById('sumPromoRow');
+      if (summary.promoApplied) {
+        promoRow.style.display = 'flex';
+        document.getElementById('sumPromoLabel').textContent = `🎉 ${summary.promoLabel}`;
+        document.getElementById('sumPromoVal').textContent = `-${formatEur(summary.promoDiscount)}`;
+      } else {
+        promoRow.style.display = 'none';
+      }
+
+      const couponRow = document.getElementById('sumCouponRow');
+      const couponBadge = document.getElementById('couponActiveBadge');
+      if (summary.couponApplied) {
+        couponRow.style.display = 'flex';
+        document.getElementById('sumCouponCode').textContent = summary.couponCode;
+        document.getElementById('sumCouponVal').textContent = `-${formatEur(summary.couponDiscount)}`;
+        if (couponBadge) couponBadge.style.display = 'inline-block';
+      } else {
+        couponRow.style.display = 'none';
+        if (couponBadge) couponBadge.style.display = 'none';
+        if (appliedCoupon && summary.couponDiscount === 0) {
+          appliedCoupon = null;
+          const fb = document.getElementById('couponFeedback');
+          if (fb) {
+            fb.style.display = 'block';
+            fb.style.color = 'var(--warning)';
+            fb.textContent = "Coupon rimosso: il carrello non soddisfa più i requisiti minimi di spesa.";
+          }
+        }
+      }
+
+      const shippingLabelEl = document.getElementById('sumShippingLabel');
+      if (shippingLabelEl) shippingLabelEl.textContent = summary.shippingLabel;
+      document.getElementById('sumShipping').textContent = selectedDeliveryMethod === 'pickup' ? '0,00 €' : formatEur(summary.shippingCost);
+      document.getElementById('sumTotal').textContent = formatEur(summary.total);
+
+      // Aggiorna UI campi di consegna
+      const addrInputs = ['custAddress', 'custZip', 'custCity', 'custProvince'];
+      const shippingFields = document.getElementById('shippingAddressFields');
+      const pickupNotice = document.getElementById('pickupNoticeBox');
+      const pickupPaymentSelector = document.getElementById('pickupPaymentSelector');
+      const btnConfirmCash = document.getElementById('btnConfirmCashOrder');
+      const paypalContainer = document.getElementById('paypal-button-container');
+
+      if (selectedDeliveryMethod === 'pickup') {
+        if (shippingFields) shippingFields.style.display = 'none';
+        if (pickupNotice) pickupNotice.style.display = 'block';
+        if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'block';
+        addrInputs.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.required = false;
+        });
+
+        if (selectedPaymentChoice === 'cash') {
+          if (btnConfirmCash) btnConfirmCash.style.display = 'block';
+          if (paypalContainer) paypalContainer.style.display = 'none';
+        } else {
+          if (btnConfirmCash) btnConfirmCash.style.display = 'none';
+          if (paypalContainer) paypalContainer.style.display = 'block';
+          initPayPalButtons(summary);
+        }
+      } else {
+        if (shippingFields) shippingFields.style.display = 'block';
+        if (pickupNotice) pickupNotice.style.display = 'none';
+        if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'none';
+        if (btnConfirmCash) btnConfirmCash.style.display = 'none';
+        if (paypalContainer) paypalContainer.style.display = 'block';
+        addrInputs.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.required = true;
+        });
+
+        initPayPalButtons(summary);
+      }
+    }
+
+    // 11. PAYPAL BUTTONS
+    function initPayPalButtons(summary) {
+      const container = document.getElementById('paypal-button-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const render = () => {
+        if (!window.paypal) return;
+        window.paypal.Buttons({
+          style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
+          onClick: (data, actions) => {
+            lastCheckoutError = null;
+            const form = document.getElementById('checkoutForm');
+            if (form && !form.checkValidity()) {
+              form.reportValidity();
+              lastCheckoutError = "Compila tutti i campi obbligatori contrassegnati con *.";
+              return actions.reject();
+            }
+            return actions.resolve();
+          },
+          createOrder: async () => {
+            lastCheckoutError = null;
+            const isPickup = selectedDeliveryMethod === 'pickup';
+            const zipValue = isPickup ? '00000' : String(document.getElementById('custZip')?.value || '').trim();
+            const customerInfo = {
+              customer_name: (document.getElementById('custName')?.value || '').trim(),
+              customer_email: (document.getElementById('custEmail')?.value || '').trim(),
+              customer_phone: (document.getElementById('custPhone')?.value || '').trim(),
+              shipping_address: isPickup ? 'Ritiro a mano di persona' : (document.getElementById('custAddress')?.value || '').trim(),
+              shipping_zip: zipValue,
+              shipping_city: isPickup ? 'Laboratorio' : (document.getElementById('custCity')?.value || '').trim(),
+              shipping_province: isPickup ? 'RM' : (document.getElementById('custProvince')?.value || '').trim().toUpperCase(),
+              order_notes: (document.getElementById('custNotes')?.value || '').trim(),
+              delivery_method: selectedDeliveryMethod,
+              coupon_code: appliedCoupon ? appliedCoupon.code : null
+            };
+
+            const currentSummary = calculateCartSummary(cart, {
+              coupon: appliedCoupon,
+              deliveryMethod: selectedDeliveryMethod
+            });
+
+            const payload = {
+              items: cart,
+              customerInfo,
+              delivery_method: selectedDeliveryMethod,
+              coupon_code: appliedCoupon ? appliedCoupon.code : null,
+              subtotal: currentSummary.subtotal,
+              shipping_amount: currentSummary.shippingCost,
+              total_amount: currentSummary.total
+            };
+
+            let resp;
+            try {
+              resp = await fetch('/api/orders/create-paypal-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+            } catch (netErr) {
+              console.error("Dettaglio errore checkout:", netErr);
+              lastCheckoutError = "Errore di connessione al server: " + netErr.message;
+              throw netErr;
+            }
+
+            if (!resp.ok) {
+              let errorDetail = `Errore server (HTTP ${resp.status})`;
+              try {
+                const errJson = await resp.json();
+                errorDetail = errJson.detail || JSON.stringify(errJson);
+              } catch (_) {
+                errorDetail = (await resp.text()) || resp.statusText;
+              }
+              console.error("Dettaglio errore checkout:", errorDetail);
+              lastCheckoutError = errorDetail;
+              throw new Error(errorDetail);
+            }
+
+            const data = await resp.json();
+            if (!data.id) {
+              const errorDetail = "Risposta del server non valida: ID ordine PayPal mancante.";
+              console.error("Dettaglio errore checkout:", errorDetail, data);
+              lastCheckoutError = errorDetail;
+              throw new Error(errorDetail);
+            }
+            return data.id;
+          },
+          onApprove: async (data) => {
+            lastCheckoutError = null;
+            const isPickup = selectedDeliveryMethod === 'pickup';
+            const zipValue = isPickup ? '00000' : String(document.getElementById('custZip')?.value || '').trim();
+            const customerInfo = {
+              customer_name: (document.getElementById('custName')?.value || '').trim(),
+              customer_email: (document.getElementById('custEmail')?.value || '').trim(),
+              customer_phone: (document.getElementById('custPhone')?.value || '').trim(),
+              shipping_address: isPickup ? 'Ritiro a mano di persona' : (document.getElementById('custAddress')?.value || '').trim(),
+              shipping_zip: zipValue,
+              shipping_city: isPickup ? 'Laboratorio' : (document.getElementById('custCity')?.value || '').trim(),
+              shipping_province: isPickup ? 'RM' : (document.getElementById('custProvince')?.value || '').trim().toUpperCase(),
+              order_notes: (document.getElementById('custNotes')?.value || '').trim(),
+              delivery_method: selectedDeliveryMethod,
+              coupon_code: appliedCoupon ? appliedCoupon.code : null
+            };
+
+            let resp;
+            try {
+              resp = await fetch('/api/orders/capture-paypal-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  paypalOrderId: data.orderID,
+                  items: cart,
+                  customerInfo,
+                  delivery_method: selectedDeliveryMethod,
+                  coupon_code: appliedCoupon ? appliedCoupon.code : null
+                })
+              });
+            } catch (netErr) {
+              console.error("Dettaglio errore checkout:", netErr);
+              lastCheckoutError = "Errore di connessione durante la cattura del pagamento: " + netErr.message;
+              throw netErr;
+            }
+
+            if (!resp.ok) {
+              let errorDetail = `Errore cattura pagamento (HTTP ${resp.status})`;
+              try {
+                const errJson = await resp.json();
+                errorDetail = errJson.detail || JSON.stringify(errJson);
+              } catch (_) {
+                errorDetail = (await resp.text()) || resp.statusText;
+              }
+              console.error("Dettaglio errore checkout:", errorDetail);
+              lastCheckoutError = errorDetail;
+              throw new Error(errorDetail);
+            }
+
+            const result = await resp.json();
+            cart = [];
+            appliedCoupon = null;
+            closeCart();
+            document.getElementById('succHeaderTitle').textContent = "Grazie per il tuo acquisto!";
+            document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
+            if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
+            document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--success);">PayPal</strong>`;
+            const adminLinkPaypal = document.getElementById('btnAdminSuccessLink');
+            if (adminLinkPaypal) {
+              adminLinkPaypal.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
+            }
+            document.getElementById('orderSuccessScreen').style.display = 'block';
+          },
+          onError: (err) => {
+            console.error("Dettaglio errore checkout:", err);
+            const detailMsg = lastCheckoutError || (err && err.message) || String(err);
+            alert(`Errore checkout PayPal: ${detailMsg}\n\nVerifica i campi inseriti o usa la modalità di test.`);
+          }
+        }).render('#paypal-button-container');
+      };
+
+      if (!window.paypal) {
+        const script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=EUR&locale=it_IT&components=buttons`;
+        script.async = true;
+        script.onload = render;
+        document.body.appendChild(script);
+      } else {
+        render();
+      }
+    }
+
+    // 12. PWA SMART INSTALL BANNER (Android & iOS) & SERVICE WORKER
+    (function initPwaBanner() {
+      // Registra Service Worker se supportato
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js').catch(err => {
+          console.debug("Service worker non registrato:", err);
+        });
+      }
+
+      // Non mostrare se l'app è già aperta in modalità standalone (app già installata)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (isStandalone) return;
+
+      // Non mostrare se l'utente ha già chiuso il banner (salvato in localStorage per 7 giorni)
+      const dismissedUntil = localStorage.getItem('gadgetpoint_pwa_dismissed');
+      if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
+
+      let deferredPrompt = null;
+      const banner = document.getElementById('pwaInstallBanner');
+      const titleEl = document.getElementById('pwaBannerTitle');
+      const descEl = document.getElementById('pwaBannerDesc');
+      const btnInstall = document.getElementById('btnPwaInstall');
+      const btnClose = document.getElementById('btnPwaClose');
+
+      btnClose?.addEventListener('click', () => {
+        if (banner) banner.style.display = 'none';
+        localStorage.setItem('gadgetpoint_pwa_dismissed', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      });
+
+      // Rilevamento iOS
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isIos = /iphone|ipad|ipod/.test(ua);
+
+      // Evento nativo di installazione per Android / Chromium
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (banner) {
+          titleEl.textContent = "📲 Installa GadgetPoint";
+          descEl.textContent = "Installa l'app sullo smartphone per un'esperienza a tutto schermo ad alta velocità.";
+          if (btnInstall) btnInstall.style.display = 'block';
+          banner.style.display = 'flex';
+        }
+      });
+
+      btnInstall?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted' && banner) {
+            banner.style.display = 'none';
+          }
+          deferredPrompt = null;
+        }
+      });
+
+      // Su iOS Safari: mostra il suggerimento guidato con i 2 passaggi
+      if (isIos) {
+        setTimeout(() => {
+          if (banner && banner.style.display === 'none') {
+            titleEl.innerHTML = "📲 Installa GadgetPoint su iPhone";
+            descEl.innerHTML = "Tocca il tasto <strong>Condividi</strong> (icona quadrata con freccia in basso) e seleziona <strong>'Aggiungi a schermata Home'</strong>.";
+            if (btnInstall) btnInstall.style.display = 'none';
+            banner.style.display = 'flex';
+          }
+        }, 2200);
+      }
+    })();
+
+    // AVVIO
+    window.addEventListener('DOMContentLoaded', async () => {
+      initViewer();
+      await loadResources();
+      setupEvents();
+      updateLivePrice();
+      request3DPreview();
+    });
+  </script>
+
+  <!-- Smart PWA Install Banner (Android & iOS) -->
+  <div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;">
+    <img src="/static/icons/apple-touch-icon.png?v=printer" alt="GadgetPoint" class="pwa-icon-thumb">
+    <div class="pwa-banner-content">
+      <div class="pwa-banner-title" id="pwaBannerTitle">📲 Installa GadgetPoint</div>
+      <div class="pwa-banner-desc" id="pwaBannerDesc">Aggiungi l'app alla schermata Home per aprirla come app nativa.</div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button type="button" id="btnPwaInstall" class="btn-pwa-install" style="display: none;">Installa</button>
+      <button type="button" id="btnPwaClose" class="btn-pwa-close" title="Chiudi">✕</button>
+    </div>
+  </div>
 </body>
 </html>

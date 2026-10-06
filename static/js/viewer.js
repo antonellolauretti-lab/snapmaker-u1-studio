@@ -304,13 +304,17 @@ class ModelViewer {
       geom.computeVertexNormals();
 
       // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
-      const colorDef = palette[p.extruder] || "#ffffff";
+      let ext = p.extruder;
+      if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon"))) {
+        ext = 2;
+      }
+      const colorDef = palette[ext] || "#ffffff";
       const mat = this.createMaterial(colorDef, this.wireframeMode);
 
       const mesh = new THREE.Mesh(geom, mat);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.userData = { partName: p.name, extruder: p.extruder };
+      mesh.userData = { partName: p.name, extruder: ext };
 
       this.modelGroup.add(mesh);
       this.partMeshes.push(mesh);
@@ -327,7 +331,10 @@ class ModelViewer {
    */
   updateColors(palette) {
     this.partMeshes.forEach((mesh) => {
-      const ext = mesh.userData.extruder;
+      let ext = mesh.userData.extruder;
+      if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon"))) {
+        ext = 2;
+      }
       const colorDef = palette[ext];
       if (colorDef) {
         const oldMat = mesh.material;
