@@ -218,7 +218,7 @@ def verify_admin_auth(
 @router.post("/admin/verify-pin")
 @router.get("/admin/verify-pin")
 async def api_verify_pin(
-    request: Optional[Request] = None,
+    request: Request,
     payload: Optional[Dict[str, Any]] = None,
     x_admin_pin: Optional[str] = Header(None),
     pin: Optional[str] = Query(None)
@@ -361,7 +361,7 @@ def api_validate_coupon(payload: Dict[str, Any]):
 @router.post("/store/orders/create-paypal")
 @router.post("/orders/create-paypal-order")
 @router.post("/orders/create-paypal")
-def api_create_paypal_order(payload: Dict[str, Any], request: Optional[Request] = None):
+def api_create_paypal_order(payload: Dict[str, Any], request: Request):
     """Crea un ordine PayPal sicuro con importi calcolati dal server e logging esplicito."""
     check_order_rate_limit(request)
     items = payload.get("items", [])
@@ -392,7 +392,7 @@ def api_create_paypal_order(payload: Dict[str, Any], request: Optional[Request] 
 @router.post("/store/orders/capture-paypal")
 @router.post("/orders/capture-paypal-order")
 @router.post("/orders/capture-paypal")
-def api_capture_paypal_order(payload: Dict[str, Any], request: Optional[Request] = None):
+def api_capture_paypal_order(payload: Dict[str, Any], request: Request):
     """Cattura il pagamento PayPal, salva l'ordine in DB e avvia le notifiche Resend."""
     check_order_rate_limit(request)
     paypal_order_id = payload.get("paypalOrderId") or payload.get("orderID") or payload.get("paypal_order_id")
@@ -507,7 +507,7 @@ def api_capture_paypal_order(payload: Dict[str, Any], request: Optional[Request]
 
 @router.post("/store/orders/create-pickup-cash")
 @router.post("/orders/create-pickup-cash")
-def api_create_pickup_cash_order(payload: Dict[str, Any], request: Optional[Request] = None):
+def api_create_pickup_cash_order(payload: Dict[str, Any], request: Request):
     """
     Registra un ordine con consegna 'Ritiro a Mano' e pagamento 'Contanti al Ritiro'.
     Salta PayPal, assegna stato 'da_stampare' e payment_status 'in_attesa_al_ritiro',
@@ -618,7 +618,7 @@ def api_create_pickup_cash_order(payload: Dict[str, Any], request: Optional[Requ
     }
 
 @router.post("/store/orders/create-test")
-def api_create_test_order(payload: Dict[str, Any], request: Optional[Request] = None):
+def api_create_test_order(payload: Dict[str, Any], request: Request):
     """
     MODALITÀ TEST CHECKOUT:
     Crea e registra un ordine di test senza richiedere transazioni monetarie reali su PayPal.
