@@ -297,50 +297,41 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     if base_style == "contour":
         # ==============================================================================
-        # 1. TARGHETTA DA TAVOLO SAGOMATA SUL TESTO CON BASAMENTO/BINARIO D'APPOGGIO
+        # 1. TARGHETTA DA TAVOLO SAGOMATA SUL TESTO CON PIEDISTALLO POSTERIORE
         # ==============================================================================
         contour_pad = max(3.5, padding_y)
-        all_fg_bounds = fg_union.bounds
-        overall_minx, overall_miny, overall_maxx, overall_maxy = all_fg_bounds
 
-        # Profilo sagomato attorno a testo e simbolo
+        # Profilo sagomato organico attorno a testo e simbolo
         close_r = max(4.0, font_size_line1 * 0.3)
         closed_fg = fg_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
         contour_raw = closed_fg.buffer(contour_pad, resolution=16).buffer(0)
 
-        # Elementi di supporto e fusione monolitica:
-        fuse_elements = [contour_raw]
-
-        # A) Se è presente un'icona laterale (a destra o sinistra):
-        if icon_local is not None:
-            ix_min, iy_min, ix_max, iy_max = icon_local.bounds
-            # 1. Pilastro/pedistallo solido verticale sotto l'icona fino al basamento inferiore (elimina fluttuazioni)
-            icon_column = sg.box(ix_min - contour_pad, -contour_pad - 4.0, ix_max + contour_pad, iy_min + 1.5)
-            fuse_elements.append(icon_column)
-
-            # 2. Ponte orizzontale solido di raccordo tra il corpo del testo e l'icona
-            if icon_position == "left":
-                bridge_conn = sg.box(ix_min, min(0.0, iy_min), x_text_start + 2.0, iy_max + contour_pad)
+        # Se sono presenti parti disconnesse (es. più parole separate o simboli distanziati),
+        # uniscile armoniosamente lungo l'allineamento tipografico naturale
+        if contour_raw.geom_type == 'MultiPolygon':
+            close_gap = max(6.0, close_r * 0.8)
+            connected = contour_raw.buffer(close_gap, resolution=16).buffer(-close_gap, resolution=16)
+            if connected.geom_type == 'MultiPolygon':
+                polys = sorted(list(connected.geoms), key=lambda p: p.bounds[0])
+                bridges = []
+                for i in range(len(polys) - 1):
+                    p1, p2 = polys[i], polys[i + 1]
+                    b1, b2 = p1.bounds, p2.bounds
+                    bridges.append(sg.box(b1[2] - 1.0, min(b1[1], b2[1]), b2[0] + 1.0, max(b1[3], b2[3])))
+                contour_raw = unary_union([connected] + bridges).buffer(0)
             else:
-                bridge_conn = sg.box(x_text_start + w_text_content - 2.0, min(0.0, iy_min), ix_max, iy_max + contour_pad)
-            fuse_elements.append(bridge_conn)
+                contour_raw = connected
 
-        # B) Basamento/Fondazione orizzontale continua lungo tutta la larghezza dell'assieme:
-        # L'offset perimetrale della base scura scende verso il basso fino ad affondare direttamente
-        # dentro il binario d'appoggio inclinato scuro, fungendo da solido supporto strutturale
-        bot_foundation_h = min(1.0, contour_pad * 0.3)
-        bottom_foundation = sg.box(overall_minx - contour_pad, -contour_pad - 4.0, overall_maxx + contour_pad, bot_foundation_h)
-        fuse_elements.append(bottom_foundation)
-
-        contour_fused = unary_union(fuse_elements).buffer(0)
-        # Rimuovi eventuali fori/fessure interne residue per garantire una placca d'appoggio monolitica
-        if hasattr(contour_fused, 'exterior') and contour_fused.exterior is not None:
-            contour_2d = sg.Polygon(contour_fused.exterior.coords)
-        elif contour_fused.geom_type == 'MultiPolygon':
-            outers = [sg.Polygon(p.exterior.coords) for p in contour_fused.geoms if not p.is_empty]
+        # Garantisci una placca monolitica piena: estrai il perimetro esterno (zero fessure/buchi interni)
+        if contour_raw.geom_type == 'Polygon':
+            contour_2d = sg.Polygon(contour_raw.exterior.coords)
+        elif contour_raw.geom_type == 'MultiPolygon':
+            outers = [sg.Polygon(p.exterior.coords) for p in contour_raw.geoms if not p.is_empty]
             contour_2d = unary_union(outers).buffer(0)
+            if hasattr(contour_2d, 'exterior') and contour_2d.exterior is not None:
+                contour_2d = sg.Polygon(contour_2d.exterior.coords)
         else:
-            contour_2d = contour_fused
+            contour_2d = contour_raw
 
         c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
         w_contour = c_maxx - c_minx
@@ -354,40 +345,46 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         t2_2d_aligned = affinity.translate(t2_local, yoff=v_offset) if t2_local else None
         icon_2d_aligned = affinity.translate(icon_local, yoff=v_offset) if icon_local else None
 
-        # Parametri Geometrici Inclinazione e Binario d'Appoggio (Standing Footing)
+        # Parametri Geometrici Inclinazione ed Ergonomia da Scrivania
         tilt_angle_deg = float(params.get("tilt_angle", 76.0)) # Angolo ergonomico da scrivania
         tilt_angle = np.radians(tilt_angle_deg)
-        rail_h = 6.0               # Spessore/altezza del basamento (mm)
-        y_front = -8.0             # Sporgenza frontale del basamento sul tavolo (mm)
-        y_back = 18.0              # Sporgenza posteriore del basamento sul tavolo (mm)
-        w_rail = max(w_contour + 16.0, 72.0) # Larghezza basamento (supera la sagoma del testo)
         plate_thickness = max(base_thickness, 3.2)
         y_anchor = 0.0
-        z_anchor = rail_h - 2.0    # Incastro solido nel basamento
+        z_anchor = 0.0
 
-        # 1. Mesh Basamento/Binario Orizzontale Solido da Appoggio con Gusset Posteriore Continuo
-        # Profilo trasversale YZ con appoggio piatto su Z = 0 e sostegno continuo lungo la schiena della targa
-        h_gusset = min(h_contour * 0.45, 14.0)
-        back_y = y_anchor - plate_thickness * np.sin(tilt_angle) + h_gusset * np.cos(tilt_angle)
-        back_z = z_anchor + plate_thickness * np.cos(tilt_angle) + h_gusset * np.sin(tilt_angle)
+        # 1. Piedistallo Posteriore di Sostegno (Standing Footing):
+        # Appoggio a terra piatto (Z = 0, profondità ~24 mm), agganciato ESCLUSIVAMENTE sul RETRO
+        # della sagoma (t <= 0) con ZERO bordo/labbra frontale sporgente davanti alle lettere.
+        v_attach = max(10.0, min(h_contour * 0.45, 14.0))
+        delta_t = 0.4  # Leggera compenetrazione nella schiena della placca per solida fusione volumetrica
 
-        p_front_bot = (y_front, 0.0)
-        p_front_top = (y_front, 3.5)
-        p_front_lip = (-2.0, rail_h)
-        p_back_gusset = (back_y, back_z)
-        p_rear_top = (y_back - 3.5, rail_h + 1.0)
-        p_rear_chamf = (y_back, 2.5)
-        p_rear_bot = (y_back, 0.0)
-        rail_poly_yz = sg.Polygon([p_front_bot, p_front_top, p_front_lip, p_back_gusset, p_rear_top, p_rear_chamf, p_rear_bot])
+        back_y_attach = y_anchor - (-delta_t) * np.sin(tilt_angle) + v_attach * np.cos(tilt_angle)
+        back_z_attach = z_anchor + (-delta_t) * np.cos(tilt_angle) + v_attach * np.sin(tilt_angle)
+        back_y_bot = y_anchor - (-delta_t) * np.sin(tilt_angle)
+        back_z_bot = z_anchor + (-delta_t) * np.cos(tilt_angle)
 
-        mesh_rail = trimesh.creation.extrude_polygon(rail_poly_yz, height=w_rail)
-        T_rail = np.array([
-            [0.0, 0.0, 1.0, x_contour_center - w_rail / 2.0],
+        y_rear_foot = 24.0  # Profondità totale di appoggio sul tavolo (anti-ribaltamento)
+
+        p_front_bot = (back_y_bot, 0.0)
+        p_front_attach = (back_y_attach, back_z_attach)
+        p_rear_top = (y_rear_foot - 3.0, 3.5)
+        p_rear_bot = (y_rear_foot, 0.0)
+
+        poly_footing_yz = sg.Polygon([p_front_bot, p_front_attach, p_rear_top, p_rear_bot])
+
+        # Larghezza piedistallo: centrato dietro la sagoma, leggermente rastremato per non sporgere dai lati curvi
+        w_footing = max(40.0, min(w_contour - 8.0, w_contour * 0.88))
+        if w_contour <= 48.0:
+            w_footing = max(30.0, w_contour - 4.0)
+
+        mesh_footing = trimesh.creation.extrude_polygon(poly_footing_yz, height=w_footing)
+        T_footing = np.array([
+            [0.0, 0.0, 1.0, x_contour_center - w_footing / 2.0],
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
-        mesh_rail.apply_transform(T_rail)
+        mesh_footing.apply_transform(T_footing)
 
         # 2. Mesh Placca Sagomata Inclinata (Backplate)
         mesh_plate = _extrude_geometry(contour_2d_aligned, height=plate_thickness)
@@ -399,7 +396,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         ], dtype=float)
         mesh_plate.apply_transform(M_plate)
 
-        mesh_base_total = trimesh.util.concatenate([mesh_rail, mesh_plate])
+        mesh_base_total = trimesh.util.concatenate([mesh_footing, mesh_plate])
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=extruder_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
