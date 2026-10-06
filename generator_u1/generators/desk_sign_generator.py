@@ -285,18 +285,6 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2) if (line2_enabled and t2_norm is not None) else None
     icon_local = affinity.translate(icon_norm, xoff=x_icon, yoff=y_icon) if (icon_norm is not None) else None
 
-    # Fissaggio robusto del testo sul binario:
-    # Rimuovi i singoli 'dentini' isolati: crea un raccordo continuo lungo tutta la quota orizzontale
-    # inferiore delle lettere dell'ultima riga, saldando la scritta direttamente al basamento
-    if line2_enabled and t2_local is not None:
-        b_minx, b_miny, b_maxx, b_maxy = t2_local.bounds
-        text_weld_runner = sg.box(b_minx - 0.5, -2.5, b_maxx + 0.5, 1.8)
-        t2_local = unary_union([t2_local, text_weld_runner]).buffer(0)
-    else:
-        b_minx, b_miny, b_maxx, b_maxy = t1_local.bounds
-        text_weld_runner = sg.box(b_minx - 0.5, -2.5, b_maxx + 0.5, 1.8)
-        t1_local = unary_union([t1_local, text_weld_runner]).buffer(0)
-
     # Unione elementi in rilievo frontale
     fg_items = [t1_local]
     if t2_local is not None:
@@ -337,9 +325,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
                 bridge_conn = sg.box(x_text_start + w_text_content - 2.0, min(0.0, iy_min), ix_max, iy_max + contour_pad)
             fuse_elements.append(bridge_conn)
 
-        # B) Basamento/Fondazione orizzontale continua lungo tutta la larghezza dell'assieme
-        # Garantisce appoggio continuo e chiusura completa di qualsiasi fessura tra lettere e binario
-        bot_foundation_h = max(6.0, contour_pad * 2.2)
+        # B) Basamento/Fondazione orizzontale continua lungo tutta la larghezza dell'assieme:
+        # L'offset perimetrale della base scura scende verso il basso fino ad affondare direttamente
+        # dentro il binario d'appoggio inclinato scuro, fungendo da solido supporto strutturale
+        bot_foundation_h = min(1.0, contour_pad * 0.3)
         bottom_foundation = sg.box(overall_minx - contour_pad, -contour_pad - 4.0, overall_maxx + contour_pad, bot_foundation_h)
         fuse_elements.append(bottom_foundation)
 
