@@ -1522,7 +1522,15 @@
     // 2. INIZIALIZZAZIONE 3D THREE.JS
     function initViewer() {
       viewer = new ModelViewer('webglContainer');
-      document.getElementById('btnResetView')?.addEventListener('click', () => viewer.resetView());
+      document.getElementById('btnResetView')?.addEventListener('click', () => {
+        if (viewer) {
+          if (currentConfig.productType === 'desk_sign') {
+            viewer.setDeskSignView();
+          } else {
+            viewer.resetView();
+          }
+        }
+      });
       document.getElementById('btnTopView')?.addEventListener('click', () => viewer.topView());
     }
 
@@ -1868,8 +1876,11 @@
         document.getElementById('section-icon-position').style.display = 'block';
         if (currentConfig.iconId !== 'none') {
           document.getElementById('groupIconColor').style.display = 'block';
+        } else {
+          document.getElementById('groupIconColor').style.display = 'none';
         }
         currentConfig.productType = 'keychain';
+        if (viewer) viewer.resetView();
         updateLivePrice();
         request3DPreview();
       });
@@ -1880,13 +1891,18 @@
         document.body.classList.add('product-desk-sign');
         document.body.classList.remove('product-keychain');
         document.getElementById('groupHolePosition').style.display = 'none';
-        document.getElementById('groupIcon').style.display = 'none';
-        document.getElementById('section-icon-position').style.display = 'none';
-        document.getElementById('groupIconColor').style.display = 'none';
+        document.getElementById('groupIcon').style.display = 'block';
+        document.getElementById('section-icon-position').style.display = 'block';
+        if (currentConfig.iconId !== 'none') {
+          document.getElementById('groupIconColor').style.display = 'block';
+        } else {
+          document.getElementById('groupIconColor').style.display = 'none';
+        }
         currentConfig.productType = 'desk_sign';
         currentConfig.baseStyle = 'contour';
         document.getElementById('btnBaseContour')?.classList.add('active');
         document.getElementById('btnBaseRect')?.classList.remove('active');
+        if (viewer) viewer.setDeskSignView();
         updateLivePrice();
         request3DPreview();
       });
@@ -1979,7 +1995,7 @@
           currentConfig.iconId = card.dataset.icon;
 
           const groupIconColor = document.getElementById('groupIconColor');
-          if (currentConfig.iconId !== 'none' && currentConfig.productType === 'keychain') {
+          if (currentConfig.iconId !== 'none') {
             if (groupIconColor) groupIconColor.style.display = 'block';
           } else {
             if (groupIconColor) groupIconColor.style.display = 'none';

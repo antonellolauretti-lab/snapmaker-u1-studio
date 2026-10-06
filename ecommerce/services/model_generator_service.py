@@ -72,6 +72,16 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
             params["font_path_line2"] = resolved_font
         if item_data.get("base_style"):
             params["base_style"] = item_data.get("base_style")
+        elif item_data.get("base_shape"):
+            params["base_style"] = item_data.get("base_shape")
+
+        icon_val = item_data.get("icon_id") or item_data.get("icon_name") or params.get("icon_name") or params.get("icon_id")
+        if icon_val:
+            params["icon_name"] = icon_val
+            params["icon_id"] = icon_val
+        icon_pos = item_data.get("icon_position") or params.get("icon_position") or "right"
+        params["icon_position"] = icon_pos
+
         parts = generate_desk_sign_parts(params)
         filename = f"{clean_order}_{clean_text}_DeskSign_U1.3mf"
         proj_name = f"{clean_order}_{clean_text}_DeskSign"

@@ -16,6 +16,7 @@ from generator_u1.font_resolver import (
     apply_text_polygon_buffer,
     resolve_font_path
 )
+from generator_u1.generators.keychain_generator import _get_vector_icon
 
 def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
     """
@@ -123,6 +124,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
        con supporto cuneo solido autoportante (~68°), cornice perimetrale in rilievo
        e testo estruso sulla faccia inclinata.
     - Testo su 1 o 2 righe indipendenti con allineamento e spessore dedicati.
+    - Simbolo/Icona vettoriale 3D a catalogo a sinistra o destra con estrusore dedicato.
     - Fino a 4 estrusori fisici Snapmaker U1 (T0..T3).
     """
     # Determinazione stile base: 'contour' (Sagomata sul Testo) vs 'rectangle' (Rettangolare)
@@ -174,6 +176,13 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     thickness_line2 = float(params.get("thickness_line2", 1.2))
     extruder_line2 = int(params.get("extruder_line2", 2))
 
+    # Simbolo / Icona 3D
+    icon_name = params.get("icon_name") or params.get("icon_id") or "none"
+    icon_position = str(params.get("icon_position", "right")).lower()
+    extruder_icon = int(params.get("extruder_icon", 2))
+    if extruder_icon == -1:
+        extruder_icon = extruder_line1
+
     # Cornice / Bordo (utilizzato per stile 'rectangle')
     border_enabled = bool(params.get("border_enabled", True))
     border_width = float(params.get("border_width", 2.0))
@@ -212,11 +221,68 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception:
             line2_enabled = False
 
-    w_content = max(w1, w2)
+    w_text_content = max(w1, w2)
     if line2_enabled:
-        h_content = h1 + line_spacing + h2
+        h_text_content = h1 + line_spacing + h2
     else:
-        h_content = h1
+        h_text_content = h1
+
+    # 3. Generazione e Scalatura Simbolo Vettoriale (se selezionato)
+    icon_raw = _get_vector_icon(icon_name)
+    icon_norm = None
+    iw, ih = 0.0, 0.0
+    spacing_icon = 4.0 if (icon_raw is not None) else 0.0
+
+    if icon_raw is not None:
+        icon_h = min(font_size_line1 * 1.05, max(h_text_content * 0.90, 14.0))
+        icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
+        iminx, iminy, imaxx, imaxy = icon_scaled.bounds
+        iw = imaxx - iminx
+        ih = imaxy - iminy
+        icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
+
+    # Calcolo ingombro orizzontale combinato (Testo + Icona)
+    w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
+    h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
+
+    # Disposizione orizzontale centrata attorno a u = 0
+    if icon_norm is not None:
+        if icon_position == "left":
+            x_icon = -w_content_total / 2.0
+            x_text_start = -w_content_total / 2.0 + iw + spacing_icon
+        else:
+            x_text_start = -w_content_total / 2.0
+            x_icon = -w_content_total / 2.0 + w_text_content + spacing_icon
+
+        x1 = x_text_start + (w_text_content - w1) / 2.0
+        x2 = x_text_start + (w_text_content - w2) / 2.0
+    else:
+        x_icon = 0.0
+        x1 = -w1 / 2.0
+        x2 = -w2 / 2.0
+
+    # Disposizione verticale
+    if line2_enabled and t2_norm is not None:
+        y1 = h2 + line_spacing
+        y2 = 0.0
+        mid_y = h_text_content / 2.0
+        y_icon = mid_y - (ih / 2.0)
+    else:
+        y1 = 0.0
+        y2 = 0.0
+        y_icon = (h1 - ih) / 2.0
+
+    t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
+    t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2) if (line2_enabled and t2_norm is not None) else None
+    icon_local = affinity.translate(icon_norm, xoff=x_icon, yoff=y_icon) if (icon_norm is not None) else None
+
+    # Unione elementi in rilievo frontale
+    fg_items = [t1_local]
+    if t2_local is not None:
+        fg_items.append(t2_local)
+    if icon_local is not None:
+        fg_items.append(icon_local)
+    fg_union = unary_union(fg_items)
 
     parts: List[PartItem] = []
 
@@ -224,22 +290,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         # ==============================================================================
         # 1. TARGHETTA DA TAVOLO SAGOMATA SUL TESTO CON BASAMENTO/BINARIO D'APPOGGIO
         # ==============================================================================
-        # Centra le righe attorno a u = 0
-        x1 = -w1 / 2.0
-        if line2_enabled and t2_norm is not None:
-            x2 = -w2 / 2.0
-            y1 = h2 + line_spacing
-            y2 = 0.0
-            t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
-            t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2)
-            fg_union = unary_union([t1_local, t2_local])
-        else:
-            y1 = 0.0
-            t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
-            t2_local = None
-            fg_union = t1_local
-
-        # Profilo sagomato attorno al testo (con morphological closing)
+        # Profilo sagomato attorno a testo e simbolo (con morphological closing)
         close_r = max(3.5, font_size_line1 * 0.25)
         closed_fg = fg_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
         contour_pad = max(3.0, padding_y)
@@ -255,6 +306,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         contour_2d_aligned = affinity.translate(contour_2d, yoff=v_offset)
         t1_2d_aligned = affinity.translate(t1_local, yoff=v_offset)
         t2_2d_aligned = affinity.translate(t2_local, yoff=v_offset) if t2_local else None
+        icon_2d_aligned = affinity.translate(icon_local, yoff=v_offset) if icon_local else None
 
         # Parametri Geometrici Inclinazione e Binario d'Appoggio (Standing Footing)
         tilt_angle_deg = float(params.get("tilt_angle", 76.0)) # Angolo ergonomico da scrivania
@@ -320,48 +372,47 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base_total = trimesh.util.concatenate(sub_base_meshes)
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=extruder_base))
 
-        # 4. Estrusione Testo Riga 1 sulla Faccia Inclinata
-        M_text_face = np.array([
+        # Matrice comune per gli elementi in rilievo sulla faccia inclinata
+        M_face_elements = np.array([
             [1.0, 0.0, 0.0, 0.0],
             [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), y_anchor - plate_thickness * np.sin(tilt_angle)],
             [0.0, np.sin(tilt_angle), np.cos(tilt_angle), z_anchor + plate_thickness * np.cos(tilt_angle)],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
 
+        # 4. Estrusione Testo Riga 1
         mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
-        mesh_t1.apply_transform(M_text_face)
+        mesh_t1.apply_transform(M_face_elements)
         clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
         parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
 
         # 5. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
             mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
-            mesh_t2.apply_transform(M_text_face)
+            mesh_t2.apply_transform(M_face_elements)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
+
+        # 6. Estrusione Simbolo 3D (se presente)
+        if icon_2d_aligned is not None:
+            mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1)
+            mesh_icon.apply_transform(M_face_elements)
+            clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
+            parts.append(PartItem(name=f"Icon_{clean_icon}", mesh=mesh_icon, extruder=extruder_icon))
 
     else:
         # ==============================================================================
         # 2. TARGHETTA DA TAVOLO RETTANGOLARE CON SUPPORTO CUNEO AUTOPORTANTE
         # ==============================================================================
         border_clearance = (border_width + 1.5) if border_enabled else 0.0
-        w_face = max(w_content + 2 * (padding_x + border_clearance), 68.0)
-        h_face = max(h_content + 2 * (padding_y + border_clearance), 28.0)
+        w_face = max(w_content_total + 2 * (padding_x + border_clearance), 68.0)
+        h_face = max(h_content_total + 2 * (padding_y + border_clearance), 28.0)
 
-        # Centra il testo sulla faccia
-        v_start = (h_face - h_content) / 2.0
-        if line2_enabled and t2_norm is not None:
-            v1_pos = v_start + h2 + line_spacing
-            v2_pos = v_start
-            u1_pos = -w1 / 2.0
-            u2_pos = -w2 / 2.0
-            t1_2d = affinity.translate(t1_norm, xoff=u1_pos, yoff=v1_pos)
-            t2_2d = affinity.translate(t2_norm, xoff=u2_pos, yoff=v2_pos)
-        else:
-            v1_pos = v_start
-            u1_pos = -w1 / 2.0
-            t1_2d = affinity.translate(t1_norm, xoff=u1_pos, yoff=v1_pos)
-            t2_2d = None
+        # Centra il contenuto sulla faccia rettangolare
+        v_start = (h_face - h_content_total) / 2.0
+        t1_face = affinity.translate(t1_local, yoff=v_start)
+        t2_face = affinity.translate(t2_local, yoff=v_start) if t2_local else None
+        icon_face = affinity.translate(icon_local, yoff=v_start) if icon_local else None
 
         # Cornice / Bordo perimetrale
         border_2d = None
@@ -412,16 +463,22 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
 
-        mesh_t1 = _extrude_geometry(t1_2d, height=thickness_line1)
+        mesh_t1 = _extrude_geometry(t1_face, height=thickness_line1)
         mesh_t1.apply_transform(M_face)
         clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
         parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
 
-        if line2_enabled and t2_2d is not None:
-            mesh_t2 = _extrude_geometry(t2_2d, height=thickness_line2)
+        if line2_enabled and t2_face is not None:
+            mesh_t2 = _extrude_geometry(t2_face, height=thickness_line2)
             mesh_t2.apply_transform(M_face)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
+
+        if icon_face is not None:
+            mesh_icon = _extrude_geometry(icon_face, height=thickness_line1)
+            mesh_icon.apply_transform(M_face)
+            clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
+            parts.append(PartItem(name=f"Icon_{clean_icon}", mesh=mesh_icon, extruder=extruder_icon))
 
         if border_enabled and border_2d is not None and not border_2d.is_empty:
             mesh_border = _extrude_geometry(border_2d, height=border_thickness)

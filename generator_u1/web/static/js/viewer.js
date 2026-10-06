@@ -56,12 +56,15 @@ class ModelViewer {
     this.renderer.domElement.style.touchAction = "none";
     this.container.appendChild(this.renderer.domElement);
 
-    // 4. OrbitControls Touch-friendly
+    // 4. OrbitControls Touch-friendly con rotazione libera 360°
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-    this.controls.maxPolarAngle = Math.PI / 2 - 0.02; // Impedisce di andare sotto al piatto
-    this.controls.minDistance = 20;
+    this.controls.minPolarAngle = 0;
+    this.controls.maxPolarAngle = Math.PI * 0.95; // Rotazione completa a 360° evitando glitch al nadir
+    this.controls.minAzimuthAngle = -Infinity;
+    this.controls.maxAzimuthAngle = Infinity;
+    this.controls.minDistance = 15;
     this.controls.maxDistance = 500;
     this.controls.target.set(0, 0, 2);
     if (THREE.TOUCH) {
@@ -338,12 +341,31 @@ class ModelViewer {
   }
 
   // Controlli Camera Preset
-  resetView() {
+  resetView(productType = 'keychain') {
+    if (productType === 'desk_sign') {
+      this.setDeskSignView();
+      return;
+    }
     this.camera.position.set(0, -110, 95);
     this.controls.target.set(0, 0, 2);
     this.controls.update();
     if (this.modelGroup && this.modelGroup.children.length > 0) {
       this.fitCameraToObject(this.modelGroup);
+    }
+  }
+
+  setDeskSignView() {
+    const box = new THREE.Box3().setFromObject(this.modelGroup);
+    const center = new THREE.Vector3(0, 0, 10);
+    if (!box.isEmpty()) {
+      box.getCenter(center);
+    }
+    // Vista frontale ergonomica (leggermente rialzata e inclinata verso il fronte della targhetta, con target al centro del testo)
+    this.camera.position.set(center.x, center.y - 110, center.z + 42);
+    this.controls.target.copy(center);
+    this.controls.update();
+    if (this.modelGroup && this.modelGroup.children.length > 0) {
+      this.fitCameraToObject(this.modelGroup, 1.25);
     }
   }
 
