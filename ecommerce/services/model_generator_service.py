@@ -70,6 +70,8 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
         if resolved_font:
             params["font_path_line1"] = resolved_font
             params["font_path_line2"] = resolved_font
+        if item_data.get("base_style"):
+            params["base_style"] = item_data.get("base_style")
         parts = generate_desk_sign_parts(params)
         filename = f"{clean_order}_{clean_text}_DeskSign_U1.3mf"
         proj_name = f"{clean_order}_{clean_text}_DeskSign"

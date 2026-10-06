@@ -1,5 +1,6 @@
 import os
 from typing import List, Tuple, Dict, Any, Optional
+from pathlib import Path
 import numpy as np
 import shapely.geometry as sg
 from shapely.ops import unary_union
@@ -12,7 +13,8 @@ from generator_u1.packager.snapmaker_3mf import PartItem
 from generator_u1.font_resolver import (
     get_font_properties,
     get_font_dilation_offset,
-    apply_text_polygon_buffer
+    apply_text_polygon_buffer,
+    resolve_font_path
 )
 
 def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
@@ -65,6 +67,8 @@ def _generate_text_2d(
     dilation_offset: float = 0.0
 ) -> sg.base.BaseGeometry:
     """Genera la geometria 2D vettoriale di una riga di testo con buffer opzionale."""
+    if not font_path:
+        font_path = resolve_font_path(font_family)
     fp = get_font_properties(font_family, font_path)
 
     if letter_spacing == 0.0 or len(text) <= 1:
@@ -112,60 +116,81 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     """
     Genera le mesh 3D manifold per la Targhetta da Tavolo (Desk Sign).
     Supporta:
-    - Base a Cuneo Inclinato (Wedge autoportante) o Piatta (Flat).
-    - Faccia con estrusione lungo la normale matematica esatta.
-    - Testo su 1 o 2 righe indipendenti con allineamento personalizzato.
-    - Cornice / bordo decorativo in rilievo con raggio di raccordo.
-    - Fino a 4 estrusori indipendenti Snapmaker U1 (T0..T3).
+    1. Base "Sagomata sul Testo" (contour): il profilo sagomato del testo poggia
+       saldamente su un basamento/binario orizzontale spesso da appoggio con
+       inclinazione ergonomica da tavolo (~76°) e nervature di rinforzo posteriori.
+    2. Base "Rettangolare" (rectangle / wedge): targa rettangolare da tavolo
+       con supporto cuneo solido autoportante (~68°), cornice perimetrale in rilievo
+       e testo estruso sulla faccia inclinata.
+    - Testo su 1 o 2 righe indipendenti con allineamento e spessore dedicati.
+    - Fino a 4 estrusori fisici Snapmaker U1 (T0..T3).
     """
-    base_mode = params.get("base_mode", "wedge").lower()
-    wedge_angle_deg = float(params.get("wedge_angle", 45.0))
-    wedge_angle = np.radians(wedge_angle_deg)
-    base_thickness = float(params.get("base_thickness", 2.4))
-    corner_radius = float(params.get("corner_radius", 3.0))
-    padding_x = float(params.get("padding_x", 6.0))
-    padding_y = float(params.get("padding_y", 5.0))
-    line_spacing = float(params.get("line_spacing", 3.5))
-    text_align = params.get("text_align", "center").lower()
+    # Determinazione stile base: 'contour' (Sagomata sul Testo) vs 'rectangle' (Rettangolare)
+    base_style = params.get("base_style")
+    if not base_style:
+        base_mode = params.get("base_mode", "").lower()
+        if base_mode in ["flat", "wedge"]:
+            base_style = "rectangle" if base_mode == "wedge" else "contour"
+        else:
+            base_style = "contour"
+    base_style = base_style.lower()
+    if base_style not in ["contour", "rectangle"]:
+        base_style = "contour"
 
-    # Riga 1 (Titolo)
-    text_line1 = params.get("text_line1", "CHARIZARD").strip()
+    base_thickness = float(params.get("base_thickness", 3.0))
+    padding_x = float(params.get("padding_x", 8.0))
+    padding_y = float(params.get("padding_y", 4.0))
+    line_spacing = float(params.get("line_spacing", 3.5))
+
+    # Riga 1 (Titolo Principale)
+    text_line1 = params.get("text_line1") or params.get("text", "STUDIO U1")
+    text_line1 = str(text_line1).strip()
     if not text_line1:
-        text_line1 = params.get("text", "DESK SIGN").strip() or "DESK SIGN"
-    font_family_line1 = params.get("font_family_line1") or params.get("font_family", "Arial")
+        text_line1 = "STUDIO U1"
+
+    font_family_line1 = params.get("font_family_line1") or params.get("font_family", "Permanent Marker")
     font_path_line1 = params.get("font_path_line1") or params.get("font_path")
-    font_size_line1 = float(params.get("font_size_line1", params.get("font_size", 14.0)))
+    if not font_path_line1:
+        font_path_line1 = resolve_font_path(font_family_line1)
+
+    font_size_line1 = float(params.get("font_size_line1", params.get("font_size", 16.0)))
     letter_spacing_line1 = float(params.get("letter_spacing_line1", params.get("letter_spacing", 0.0)))
-    thickness_line1 = float(params.get("thickness_line1", 1.2))
+    thickness_line1 = float(params.get("thickness_line1", 1.4))
     extruder_line1 = int(params.get("extruder_line1", params.get("extruder_text", 1)))
 
     # Riga 2 (Sottotitolo, opzionale)
-    line2_enabled = bool(params.get("line2_enabled", True))
-    text_line2 = params.get("text_line2", "").strip()
+    line2_enabled = bool(params.get("line2_enabled", False))
+    text_line2 = (params.get("text_line2") or "").strip()
     if not text_line2:
         line2_enabled = False
 
     font_family_line2 = params.get("font_family_line2") or font_family_line1
     font_path_line2 = params.get("font_path_line2") or font_path_line1
-    font_size_line2 = float(params.get("font_size_line2", 8.0))
+    if not font_path_line2 and font_family_line2:
+        font_path_line2 = resolve_font_path(font_family_line2)
+
+    font_size_line2 = float(params.get("font_size_line2", font_size_line1 * 0.65))
     letter_spacing_line2 = float(params.get("letter_spacing_line2", 0.0))
     thickness_line2 = float(params.get("thickness_line2", 1.2))
     extruder_line2 = int(params.get("extruder_line2", 2))
 
-    # Cornice / Bordo
+    # Cornice / Bordo (utilizzato per stile 'rectangle')
     border_enabled = bool(params.get("border_enabled", True))
     border_width = float(params.get("border_width", 2.0))
     border_thickness = float(params.get("border_thickness", 1.0))
     extruder_border = int(params.get("extruder_border", 3))
 
-    # Base
+    # Assegnazione estrusore base
     extruder_base = int(params.get("extruder_base", 0))
 
     offset1 = get_font_dilation_offset(font_family_line1)
     offset2 = get_font_dilation_offset(font_family_line2)
 
-    # 1. Generazione 2D Testo Riga 1 (con buffer per tratti sottili)
-    t1_raw = _generate_text_2d(text_line1, font_family_line1, font_path_line1, font_size_line1, letter_spacing_line1, dilation_offset=offset1)
+    # 1. Generazione 2D Testo Riga 1
+    t1_raw = _generate_text_2d(
+        text_line1, font_family_line1, font_path_line1,
+        font_size_line1, letter_spacing_line1, dilation_offset=offset1
+    )
     t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
     w1 = t1_maxx - t1_minx
     h1 = t1_maxy - t1_miny
@@ -175,79 +200,193 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     t2_norm = None
     w2, h2 = 0.0, 0.0
     if line2_enabled:
-        t2_raw = _generate_text_2d(text_line2, font_family_line2, font_path_line2, font_size_line2, letter_spacing_line2, dilation_offset=offset2)
-        t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
-        w2 = t2_maxx - t2_minx
-        h2 = t2_maxy - t2_miny
-        t2_norm = affinity.translate(t2_raw, xoff=-t2_minx, yoff=-t2_miny)
+        try:
+            t2_raw = _generate_text_2d(
+                text_line2, font_family_line2, font_path_line2,
+                font_size_line2, letter_spacing_line2, dilation_offset=offset2
+            )
+            t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
+            w2 = t2_maxx - t2_minx
+            h2 = t2_maxy - t2_miny
+            t2_norm = affinity.translate(t2_raw, xoff=-t2_minx, yoff=-t2_miny)
+        except Exception:
+            line2_enabled = False
 
-    # 3. Calcolo Ingombri Contenuto e Dimensionamento Faccia (W x H_face)
     w_content = max(w1, w2)
     if line2_enabled:
         h_content = h1 + line_spacing + h2
     else:
         h_content = h1
 
-    border_clearance = (border_width + 1.5) if border_enabled else 0.0
-    w_face = max(w_content + 2 * (padding_x + border_clearance), 60.0)
-    h_face = max(h_content + 2 * (padding_y + border_clearance), 25.0)
-
-    # 4. Posizionamento 2D dei Testi sulla Faccia (u in [-W/2, W/2], v in [0, H_face])
-    v_start = (h_face - h_content) / 2.0
-
-    if line2_enabled:
-        # Riga 2 in basso (v inferiore), Riga 1 in alto (v superiore)
-        v2_pos = v_start
-        v1_pos = v_start + h2 + line_spacing
-    else:
-        v1_pos = v_start
-        v2_pos = 0.0
-
-    # Calcolo coordinate u in base all'allineamento
-    if text_align == "center":
-        u1_pos = -w1 / 2.0
-        u2_pos = -w2 / 2.0
-    elif text_align == "left":
-        u1_pos = -w_face / 2.0 + padding_x + border_clearance
-        u2_pos = -w_face / 2.0 + padding_x + border_clearance
-    else:  # right
-        u1_pos = w_face / 2.0 - padding_x - border_clearance - w1
-        u2_pos = w_face / 2.0 - padding_x - border_clearance - w2
-
-    t1_2d = affinity.translate(t1_norm, xoff=u1_pos, yoff=v1_pos)
-    t2_2d = affinity.translate(t2_norm, xoff=u2_pos, yoff=v2_pos) if line2_enabled else None
-
-    # 5. Generazione Cornice / Bordo 2D (se abilitata)
-    border_2d = None
-    if border_enabled:
-        inset = 1.0
-        u_min = -w_face / 2.0 + inset
-        u_max = w_face / 2.0 - inset
-        v_min = inset
-        v_max = h_face - inset
-
-        r = min(corner_radius, (u_max - u_min) / 4.0, (v_max - v_min) / 4.0)
-        if r > 0.1:
-            outer_box = sg.box(u_min + r, v_min + r, u_max - r, v_max - r).buffer(r, resolution=16)
-        else:
-            outer_box = sg.box(u_min, v_min, u_max, v_max)
-
-        inner_box = outer_box.buffer(-border_width, resolution=16)
-        border_2d = outer_box.difference(inner_box)
-
-    # 6. Costruzione della Geometria 3D della Base e Trasformazione Normale
     parts: List[PartItem] = []
 
-    if base_mode == "wedge":
-        # BASE A CUNEO (WEDGE AUTOPORTANTE DA TAVOLO)
-        # Profilo Y-Z:
-        # Piatto PEI a Z=0. Faccia inclinata ad angolo alpha.
-        h_lip = min(base_thickness, 2.0)
-        t_land = 2.0  # Appiattimento superiore per solidità
+    if base_style == "contour":
+        # ==============================================================================
+        # 1. TARGHETTA DA TAVOLO SAGOMATA SUL TESTO CON BASAMENTO/BINARIO D'APPOGGIO
+        # ==============================================================================
+        # Centra le righe attorno a u = 0
+        x1 = -w1 / 2.0
+        if line2_enabled and t2_norm is not None:
+            x2 = -w2 / 2.0
+            y1 = h2 + line_spacing
+            y2 = 0.0
+            t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
+            t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2)
+            fg_union = unary_union([t1_local, t2_local])
+        else:
+            y1 = 0.0
+            t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
+            t2_local = None
+            fg_union = t1_local
+
+        # Profilo sagomato attorno al testo (con morphological closing)
+        close_r = max(3.5, font_size_line1 * 0.25)
+        closed_fg = fg_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
+        contour_pad = max(3.0, padding_y)
+        contour_2d = closed_fg.buffer(contour_pad, resolution=16).buffer(0)
+        contour_2d = contour_2d.buffer(0.5, resolution=16).buffer(-0.5, resolution=16)
+
+        c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
+        w_contour = c_maxx - c_minx
+        h_contour = c_maxy - c_miny
+
+        # Allinea in modo che la base della sagoma inizi a v = 0
+        v_offset = -c_miny
+        contour_2d_aligned = affinity.translate(contour_2d, yoff=v_offset)
+        t1_2d_aligned = affinity.translate(t1_local, yoff=v_offset)
+        t2_2d_aligned = affinity.translate(t2_local, yoff=v_offset) if t2_local else None
+
+        # Parametri Geometrici Inclinazione e Binario d'Appoggio (Standing Footing)
+        tilt_angle_deg = float(params.get("tilt_angle", 76.0)) # Angolo ergonomico da scrivania
+        tilt_angle = np.radians(tilt_angle_deg)
+        rail_h = 5.5               # Spessore/altezza del basamento (mm)
+        y_front = -8.0             # Sporgenza frontale del basamento sul tavolo (mm)
+        y_back = 14.0              # Sporgenza posteriore del basamento sul tavolo (mm)
+        w_rail = max(w_contour + 14.0, 68.0) # Larghezza basamento (supera la sagoma del testo)
+        plate_thickness = max(base_thickness, 2.6)
+
+        # 1. Mesh Basamento/Binario Orizzontale Solido da Appoggio (Footing Rail)
+        # Profilo trasversale YZ con appoggio piatto su Z = 0
+        p_front_bot = (y_front, 0.0)
+        p_front_top = (y_front, 3.2)
+        p_front_lip = (-2.0, rail_h)
+        p_rear_top = (y_back - 3.0, rail_h)
+        p_rear_chamf = (y_back, 2.5)
+        p_rear_bot = (y_back, 0.0)
+        rail_poly_yz = sg.Polygon([p_front_bot, p_front_top, p_front_lip, p_rear_top, p_rear_chamf, p_rear_bot])
+
+        mesh_rail = trimesh.creation.extrude_polygon(rail_poly_yz, height=w_rail)
+        T_rail = np.array([
+            [0.0, 0.0, 1.0, -w_rail / 2.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=float)
+        mesh_rail.apply_transform(T_rail)
+
+        # 2. Mesh Placca Sagomata Inclinata (Backplate)
+        mesh_plate = _extrude_geometry(contour_2d_aligned, height=plate_thickness)
+        y_anchor = 0.0
+        z_anchor = rail_h - 1.5 # Incastro solido nel basamento
+        M_plate = np.array([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), y_anchor],
+            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), z_anchor],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=float)
+        mesh_plate.apply_transform(M_plate)
+
+        # 3. Nervature Posteriori di Rinforzo Triangolari (Supporti antiribaltamento)
+        sub_base_meshes = [mesh_rail, mesh_plate]
+        rib_w = 3.0
+        rib_h = min(h_contour * 0.45, 18.0)
+        if rib_h > 4.0:
+            p_rib_bot = (0.0, rail_h - 1.0)
+            p_rib_rear = (y_back - 2.5, rail_h - 1.0)
+            p_rib_top = (rib_h * np.cos(tilt_angle), rail_h - 1.5 + rib_h * np.sin(tilt_angle))
+            rib_poly_yz = sg.Polygon([p_rib_bot, p_rib_rear, p_rib_top])
+            if rib_poly_yz.area > 1.0:
+                for rib_x in [-w_contour * 0.28, w_contour * 0.28]:
+                    m_rib = trimesh.creation.extrude_polygon(rib_poly_yz, height=rib_w)
+                    T_rib = np.array([
+                        [0.0, 0.0, 1.0, rib_x - rib_w / 2.0],
+                        [1.0, 0.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 1.0]
+                    ], dtype=float)
+                    m_rib.apply_transform(T_rib)
+                    sub_base_meshes.append(m_rib)
+
+        mesh_base_total = trimesh.util.concatenate(sub_base_meshes)
+        parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=extruder_base))
+
+        # 4. Estrusione Testo Riga 1 sulla Faccia Inclinata
+        M_text_face = np.array([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), y_anchor - plate_thickness * np.sin(tilt_angle)],
+            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), z_anchor + plate_thickness * np.cos(tilt_angle)],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=float)
+
+        mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
+        mesh_t1.apply_transform(M_text_face)
+        clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
+        parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
+
+        # 5. Estrusione Testo Riga 2 (se presente)
+        if line2_enabled and t2_2d_aligned is not None:
+            mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
+            mesh_t2.apply_transform(M_text_face)
+            clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
+            parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
+
+    else:
+        # ==============================================================================
+        # 2. TARGHETTA DA TAVOLO RETTANGOLARE CON SUPPORTO CUNEO AUTOPORTANTE
+        # ==============================================================================
+        border_clearance = (border_width + 1.5) if border_enabled else 0.0
+        w_face = max(w_content + 2 * (padding_x + border_clearance), 68.0)
+        h_face = max(h_content + 2 * (padding_y + border_clearance), 28.0)
+
+        # Centra il testo sulla faccia
+        v_start = (h_face - h_content) / 2.0
+        if line2_enabled and t2_norm is not None:
+            v1_pos = v_start + h2 + line_spacing
+            v2_pos = v_start
+            u1_pos = -w1 / 2.0
+            u2_pos = -w2 / 2.0
+            t1_2d = affinity.translate(t1_norm, xoff=u1_pos, yoff=v1_pos)
+            t2_2d = affinity.translate(t2_norm, xoff=u2_pos, yoff=v2_pos)
+        else:
+            v1_pos = v_start
+            u1_pos = -w1 / 2.0
+            t1_2d = affinity.translate(t1_norm, xoff=u1_pos, yoff=v1_pos)
+            t2_2d = None
+
+        # Cornice / Bordo perimetrale
+        border_2d = None
+        if border_enabled:
+            inset = 1.0
+            u_min = -w_face / 2.0 + inset
+            u_max = w_face / 2.0 - inset
+            v_min = inset
+            v_max = h_face - inset
+            r = min(3.0, (u_max - u_min) / 4.0, (v_max - v_min) / 4.0)
+            if r > 0.1:
+                outer_box = sg.box(u_min + r, v_min + r, u_max - r, v_max - r).buffer(r, resolution=16)
+            else:
+                outer_box = sg.box(u_min, v_min, u_max, v_max)
+            inner_box = outer_box.buffer(-border_width, resolution=16)
+            border_2d = outer_box.difference(inner_box)
+
+        # Angolo di inclinazione ergonomico da scrivania
+        wedge_angle_deg = float(params.get("wedge_angle", 68.0))
+        wedge_angle = np.radians(wedge_angle_deg)
+        h_lip = min(base_thickness, 2.5)
+        t_land = 3.0  # Appiattimento superiore per solidità
         d_base = h_face * np.cos(wedge_angle) + t_land
         y0 = -d_base / 2.0
 
-        # Poligono 2D YZ della sezione trasversale
         p_front_bot = (y0, 0.0)
         p_front_top = (y0, h_lip)
         p_face_top = (y0 + h_face * np.cos(wedge_angle), h_lip + h_face * np.sin(wedge_angle))
@@ -256,10 +395,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         poly_yz = sg.Polygon([p_front_bot, p_front_top, p_face_top, p_rear_top, p_rear_bot])
 
-        # Estrusione lungo X per larghezza w_face
         mesh_base_raw = trimesh.creation.extrude_polygon(poly_yz, height=w_face)
-        # Matrice di rotazione per allineare l'asse di estrusione a X:
-        # X = z_ext - w_face/2, Y = y, Z = z
         T_base = np.array([
             [0.0, 0.0, 1.0, -w_face / 2.0],
             [1.0, 0.0, 0.0, 0.0],
@@ -267,13 +403,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
         mesh_base_raw.apply_transform(T_base)
-        parts.append(PartItem(name="Base_Wedge", mesh=mesh_base_raw, extruder=extruder_base))
+        parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_raw, extruder=extruder_base))
 
-        # Matrice di trasformazione dal piano locale della faccia (u, v, w) allo spazio mondo (x, y, z):
-        # x = u
-        # y = y0 + v * cos(alpha) - w * sin(alpha)
-        # z = h_lip + v * sin(alpha) + w * cos(alpha)
-        # Normal w points strictly OUTWARD: (0, -sin(alpha), cos(alpha))
         M_face = np.array([
             [1.0, 0.0, 0.0, 0.0],
             [0.0, np.cos(wedge_angle), -np.sin(wedge_angle), y0],
@@ -281,51 +412,20 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
 
-    else:
-        # BASE PIATTA (FLAT)
-        # Rettangolo con angoli arrotondati estruso verticalmente
-        r = min(corner_radius, w_face / 4.0, h_face / 4.0)
-        u_min = -w_face / 2.0
-        u_max = w_face / 2.0
-        v_min = 0.0
-        v_max = h_face
+        mesh_t1 = _extrude_geometry(t1_2d, height=thickness_line1)
+        mesh_t1.apply_transform(M_face)
+        clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
+        parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
 
-        if r > 0.1:
-            base_poly = sg.box(u_min + r, v_min + r, u_max - r, v_max - r).buffer(r, resolution=16)
-        else:
-            base_poly = sg.box(u_min, v_min, u_max, v_max)
+        if line2_enabled and t2_2d is not None:
+            mesh_t2 = _extrude_geometry(t2_2d, height=thickness_line2)
+            mesh_t2.apply_transform(M_face)
+            clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
+            parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
 
-        # Centra in Y attorno a 0
-        base_poly = affinity.translate(base_poly, yoff=-h_face / 2.0)
-        mesh_base_raw = _extrude_geometry(base_poly, height=base_thickness)
-        parts.append(PartItem(name="Base_Flat", mesh=mesh_base_raw, extruder=extruder_base))
-
-        # Trasformazione per posizionare il rilievo sulla faccia superiore piatta a Z = base_thickness
-        M_face = np.array([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, -h_face / 2.0],
-            [0.0, 0.0, 1.0, base_thickness],
-            [0.0, 0.0, 0.0, 1.0]
-        ], dtype=float)
-
-    # 7. Estrusione e Trasformazione Elementi in Rilievo sulla Faccia
-    # Riga 1
-    mesh_t1 = _extrude_geometry(t1_2d, height=thickness_line1)
-    mesh_t1.apply_transform(M_face)
-    clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-") or "Line1"
-    parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
-
-    # Riga 2 (se presente)
-    if line2_enabled and t2_2d is not None:
-        mesh_t2 = _extrude_geometry(t2_2d, height=thickness_line2)
-        mesh_t2.apply_transform(M_face)
-        clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-") or "Line2"
-        parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
-
-    # Cornice decorativa (se abilitata)
-    if border_enabled and border_2d is not None and not border_2d.is_empty:
-        mesh_border = _extrude_geometry(border_2d, height=border_thickness)
-        mesh_border.apply_transform(M_face)
-        parts.append(PartItem(name="Border_Frame", mesh=mesh_border, extruder=extruder_border))
+        if border_enabled and border_2d is not None and not border_2d.is_empty:
+            mesh_border = _extrude_geometry(border_2d, height=border_thickness)
+            mesh_border.apply_transform(M_face)
+            parts.append(PartItem(name="Border_Frame", mesh=mesh_border, extruder=extruder_border))
 
     return parts

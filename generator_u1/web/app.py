@@ -550,6 +550,13 @@ def preview_model(params: Dict[str, Any]):
     generator_type = params.get("generator", "keychain").lower()
 
     if generator_type == "desk_sign":
+        if not params.get("font_family_line1") and params.get("font_family"):
+            params["font_family_line1"] = params.get("font_family")
+        if not params.get("text_line1") and params.get("text"):
+            params["text_line1"] = params.get("text")
+        if not params.get("font_path_line1") and params.get("font_path"):
+            params["font_path_line1"] = params.get("font_path")
+
         fp1 = _resolve_font_path(params, font_key="font_family_line1", path_key="font_path_line1")
         if fp1:
             params["font_path_line1"] = fp1
@@ -620,6 +627,13 @@ def generate_3mf(params: Dict[str, Any]):
     generator_type = params.get("generator", "keychain").lower()
 
     if generator_type == "desk_sign":
+        if not params.get("font_family_line1") and params.get("font_family"):
+            params["font_family_line1"] = params.get("font_family")
+        if not params.get("text_line1") and params.get("text"):
+            params["text_line1"] = params.get("text")
+        if not params.get("font_path_line1") and params.get("font_path"):
+            params["font_path_line1"] = params.get("font_path")
+
         fp1 = _resolve_font_path(params, font_key="font_family_line1", path_key="font_path_line1")
         if fp1:
             params["font_path_line1"] = fp1

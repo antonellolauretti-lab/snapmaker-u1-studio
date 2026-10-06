@@ -205,6 +205,7 @@
       gap: 8px;
     }
     .config-group, .config-section { margin-bottom: 22px; }
+    body.product-desk-sign #groupHolePosition { display: none !important; }
 
     /* Button Tabs */
     .tab-grid-2, .toggle-group-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -1818,6 +1819,7 @@
           base_style: currentConfig.baseStyle,
           hole_position: currentConfig.holePosition,
           font_family: currentConfig.fontId,
+          font_family_line1: currentConfig.fontId,
           padding_y: 2.0,
           icon_name: currentConfig.iconId,
           icon_id: currentConfig.iconId,
@@ -1859,6 +1861,8 @@
       document.getElementById('tabKeychain')?.addEventListener('click', () => {
         document.getElementById('tabKeychain').classList.add('active');
         document.getElementById('tabDeskSign').classList.remove('active');
+        document.body.classList.remove('product-desk-sign');
+        document.body.classList.add('product-keychain');
         document.getElementById('groupHolePosition').style.display = 'block';
         document.getElementById('groupIcon').style.display = 'block';
         document.getElementById('section-icon-position').style.display = 'block';
@@ -1873,11 +1877,16 @@
       document.getElementById('tabDeskSign')?.addEventListener('click', () => {
         document.getElementById('tabDeskSign').classList.add('active');
         document.getElementById('tabKeychain').classList.remove('active');
+        document.body.classList.add('product-desk-sign');
+        document.body.classList.remove('product-keychain');
         document.getElementById('groupHolePosition').style.display = 'none';
         document.getElementById('groupIcon').style.display = 'none';
         document.getElementById('section-icon-position').style.display = 'none';
         document.getElementById('groupIconColor').style.display = 'none';
         currentConfig.productType = 'desk_sign';
+        currentConfig.baseStyle = 'contour';
+        document.getElementById('btnBaseContour')?.classList.add('active');
+        document.getElementById('btnBaseRect')?.classList.remove('active');
         updateLivePrice();
         request3DPreview();
       });
