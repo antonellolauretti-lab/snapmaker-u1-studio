@@ -18,17 +18,40 @@ if not logger.handlers:
     logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-RESEND_API_KEY = os.getenv("RESEND_API_KEY")
-STORE_OWNER_EMAIL = os.getenv("STORE_OWNER_EMAIL", "antonello.lauretti82@gmail.com")
-FROM_EMAIL = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
+def get_notification_config() -> Dict[str, str]:
+    """Recupera la configurazione email supportando tutti gli alias delle variabili d'ambiente."""
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    from_email = (
+        os.getenv("FROM_EMAIL")
+        or os.getenv("RESEND_FROM_EMAIL")
+        or "onboarding@resend.dev"
+    ).strip()
+    store_owner = (
+        os.getenv("ADMIN_NOTIFICATION_EMAIL")
+        or os.getenv("STORE_OWNER_EMAIL")
+        or os.getenv("ADMIN_EMAIL")
+        or "antonello.lauretti82@gmail.com"
+    ).strip()
+    return {
+        "api_key": api_key,
+        "from_email": from_email,
+        "store_owner": store_owner
+    }
 
 def _send_resend_email(from_addr: str, to_addrs: List[str], subject: str, html_content: str) -> Optional[Dict[str, Any]]:
-    """Invia email con libreria resend ufficiale se disponibile, o tramite API REST diretta."""
-    api_key = os.getenv("RESEND_API_KEY")
+    """Invia email con libreria resend ufficiale se disponibile, o tramite API REST diretta con logging diagnostico completo."""
+    cfg = get_notification_config()
+    api_key = cfg["api_key"]
     if not api_key:
-        logger.warning(f"RESEND_API_KEY non impostata. Email a {to_addrs} con oggetto '{subject}' simulata in console.")
-        return {"id": "simulated", "status": "simulated"}
+        logger.error(
+            f"[EMAIL NON CONFIGURATA] RESEND_API_KEY mancante! Impossibile inviare email a {to_addrs} (Oggetto: '{subject}'). "
+            "Aggiungi la variabile 'RESEND_API_KEY' nella Dashboard di Render (Environment)."
+        )
+        return {"id": "simulated", "status": "simulated", "error": "RESEND_API_KEY_MANCANTE"}
 
+    logger.info(f"[EMAIL SENDING] Tentativo invio da '{from_addr}' a {to_addrs} | Oggetto: '{subject}'")
+
+    # Tentativo 1: SDK resend ufficiale
     try:
         import resend
         resend.api_key = api_key
@@ -39,10 +62,17 @@ def _send_resend_email(from_addr: str, to_addrs: List[str], subject: str, html_c
             "html": html_content,
         }
         email_res = resend.Emails.send(params)
-        logger.info(f"Notifica Resend inviata con successo: {email_res}")
+        logger.info(f"[EMAIL RESEND SDK] Risposta invio per {to_addrs}: {email_res}")
+        if isinstance(email_res, dict) and ("statusCode" in email_res or "error" in email_res):
+            logger.error(f"[EMAIL RESEND SDK RIFIUTATO] Errore API Resend: {email_res}")
         return email_res
     except ImportError:
-        # Fallback a richiesta HTTP nativa
+        logger.info("[EMAIL INFO] Pacchetto resend non installato, uso fallback HTTP REST nativo.")
+    except Exception as err:
+        logger.error(f"[EMAIL SDK ERROR] resend.Emails.send ha sollevato eccezione: {type(err).__name__}: {err}", exc_info=True)
+
+    # Tentativo 2: Fallback a richiesta HTTP REST nativa con logging corpo di risposta
+    try:
         url = "https://api.resend.com/emails"
         req_data = json.dumps({
             "from": from_addr,
@@ -60,9 +90,20 @@ def _send_resend_email(from_addr: str, to_addrs: List[str], subject: str, html_c
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=12) as resp:
-            body = json.loads(resp.read().decode("utf-8"))
-            logger.info(f"Notifica Resend inviata via REST con successo: {body}")
+            resp_body = resp.read().decode("utf-8", errors="ignore")
+            body = json.loads(resp_body)
+            logger.info(f"[EMAIL REST SUCCESS] Notifica Resend inviata via REST con successo (HTTP {resp.status}): {body}")
             return body
+    except urllib.error.HTTPError as http_err:
+        err_msg = http_err.read().decode("utf-8", errors="ignore")
+        logger.error(
+            f"[EMAIL HTTP ERROR {http_err.code}] Resend API ha rifiutato la richiesta: {err_msg} "
+            f"| Mittente: '{from_addr}' | Destinatari: {to_addrs} | Oggetto: '{subject}'"
+        )
+        return {"error": "http_error", "code": http_err.code, "detail": err_msg}
+    except Exception as rest_err:
+        logger.error(f"[EMAIL NETWORK ERROR] Connessione a api.resend.com non riuscita: {type(rest_err).__name__}: {rest_err}", exc_info=True)
+        return {"error": "network_error", "detail": str(rest_err)}
 
 import html
 
@@ -75,8 +116,9 @@ def send_admin_new_order_alert(order: Dict[str, Any], items: List[Dict[str, Any]
     try:
         order_id = _esc(order.get("order_number") or order.get("id", "N/D"))
         total = f"{float(order.get('total_amount', 0)):.2f}"
-        from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
-        store_owner = os.getenv("STORE_OWNER_EMAIL", "antonello.lauretti82@gmail.com")
+        cfg = get_notification_config()
+        from_email = cfg["from_email"]
+        store_owner = cfg["store_owner"]
 
         delivery_method = order.get("delivery_method", "shipping")
         is_pickup = delivery_method == "pickup"
@@ -147,7 +189,8 @@ def send_customer_order_confirmation(order: Dict[str, Any], items: List[Dict[str
     try:
         order_id = _esc(order.get("order_number") or order.get("id", "N/D"))
         total = f"{float(order.get('total_amount', 0)):.2f}"
-        from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
+        cfg = get_notification_config()
+        from_email = cfg["from_email"]
 
         delivery_method = order.get("delivery_method", "shipping")
         is_pickup = delivery_method == "pickup"

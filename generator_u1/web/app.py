@@ -429,6 +429,21 @@ def handle_create_test_order(payload: Dict[str, Any], request: Request):
     from ecommerce.api_router import api_create_test_order
     return api_create_test_order(payload, request=request)
 
+@app.post("/api/store/orders/create-pickup-cash")
+@app.post("/store/orders/create-pickup-cash")
+@app.post("/api/orders/create-pickup-cash")
+@app.post("/orders/create-pickup-cash")
+def handle_create_pickup_cash_order_alias(payload: Dict[str, Any], request: Request):
+    """Alias diretto per ordini con ritiro a mano e pagamento in contanti."""
+    from ecommerce.api_router import api_create_pickup_cash_order
+    return api_create_pickup_cash_order(payload, request=request)
+
+@app.get("/admin/orders")
+def handle_admin_orders_alias(auth: bool = Depends(verify_admin_auth)):
+    """Alias diretto per recupero ordini admin accessibile anche senza prefisso /api."""
+    from ecommerce.api_router import admin_get_orders
+    return admin_get_orders(auth=auth)
+
 @app.post("/api/orders/create-paypal-order")
 @app.post("/orders/create-paypal-order")
 def handle_create_paypal_order_alias(payload: Dict[str, Any], request: Request):

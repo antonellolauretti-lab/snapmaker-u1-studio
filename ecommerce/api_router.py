@@ -78,34 +78,57 @@ _LOCAL_FILAMENTS_DB = [
 _LOCAL_ORDERS_DB = []
 _LOCAL_ORDER_ITEMS_DB = []
 
-DATA_DIR = PROJECT_ROOT / "ecommerce" / "data"
+# ==============================================================================
+# PERSISTENZA ORDINI & COSTANTE UNIFICATA PERCORSO DATABASE
+# ==============================================================================
+DATA_DIR = (PROJECT_ROOT / "ecommerce" / "data").resolve()
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-DB_FILE = DATA_DIR / "orders_db.json"
+
+# Costante unificata per garantire allineamento assoluto tra checkout e Admin
+_CUSTOM_ORDERS_PATH = os.getenv("ORDERS_FILE_PATH", "").strip()
+if _CUSTOM_ORDERS_PATH:
+    ORDERS_FILE_PATH = Path(_CUSTOM_ORDERS_PATH).resolve()
+else:
+    ORDERS_FILE_PATH = (DATA_DIR / "orders_db.json").resolve()
+
+ALT_ORDERS_FILE = (DATA_DIR / "orders.json").resolve()
+DB_FILE = ORDERS_FILE_PATH
 
 def _load_local_db():
     global _LOCAL_ORDERS_DB, _LOCAL_ORDER_ITEMS_DB, _LOCAL_FILAMENTS_DB
-    if DB_FILE.exists() and DB_FILE.stat().st_size > 0:
+    target_file = ORDERS_FILE_PATH
+    if not target_file.exists() and ALT_ORDERS_FILE.exists() and ALT_ORDERS_FILE.stat().st_size > 0:
+        target_file = ALT_ORDERS_FILE
+
+    if target_file.exists() and target_file.stat().st_size > 0:
         try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
+            with open(target_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 _LOCAL_ORDERS_DB = data.get("orders", [])
                 _LOCAL_ORDER_ITEMS_DB = data.get("order_items", [])
                 if data.get("filaments"):
                     _LOCAL_FILAMENTS_DB = data["filaments"]
         except Exception as e:
-            print(f"[WARN] Impossibile caricare {DB_FILE}: {e}")
+            print(f"[WARN] Impossibile caricare {target_file}: {e}")
 
 def _save_local_db():
     try:
+        ORDERS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
         content = json.dumps({
             "orders": _LOCAL_ORDERS_DB,
             "order_items": _LOCAL_ORDER_ITEMS_DB,
             "filaments": _LOCAL_FILAMENTS_DB
         }, indent=2, ensure_ascii=False, default=str)
-        with open(DB_FILE, "w", encoding="utf-8") as f:
+        with open(ORDERS_FILE_PATH, "w", encoding="utf-8") as f:
             f.write(content)
+        # Mirror sincrono su orders.json per massima interoperabilità
+        try:
+            with open(ALT_ORDERS_FILE, "w", encoding="utf-8") as f:
+                f.write(content)
+        except Exception:
+            pass
     except Exception as e:
-        print(f"[WARN] Impossibile salvare {DB_FILE}: {e}")
+        print(f"[WARN] Impossibile salvare {ORDERS_FILE_PATH}: {e}")
 
 _load_local_db()
 
@@ -489,12 +512,20 @@ def api_capture_paypal_order(payload: Dict[str, Any], request: Request):
 
     _save_local_db()
 
-    # Notifiche email via Resend
+    # Notifiche email via Resend con blocchi separati per isolare errori
     try:
-        send_customer_order_confirmation(order_record, saved_items)
-        send_admin_new_order_alert(order_record, saved_items)
+        cust_res = send_customer_order_confirmation(order_record, saved_items)
+        if cust_res and isinstance(cust_res, dict) and cust_res.get("error"):
+            print(f"[WARN] Invio conferma cliente PayPal non riuscito ({order_number}): {cust_res}")
     except Exception as e:
-        print(f"[WARN] Invio email non riuscito: {e}")
+        print(f"[WARN] Errore imprevisto invio email cliente PayPal ({order_number}): {e}")
+
+    try:
+        admin_res = send_admin_new_order_alert(order_record, saved_items)
+        if admin_res and isinstance(admin_res, dict) and admin_res.get("error"):
+            print(f"[WARN] Invio notifica admin PayPal non riuscito ({order_number}): {admin_res}")
+    except Exception as e:
+        print(f"[WARN] Errore imprevisto invio email admin PayPal ({order_number}): {e}")
 
     return {
         "status": "success",
@@ -536,6 +567,7 @@ def api_create_pickup_cash_order(payload: Dict[str, Any], request: Request):
     # Calcolo totale verificato con delivery_method='pickup'
     totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method="pickup")
 
+    _load_local_db()
     now = datetime.datetime.now()
     order_number = f"U1-RIT-{now.strftime('%Y%m%d')}-{len(_LOCAL_ORDERS_DB) + 1:04d}"
     order_id = str(uuid.uuid4())
@@ -601,12 +633,20 @@ def api_create_pickup_cash_order(payload: Dict[str, Any], request: Request):
 
     _save_local_db()
 
-    # Notifiche email via Resend
+    # Notifiche email via Resend con blocchi separati per isolare errori
     try:
-        send_customer_order_confirmation(order_record, saved_items)
-        send_admin_new_order_alert(order_record, saved_items)
+        cust_res = send_customer_order_confirmation(order_record, saved_items)
+        if cust_res and isinstance(cust_res, dict) and cust_res.get("error"):
+            print(f"[WARN] Invio conferma cliente ritiro non riuscito ({order_number}): {cust_res}")
     except Exception as e:
-        print(f"[WARN] Invio email non riuscito: {e}")
+        print(f"[WARN] Errore imprevisto invio email cliente ritiro ({order_number}): {e}")
+
+    try:
+        admin_res = send_admin_new_order_alert(order_record, saved_items)
+        if admin_res and isinstance(admin_res, dict) and admin_res.get("error"):
+            print(f"[WARN] Invio notifica admin ritiro non riuscito ({order_number}): {admin_res}")
+    except Exception as e:
+        print(f"[WARN] Errore imprevisto invio email admin ritiro ({order_number}): {e}")
 
     return {
         "status": "success",
@@ -875,6 +915,7 @@ def admin_delete_coupon(coupon_id: str, auth: bool = Depends(verify_admin_auth))
 @router.get("/admin/orders")
 def admin_get_orders(auth: bool = Depends(verify_admin_auth)):
     """Restituisce tutti gli ordini registrati con gli articoli associati."""
+    _load_local_db()
     enriched_orders = []
     for order in _LOCAL_ORDERS_DB:
         items = [it for it in _LOCAL_ORDER_ITEMS_DB if it["order_id"] == order["id"]]
@@ -886,6 +927,7 @@ def admin_get_orders(auth: bool = Depends(verify_admin_auth)):
 @router.post("/admin/orders/{order_id}/status")
 def admin_update_order_status(order_id: str, payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
     """Aggiorna lo stato dell'ordine e, se impostato su 'spedito', invia l'email al cliente."""
+    _load_local_db()
     new_status = payload.get("status")
     tracking = payload.get("tracking_number")
 
