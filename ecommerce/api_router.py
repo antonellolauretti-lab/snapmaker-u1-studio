@@ -521,6 +521,15 @@ def api_capture_paypal_order(payload: Dict[str, Any], request: Request):
         saved_items.append(item_record)
 
     _save_local_db()
+    print(
+        f"\n=======================================================\n"
+        f"[NUOVO ORDINE REGISTRATO] #{order_number} (PayPal)\n"
+        f"Cliente: {order_record.get('customer_name')} | Tel: {order_record.get('customer_phone')} | Email: {order_record.get('customer_email')}\n"
+        f"Totale: {order_record.get('total_amount')} EUR | Consegna: {order_record.get('delivery_method')}\n"
+        f"Articoli ({len(saved_items)}): {json.dumps(saved_items, ensure_ascii=False, indent=2)}\n"
+        f"=======================================================\n",
+        flush=True
+    )
 
     # Notifiche email via Resend con blocchi separati per isolare errori
     try:
@@ -642,6 +651,15 @@ def api_create_pickup_cash_order(payload: Dict[str, Any], request: Request):
         saved_items.append(item_record)
 
     _save_local_db()
+    print(
+        f"\n=======================================================\n"
+        f"[NUOVO ORDINE REGISTRATO] #{order_number} (Contanti al Ritiro)\n"
+        f"Cliente: {cust_name} | Tel: {cust_phone} | Email: {cust_email}\n"
+        f"Totale: {order_record.get('total_amount')} EUR | Consegna: {order_record.get('delivery_method')}\n"
+        f"Articoli ({len(saved_items)}): {json.dumps(saved_items, ensure_ascii=False, indent=2)}\n"
+        f"=======================================================\n",
+        flush=True
+    )
 
     # Notifiche email via Resend con blocchi separati per isolare errori
     try:
@@ -755,6 +773,15 @@ def api_create_test_order(payload: Dict[str, Any], request: Request):
         saved_items.append(item_record)
 
     _save_local_db()
+    print(
+        f"\n=======================================================\n"
+        f"[NUOVO ORDINE REGISTRATO] #{order_number} (TEST)\n"
+        f"Cliente: {order_record.get('customer_name')} | Tel: {order_record.get('customer_phone')} | Email: {order_record.get('customer_email')}\n"
+        f"Totale: {order_record.get('total_amount')} EUR | Consegna: {order_record.get('delivery_method')}\n"
+        f"Articoli ({len(saved_items)}): {json.dumps(saved_items, ensure_ascii=False, indent=2)}\n"
+        f"=======================================================\n",
+        flush=True
+    )
 
     try:
         send_admin_new_order_alert(order_record, saved_items)
@@ -992,6 +1019,47 @@ def admin_delete_order(order_id: str, auth: bool = Depends(verify_admin_auth)):
         "deleted_order_number": target_num,
         "message": f"Ordine #{target_num} eliminato con successo."
     }
+
+@router.post("/admin/orders/{order_id}/edit")
+@router.patch("/admin/orders/{order_id}")
+def admin_edit_order(order_id: str, payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
+    """Permette di modificare i dati anagrafici o i parametri degli articoli di un ordine."""
+    global _LOCAL_ORDERS_DB, _LOCAL_ORDER_ITEMS_DB
+    _load_local_db()
+
+    target_order = None
+    for o in _LOCAL_ORDERS_DB:
+        if str(o.get("id")) == str(order_id) or str(o.get("order_number")) == str(order_id):
+            target_order = o
+            break
+
+    if not target_order:
+        raise HTTPException(status_code=404, detail="Ordine non trovato.")
+
+    for field in ["customer_name", "customer_email", "customer_phone", "shipping_address",
+                  "shipping_city", "shipping_zip", "shipping_province", "order_notes",
+                  "delivery_method", "payment_method", "payment_status", "order_status", "total_amount"]:
+        if field in payload and payload[field] is not None:
+            target_order[field] = payload[field]
+
+    if "items" in payload and isinstance(payload["items"], list):
+        for upd_it in payload["items"]:
+            it_id = upd_it.get("id")
+            for it in _LOCAL_ORDER_ITEMS_DB:
+                if str(it.get("id")) == str(it_id) or (len(payload["items"]) == 1 and str(it.get("order_id")) == str(target_order.get("id"))):
+                    for k in ["custom_text_line1", "custom_text_line2", "font_id", "icon_id",
+                              "icon_position", "icon_color_hex", "has_custom_icon_color",
+                              "base_style", "hole_position", "base_color_name", "base_color_hex",
+                              "text_color_name", "text_color_hex", "product_title", "unit_price"]:
+                        if k in upd_it and upd_it[k] is not None:
+                            it[k] = upd_it[k]
+                    if "generator_params" in upd_it and isinstance(upd_it["generator_params"], dict):
+                        it.setdefault("generator_params", {}).update(upd_it["generator_params"])
+                    break
+
+    _save_local_db()
+    print(f"[ADMIN] Ordine #{target_order.get('order_number')} modificato con successo.", flush=True)
+    return {"status": "ok", "order": target_order}
 
 @router.get("/admin/items/{item_id}/download-3mf")
 async def api_download_order_item_3mf(

@@ -411,11 +411,47 @@
     tabPricing.addEventListener('click', () => { setActiveTab(tabPricing, secPricing); loadPricing(); });
     tabCoupons.addEventListener('click', () => { setActiveTab(tabCoupons, secCoupons); loadCoupons(); });
 
+    // Helper per intestazioni di autorizzazione garantite in ogni chiamata API
+    function getAdminHeaders() {
+      const pin = currentPin || sessionStorage.getItem('admin_pin') || '';
+      const token = currentToken || sessionStorage.getItem('admin_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (pin) headers['X-Admin-Pin'] = pin;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['X-Admin-Token'] = token;
+      } else if (pin) {
+        headers['Authorization'] = `Bearer ${pin}`;
+      }
+      return headers;
+    }
+
+    // Notifiche toast non bloccanti (sostituiscono alert/confirm del browser)
+    function showAdminToast(message, type = 'info') {
+      let toastContainer = document.getElementById('adminToastContainer');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'adminToastContainer';
+        toastContainer.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; max-width: 420px;';
+        document.body.appendChild(toastContainer);
+      }
+      const toast = document.createElement('div');
+      const bg = type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb';
+      toast.style.cssText = `background: ${bg}; color: #ffffff; padding: 12px 18px; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4); font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; gap: 14px; opacity: 1; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(0);`;
+      toast.innerHTML = `<span>${message}</span><button type="button" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; font-weight: bold; line-height: 1; padding: 0 4px;" onclick="this.parentElement.remove()">×</button>`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 320);
+      }, 4000);
+    }
+
     // Carica impostazioni listino
     async function loadPricing() {
       try {
         const resp = await fetch('/api/admin/pricing', {
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
         if (resp.ok) {
           const data = await resp.json();
@@ -451,20 +487,18 @@
       try {
         const resp = await fetch('/api/admin/pricing', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Pin': currentPin
-          },
+          headers: getAdminHeaders(),
           body: JSON.stringify(payload)
         });
         if (resp.ok) {
           notice.style.display = 'inline';
+          showAdminToast("Listino prezzi salvato con successo.", 'success');
           setTimeout(() => { notice.style.display = 'none'; }, 3500);
         } else {
-          alert("Errore durante il salvataggio del listino prezzi.");
+          showAdminToast("Errore durante il salvataggio del listino prezzi.", 'error');
         }
       } catch (err) {
-        alert("Errore salvataggio: " + err.message);
+        showAdminToast("Errore salvataggio: " + err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = '💾 Salva Modifiche Listino';
@@ -479,7 +513,7 @@
       if (!tbody) return;
       try {
         const resp = await fetch('/api/admin/coupons', {
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
         if (resp.ok) {
           allCoupons = await resp.json();
@@ -509,7 +543,9 @@
                 </td>
                 <td>
                   <button type="button" class="tab-btn" onclick="openCouponModal('${c.id}')" style="padding: 4px 8px; font-size: 12px; margin-right: 6px;">✏️ Modifica</button>
-                  <button type="button" class="tab-btn" onclick="deleteCoupon('${c.id}')" style="padding: 4px 8px; font-size: 12px; border-color: var(--danger); color: var(--danger);">🗑️ Elimina</button>
+                  <span id="coupon-del-${c.id}">
+                    <button type="button" class="tab-btn" onclick="initiateDeleteCoupon('${c.id}', '${c.code}')" style="padding: 4px 8px; font-size: 12px; border-color: var(--danger); color: var(--danger);">🗑️ Elimina</button>
+                  </span>
                 </td>
               </tr>
             `;
@@ -562,7 +598,7 @@
       const active = document.getElementById('couponActiveInput').checked;
 
       if (!code || isNaN(value) || value <= 0) {
-        alert("Inserisci un codice coupon e un valore di sconto valido.");
+        showAdminToast("Inserisci un codice coupon e un valore di sconto valido.", 'error');
         return;
       }
 
@@ -572,22 +608,20 @@
         const method = id ? 'PUT' : 'POST';
         const resp = await fetch(url, {
           method,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Pin': currentPin
-          },
+          headers: getAdminHeaders(),
           body: JSON.stringify(payload)
         });
 
         if (resp.ok) {
           closeCouponModal();
+          showAdminToast("Coupon salvato con successo.", 'success');
           loadCoupons();
         } else {
-          const err = await resp.json();
-          alert("Errore salvataggio coupon: " + (err.detail || JSON.stringify(err)));
+          const err = await resp.json().catch(() => ({}));
+          showAdminToast("Errore salvataggio coupon: " + (err.detail || JSON.stringify(err)), 'error');
         }
       } catch (err) {
-        alert("Errore di connessione: " + err.message);
+        showAdminToast("Errore di connessione: " + err.message, 'error');
       }
     }
 
@@ -595,28 +629,54 @@
       try {
         await fetch(`/api/admin/coupons/${couponId}/toggle`, {
           method: 'POST',
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
+        showAdminToast("Stato coupon aggiornato.", 'info');
         loadCoupons();
       } catch (e) {
-        alert("Errore modifica stato coupon: " + e.message);
+        showAdminToast("Errore modifica stato coupon: " + e.message, 'error');
       }
     }
 
-    async function deleteCoupon(couponId) {
-      if (!confirm("Sei sicuro di voler eliminare definitivamente questo codice coupon?")) return;
+    function initiateDeleteCoupon(couponId, couponCode) {
+      const container = document.getElementById(`coupon-del-${couponId}`);
+      if (!container) return;
+      container.innerHTML = `
+        <span style="display: inline-flex; gap: 4px; align-items: center;">
+          <button type="button" onclick="executeDeleteCoupon('${couponId}', '${couponCode}')" style="background: #ef4444; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">
+            ✓ Elimina
+          </button>
+          <button type="button" onclick="cancelDeleteCoupon('${couponId}', '${couponCode}')" style="background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+            Annulla
+          </button>
+        </span>
+      `;
+    }
+
+    function cancelDeleteCoupon(couponId, couponCode) {
+      const container = document.getElementById(`coupon-del-${couponId}`);
+      if (!container) return;
+      container.innerHTML = `
+        <button type="button" class="tab-btn" onclick="initiateDeleteCoupon('${couponId}', '${couponCode}')" style="padding: 4px 8px; font-size: 12px; border-color: var(--danger); color: var(--danger);">🗑️ Elimina</button>
+      `;
+    }
+
+    async function executeDeleteCoupon(couponId, couponCode) {
       try {
         const resp = await fetch(`/api/admin/coupons/${couponId}`, {
           method: 'DELETE',
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
         if (resp.ok) {
+          showAdminToast(`Coupon ${couponCode} eliminato.`, 'success');
           loadCoupons();
         } else {
-          alert("Errore durante l'eliminazione del coupon.");
+          showAdminToast("Errore durante l'eliminazione del coupon.", 'error');
+          cancelDeleteCoupon(couponId, couponCode);
         }
       } catch (e) {
-        alert("Errore di connessione: " + e.message);
+        showAdminToast("Errore di connessione: " + e.message, 'error');
+        cancelDeleteCoupon(couponId, couponCode);
       }
     }
 
@@ -635,7 +695,7 @@
       const tbody = document.getElementById('ordersTableBody');
       try {
         const resp = await fetch('/api/admin/orders', {
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
         const orders = await resp.json();
         if (!orders || orders.length === 0) {
@@ -643,7 +703,7 @@
           return;
         }
 
-        const authParam = currentToken ? `token=${encodeURIComponent(currentToken)}` : `pin=${encodeURIComponent(currentPin)}`;
+        const authParam = currentToken ? `token=${encodeURIComponent(currentToken)}` : `pin=${encodeURIComponent(currentPin || sessionStorage.getItem('admin_pin') || '')}`;
 
         tbody.innerHTML = orders.map(ord => {
           const isPickup = ord.delivery_method === 'pickup';
@@ -713,7 +773,7 @@
                 ${payBadge}
                 ${couponSnippet}
               </td>
-              <td>
+              <td style="min-width: 140px;">
                 <select class="tab-btn" onchange="updateOrderStatus('${ord.id}', this.value)" style="padding: 4px 8px; font-size: 13px; width: 100%;">
                   <option value="da_stampare" ${ord.order_status === 'da_stampare' ? 'selected' : ''}>🟡 Da Stampare</option>
                   <option value="in_stampa" ${ord.order_status === 'in_stampa' ? 'selected' : ''}>🔵 In Stampa</option>
@@ -721,8 +781,8 @@
                   <option value="spedito" ${ord.order_status === 'spedito' ? 'selected' : ''}>🟢 Spedito (Invia Email)</option>
                   <option value="completato" ${ord.order_status === 'completato' ? 'selected' : ''}>✅ Consegnato / Ritirato</option>
                 </select>
-                <div>
-                  <button type="button" class="btn-delete-order" onclick="deleteOrder('${ord.id}', '${ord.order_number}')">
+                <div id="del-container-${ord.id}" style="margin-top: 8px;">
+                  <button type="button" class="btn-delete-order" onclick="initiateDeleteOrder('${ord.id}', '${ord.order_number}')">
                     🗑️ Elimina
                   </button>
                 </div>
@@ -743,42 +803,73 @@
       try {
         const resp = await fetch(`/api/admin/orders/${orderId}/status`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Pin': currentPin
-          },
+          headers: getAdminHeaders(),
           body: JSON.stringify({ status: newStatus, tracking_number: tracking })
         });
         if (resp.ok) {
-          alert(`Stato aggiornato a: ${newStatus.toUpperCase()}`);
-          loadOrders();
-        }
-      } catch (e) {
-        alert("Errore aggiornamento stato: " + e.message);
-      }
-    }
-
-    async function deleteOrder(orderId, orderNumber) {
-      const label = orderNumber ? `#${orderNumber}` : orderId;
-      if (!confirm(`Sei sicuro di voler eliminare definitivamente l'ordine ${label}?\n\nQuesta operazione rimuoverà l'ordine e tutti i dati associati dall'archivio.`)) {
-        return;
-      }
-      try {
-        const resp = await fetch(`/api/admin/orders/${encodeURIComponent(orderId)}`, {
-          method: 'DELETE',
-          headers: {
-            'X-Admin-Pin': currentPin
-          }
-        });
-        if (resp.ok) {
-          alert(`Ordine ${label} eliminato con successo.`);
+          showAdminToast(`Stato aggiornato a: ${newStatus.toUpperCase()}`, 'success');
           loadOrders();
         } else {
           const err = await resp.json().catch(() => ({}));
-          alert(`Errore durante l'eliminazione: ${err.detail || resp.statusText}`);
+          showAdminToast(`Errore aggiornamento: ${err.detail || resp.statusText}`, 'error');
         }
       } catch (e) {
-        alert("Errore di connessione: " + e.message);
+        showAdminToast("Errore aggiornamento stato: " + e.message, 'error');
+      }
+    }
+
+    // Conferma eliminazione inline anti-blocco (nessun confirm() o alert() nativo)
+    function initiateDeleteOrder(orderId, orderNumber) {
+      const container = document.getElementById(`del-container-${orderId}`);
+      if (!container) return;
+      const label = orderNumber ? `#${orderNumber}` : '';
+      container.innerHTML = `
+        <div style="background: rgba(239,68,68,0.15); border: 1px solid #ef4444; border-radius: 6px; padding: 6px 8px; margin-top: 4px; text-align: left;">
+          <div style="font-size: 11px; color: #fca5a5; font-weight: 600; margin-bottom: 6px;">Eliminare ${label}?</div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" onclick="executeDeleteOrder('${orderId}', '${orderNumber}')" style="background: #ef4444; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">
+              ✓ Conferma
+            </button>
+            <button type="button" onclick="cancelDeleteOrder('${orderId}', '${orderNumber}')" style="background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+              Annulla
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function cancelDeleteOrder(orderId, orderNumber) {
+      const container = document.getElementById(`del-container-${orderId}`);
+      if (!container) return;
+      container.innerHTML = `
+        <button type="button" class="btn-delete-order" onclick="initiateDeleteOrder('${orderId}', '${orderNumber}')">
+          🗑️ Elimina
+        </button>
+      `;
+    }
+
+    async function executeDeleteOrder(orderId, orderNumber) {
+      const container = document.getElementById(`del-container-${orderId}`);
+      if (container) {
+        container.innerHTML = `<span style="font-size: 11px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px;">⏳ Eliminazione...</span>`;
+      }
+      const label = orderNumber ? `#${orderNumber}` : orderId;
+      try {
+        const resp = await fetch(`/api/admin/orders/${encodeURIComponent(orderId)}`, {
+          method: 'DELETE',
+          headers: getAdminHeaders()
+        });
+        if (resp.ok) {
+          showAdminToast(`Ordine ${label} eliminato con successo.`, 'success');
+          loadOrders();
+        } else {
+          const err = await resp.json().catch(() => ({}));
+          showAdminToast(`Errore eliminazione: ${err.detail || resp.statusText}`, 'error');
+          cancelDeleteOrder(orderId, orderNumber);
+        }
+      } catch (e) {
+        showAdminToast(`Errore di connessione: ${e.message}`, 'error');
+        cancelDeleteOrder(orderId, orderNumber);
       }
     }
 
@@ -787,7 +878,7 @@
       const grid = document.getElementById('filamentGrid');
       try {
         const resp = await fetch('/api/admin/filaments', {
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
         const filaments = await resp.json();
         grid.innerHTML = filaments.map(fil => {
@@ -820,10 +911,11 @@
       try {
         await fetch(`/api/admin/filaments/${filId}/toggle`, {
           method: 'POST',
-          headers: { 'X-Admin-Pin': currentPin }
+          headers: getAdminHeaders()
         });
+        showAdminToast("Disponibilità filamento aggiornata.", 'info');
       } catch (e) {
-        alert("Errore modifica disponibilità filamento: " + e.message);
+        showAdminToast("Errore modifica disponibilità filamento: " + e.message, 'error');
       }
     }
   </script>

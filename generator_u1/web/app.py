@@ -453,6 +453,15 @@ def handle_admin_delete_order_alias(order_id: str, auth: bool = Depends(verify_a
     from ecommerce.api_router import admin_delete_order
     return admin_delete_order(order_id=order_id, auth=auth)
 
+@app.post("/api/admin/orders/{order_id}/edit")
+@app.post("/admin/orders/{order_id}/edit")
+@app.patch("/api/admin/orders/{order_id}")
+@app.patch("/admin/orders/{order_id}")
+def handle_admin_edit_order_alias(order_id: str, payload: Dict[str, Any], auth: bool = Depends(verify_admin_auth)):
+    """Alias diretto per modifica ordine accessibile con o senza prefisso /api."""
+    from ecommerce.api_router import admin_edit_order
+    return admin_edit_order(order_id=order_id, payload=payload, auth=auth)
+
 @app.post("/api/orders/create-paypal-order")
 @app.post("/orders/create-paypal-order")
 def handle_create_paypal_order_alias(payload: Dict[str, Any], request: Request):
