@@ -11,6 +11,7 @@ import os
 import sys
 import uuid
 import datetime
+import zoneinfo
 import json
 import hmac
 import hashlib
@@ -21,6 +22,14 @@ import re
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
+
+def get_rome_now() -> datetime.datetime:
+    """Restituisce il timestamp corrente con fuso orario italiano Europe/Rome."""
+    try:
+        return datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Rome"))
+    except Exception:
+        # Fallback sicuro UTC+2
+        return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=2)))
 
 from fastapi import APIRouter, HTTPException, Depends, Header, Response, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
@@ -437,7 +446,8 @@ def api_capture_paypal_order(payload: Dict[str, Any], request: Request):
     totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method=delivery_method)
     
     # Genera codice ordine
-    now = datetime.datetime.now()
+    _load_local_db()
+    now = get_rome_now()
     order_number = f"U1-{now.strftime('%Y%m%d')}-{len(_LOCAL_ORDERS_DB) + 1:04d}"
     order_id = str(uuid.uuid4())
 
@@ -568,7 +578,7 @@ def api_create_pickup_cash_order(payload: Dict[str, Any], request: Request):
     totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method="pickup")
 
     _load_local_db()
-    now = datetime.datetime.now()
+    now = get_rome_now()
     order_number = f"U1-RIT-{now.strftime('%Y%m%d')}-{len(_LOCAL_ORDERS_DB) + 1:04d}"
     order_id = str(uuid.uuid4())
 
@@ -679,7 +689,8 @@ def api_create_test_order(payload: Dict[str, Any], request: Request):
         raise HTTPException(status_code=400, detail="Il carrello è vuoto.")
 
     totals = calculate_cart_totals(items, coupon_code=coupon_code, delivery_method=delivery_method)
-    now = datetime.datetime.now()
+    _load_local_db()
+    now = get_rome_now()
     order_number = f"TEST-U1-{now.strftime('%Y%m%d')}-{len(_LOCAL_ORDERS_DB) + 1:04d}"
     order_id = str(uuid.uuid4())
 
@@ -949,6 +960,38 @@ def admin_update_order_status(order_id: str, payload: Dict[str, Any], auth: bool
 
             return {"status": "ok", "order": ord_item}
     raise HTTPException(status_code=404, detail="Ordine non trovato.")
+
+@router.delete("/admin/orders/{order_id}")
+@router.post("/admin/orders/{order_id}/delete")
+def admin_delete_order(order_id: str, auth: bool = Depends(verify_admin_auth)):
+    """Elimina definitivamente un ordine dal database gestionale e dai file JSON."""
+    global _LOCAL_ORDERS_DB, _LOCAL_ORDER_ITEMS_DB
+    _load_local_db()
+
+    target_order = None
+    for o in _LOCAL_ORDERS_DB:
+        if str(o.get("id")) == str(order_id) or str(o.get("order_number")) == str(order_id):
+            target_order = o
+            break
+
+    if not target_order:
+        raise HTTPException(status_code=404, detail="Ordine non trovato nel database.")
+
+    target_id = target_order.get("id")
+    target_num = target_order.get("order_number")
+
+    _LOCAL_ORDERS_DB = [o for o in _LOCAL_ORDERS_DB if str(o.get("id")) != str(target_id) and str(o.get("order_number")) != str(target_num)]
+    _LOCAL_ORDER_ITEMS_DB = [it for it in _LOCAL_ORDER_ITEMS_DB if str(it.get("order_id")) != str(target_id)]
+
+    _save_local_db()
+    print(f"[ADMIN] Ordine #{target_num} (ID: {target_id}) eliminato definitivamente.")
+    return {
+        "success": True,
+        "status": "ok",
+        "deleted_id": target_id,
+        "deleted_order_number": target_num,
+        "message": f"Ordine #{target_num} eliminato con successo."
+    }
 
 @router.get("/admin/items/{item_id}/download-3mf")
 async def api_download_order_item_3mf(
