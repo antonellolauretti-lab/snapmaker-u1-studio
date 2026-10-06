@@ -282,6 +282,35 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
     h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
 
+    # Auto-scaling su larghezza X (larghezza massima assoluta 130.0 mm / 13,0 cm)
+    MAX_DESK_SIGN_WIDTH = 130.0
+    contour_pad = max(3.5, padding_y)
+    if base_style == "contour":
+        target_max_fg_w = MAX_DESK_SIGN_WIDTH - 2.0 * contour_pad - 1.0
+    else:
+        target_max_fg_w = MAX_DESK_SIGN_WIDTH - 2.0 * padding_x
+
+    if w_content_total > target_max_fg_w and w_content_total > 0:
+        scale_factor = target_max_fg_w / w_content_total
+        scale_factor = max(0.20, min(scale_factor, 1.0))
+        t1_norm = affinity.scale(t1_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        w1 *= scale_factor
+        h1 *= scale_factor
+        if line2_enabled and t2_norm is not None:
+            t2_norm = affinity.scale(t2_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            w2 *= scale_factor
+            h2 *= scale_factor
+        if icon_norm is not None:
+            icon_norm = affinity.scale(icon_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            iw *= scale_factor
+            ih *= scale_factor
+        line_spacing *= scale_factor
+        spacing_icon *= scale_factor
+        w_text_content = max(w1, w2)
+        h_text_content = (h1 + line_spacing + h2) if line2_enabled else h1
+        w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
+        h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
+
     # Disposizione orizzontale centrata attorno a u = 0
     if icon_norm is not None:
         if icon_position == "left":
@@ -364,6 +393,19 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
         w_contour = c_maxx - c_minx
         h_contour = c_maxy - c_miny
+        if w_contour > MAX_DESK_SIGN_WIDTH and w_contour > 0:
+            clamp_scale = MAX_DESK_SIGN_WIDTH / w_contour
+            cx = (c_minx + c_maxx) / 2.0
+            cy = (c_miny + c_maxy) / 2.0
+            contour_2d = affinity.scale(contour_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            t1_local = affinity.scale(t1_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            if t2_local is not None:
+                t2_local = affinity.scale(t2_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            if icon_local is not None:
+                icon_local = affinity.scale(icon_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
+            w_contour = c_maxx - c_minx
+            h_contour = c_maxy - c_miny
         x_contour_center = (c_minx + c_maxx) / 2.0
 
         # Allinea in modo che la base della sagoma inizi a v = 0
@@ -457,132 +499,106 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     else:
         # ==============================================================================
-        # 2. TARGHETTA DA TAVOLO RETTANGOLARE CON SUPPORTO CUNEO AUTOPORTANTE
+        # 2. TARGHETTA DA TAVOLO RETTANGOLARE CON SUPPORTO POSTERIORE MONOLITICO
         # ==============================================================================
-        border_clearance = (border_width + 1.5) if border_enabled else 0.0
-        w_face = max(w_content_total + 2 * (padding_x + border_clearance), 68.0)
-        h_face = max(h_content_total + 2 * (padding_y + border_clearance), 28.0)
+        # Piastra solida rettangolare pulita con bordi raccordati (fillet raggio ~2 mm).
+        # Testo frontale in perfetto rilievo ben centrato sulla piastra (zero fessure, zero affossamento).
+        # Piedistallo posteriore d'appoggio monolitico anti-ribaltamento a terra su Z=0.
+        # Rimossa qualsiasi cornice/bordo perimetrale tagliato o aperto (Border_Frame).
+        w_face = min(MAX_DESK_SIGN_WIDTH, max(w_content_total + 2.0 * padding_x, 68.0))
+        h_face = max(h_content_total + 2.0 * padding_y, 28.0)
 
-        # Centra il contenuto sulla faccia rettangolare
+        # Centratura verticale e orizzontale del testo/simbolo sulla faccia della targa
         v_start = (h_face - h_content_total) / 2.0
-        t1_face = affinity.translate(t1_local, yoff=v_start)
-        t2_face = affinity.translate(t2_local, yoff=v_start) if t2_local else None
-        icon_face = affinity.translate(icon_local, yoff=v_start) if icon_local else None
+        t1_2d_aligned = affinity.translate(t1_local, yoff=v_start)
+        t2_2d_aligned = affinity.translate(t2_local, yoff=v_start) if t2_local else None
+        icon_2d_aligned = affinity.translate(icon_local, yoff=v_start) if icon_local else None
 
-        # Cornice / Bordo perimetrale
-        border_2d = None
-        if border_enabled:
-            inset = 1.0
-            u_min = -w_face / 2.0 + inset
-            u_max = w_face / 2.0 - inset
-            v_min = inset
-            v_max = h_face - inset
-            r = min(3.0, (u_max - u_min) / 4.0, (v_max - v_min) / 4.0)
-            if r > 0.1:
-                outer_box = sg.box(u_min + r, v_min + r, u_max - r, v_max - r).buffer(r, resolution=16)
-            else:
-                outer_box = sg.box(u_min, v_min, u_max, v_max)
-            inner_box = outer_box.buffer(-border_width, resolution=16)
-            border_2d = outer_box.difference(inner_box)
+        # Geometria 2D piastra rettangolare con angoli raccordati (fillet r = 2.0 mm)
+        r = 2.0
+        plate_2d = sg.box(-w_face / 2.0 + r, r, w_face / 2.0 - r, h_face - r).buffer(r, resolution=16)
 
-        # Angolo di inclinazione ergonomico da scrivania
-        wedge_angle_deg = float(params.get("wedge_angle", 70.0))
-        wedge_angle = np.radians(wedge_angle_deg)
-        h_lip = min(base_thickness, 2.5)
-        t_land = 3.0  # Spessore/appiattimento superiore placca
-        y0 = -6.0
+        tilt_angle_deg = float(params.get("tilt_angle", params.get("wedge_angle", 76.0)))
+        if tilt_angle_deg < 60.0 or tilt_angle_deg > 85.0:
+            tilt_angle_deg = 76.0
+        tilt_angle = np.radians(tilt_angle_deg)
+        plate_thickness = max(base_thickness, 3.2)
 
-        p_front_bot = (y0 - 3.0, 0.0)
-        p_front_top = (y0 - 3.0, h_lip)
-        p_face_top = (y0 + h_face * np.cos(wedge_angle), h_lip + h_face * np.sin(wedge_angle))
-        p_rear_top = (p_face_top[0] + t_land, p_face_top[1])
-        p_rear_plate_bot = (y0 + 3.0 + 3.5 * np.sin(wedge_angle), 0.0)
+        # 1. Mesh Placca Rettangolare Inclinata
+        mesh_plate = _extrude_geometry(plate_2d, height=plate_thickness)
+        M_plate = np.array([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), 0.0],
+            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), 0.0],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=float)
+        mesh_plate.apply_transform(M_plate)
 
-        poly_plate_yz = sg.Polygon([p_front_bot, p_front_top, p_face_top, p_rear_top, p_rear_plate_bot])
-        mesh_base_raw = trimesh.creation.extrude_polygon(poly_plate_yz, height=w_face)
-        T_base = np.array([
-            [0.0, 0.0, 1.0, -w_face / 2.0],
+        # 2. Piedistallo Posteriore Monolitico (calibrato per non ribaltarsi, Z=0 piatto a terra, profondità 24 mm)
+        v_attach = max(12.0, min(h_face * 0.55, 18.0))
+        t_penetrate = min(2.4, plate_thickness * 0.70)
+        y_rear_foot = 24.0
+
+        p_front_bot = (-t_penetrate / np.sin(tilt_angle), 0.0)
+        p_front_top = (
+            v_attach * np.cos(tilt_angle) - t_penetrate * np.sin(tilt_angle),
+            v_attach * np.sin(tilt_angle) + t_penetrate * np.cos(tilt_angle)
+        )
+        p_back_top = (v_attach * np.cos(tilt_angle), v_attach * np.sin(tilt_angle))
+        p_rear_top = (y_rear_foot - 3.0, 3.5)
+        p_rear_bot = (y_rear_foot, 0.0)
+        poly_footing_yz = sg.Polygon([p_front_bot, p_front_top, p_back_top, p_rear_top, p_rear_bot])
+
+        w_footing = max(40.0, min(w_face - 8.0, w_face * 0.88))
+        mesh_footing = trimesh.creation.extrude_polygon(poly_footing_yz, height=w_footing)
+        T_footing = np.array([
+            [0.0, 0.0, 1.0, -w_footing / 2.0],
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
-        mesh_base_raw.apply_transform(T_base)
+        mesh_footing.apply_transform(T_footing)
 
-        # Supporto posteriore a staffe triangolari a sbalzo (profondità a terra 28 mm, anti-ribaltamento)
-        total_depth_target = 28.0  # Richiesto: almeno 25-30 mm per stabilità ottimale
-        y_rear_foot = p_front_bot[0] + total_depth_target
-        v_attach = h_face * 0.65
-        attach_y = y0 + v_attach * np.cos(wedge_angle) + 2.5
-        attach_z = h_lip + v_attach * np.sin(wedge_angle) - 1.0
-        p_bracket_bot_front = (p_rear_plate_bot[0] - 2.0, 0.0)
-        p_bracket_bot_rear = (y_rear_foot, 0.0)
-        p_bracket_top = (attach_y, attach_z)
-        poly_bracket = sg.Polygon([p_bracket_bot_front, p_bracket_bot_rear, p_bracket_top])
+        # Unione booleana monolitica placca + supporto
+        mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
+        parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_total, extruder=extruder_base))
 
-        sub_stand_meshes = [mesh_base_raw]
-        bracket_w = 8.0
-        bracket_positions = [-w_face * 0.32, w_face * 0.32]
-        if w_face > 110.0:
-            bracket_positions.append(0.0)
-
-        for bx in bracket_positions:
-            mb = trimesh.creation.extrude_polygon(poly_bracket, height=bracket_w)
-            Tb = np.array([
-                [0.0, 0.0, 1.0, bx - bracket_w / 2.0],
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0]
-            ], dtype=float)
-            mb.apply_transform(Tb)
-            sub_stand_meshes.append(mb)
-
-        # Piede stabilizzatore posteriore a terra (profilo basso 2.5 mm a basso consumo che unisce i piedi a Z=0)
-        p_tie_bot_front = (y_rear_foot - 5.0, 0.0)
-        p_tie_bot_rear = (y_rear_foot, 0.0)
-        p_tie_top_rear = (y_rear_foot, 2.5)
-        p_tie_top_front = (y_rear_foot - 5.0, 2.5)
-        poly_tie = sg.Polygon([p_tie_bot_front, p_tie_bot_rear, p_tie_top_rear, p_tie_top_front])
-        w_tie = w_face * 0.75
-        m_tie = trimesh.creation.extrude_polygon(poly_tie, height=w_tie)
-        T_tie = np.array([
-            [0.0, 0.0, 1.0, -w_tie / 2.0],
+        # Matrice comune per elementi in rilievo frontale (poggiano perfettamente a filo della faccia)
+        M_face_elements = np.array([
             [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
-        ], dtype=float)
-        m_tie.apply_transform(T_tie)
-        sub_stand_meshes.append(m_tie)
-
-        mesh_stand_total = _boolean_union_meshes(sub_stand_meshes)
-        parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_stand_total, extruder=extruder_base))
-
-        M_face = np.array([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, np.cos(wedge_angle), -np.sin(wedge_angle), y0],
-            [0.0, np.sin(wedge_angle), np.cos(wedge_angle), h_lip],
+            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), -plate_thickness * np.sin(tilt_angle)],
+            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), plate_thickness * np.cos(tilt_angle)],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
 
-        mesh_t1 = _extrude_geometry(t1_face, height=thickness_line1)
-        mesh_t1.apply_transform(M_face)
+        # 3. Estrusione Testo Riga 1
+        mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
+        mesh_t1.apply_transform(M_face_elements)
         clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
         parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
 
-        if line2_enabled and t2_face is not None:
-            mesh_t2 = _extrude_geometry(t2_face, height=thickness_line2)
-            mesh_t2.apply_transform(M_face)
+        # 4. Estrusione Testo Riga 2 (se presente)
+        if line2_enabled and t2_2d_aligned is not None:
+            mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
+            mesh_t2.apply_transform(M_face_elements)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
 
-        if icon_face is not None:
-            mesh_icon = _extrude_geometry(icon_face, height=thickness_line1)
-            mesh_icon.apply_transform(M_face)
+        # 5. Estrusione Simbolo 3D (se presente)
+        if icon_2d_aligned is not None:
+            mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1)
+            mesh_icon.apply_transform(M_face_elements)
             clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
             parts.append(PartItem(name=f"Icon_{clean_icon}", mesh=mesh_icon, extruder=extruder_icon))
 
-        if border_enabled and border_2d is not None and not border_2d.is_empty:
-            mesh_border = _extrude_geometry(border_2d, height=border_thickness)
-            mesh_border.apply_transform(M_face)
-            parts.append(PartItem(name="Border_Frame", mesh=mesh_border, extruder=extruder_border))
+    # Garanzia finale: vincolo assoluto larghezza massima 13.0 cm (130.0 mm)
+    if parts:
+        min_x = min(p.mesh.bounds[0][0] for p in parts)
+        max_x = max(p.mesh.bounds[1][0] for p in parts)
+        total_w = max_x - min_x
+        if total_w > MAX_DESK_SIGN_WIDTH and total_w > 0:
+            scale_x = MAX_DESK_SIGN_WIDTH / total_w
+            for p in parts:
+                p.mesh.apply_scale([scale_x, scale_x, 1.0])
 
     return parts

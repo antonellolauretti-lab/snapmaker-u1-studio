@@ -1120,6 +1120,8 @@
           <option value="sport">Sport & Hobby (Calcio, Bici, Montagna...)</option>
           <option value="veicoli">Veicoli & Motori (Auto, Moto, Aereo...)</option>
           <option value="simboli">Simboli & Natura (Fuoco, Ancora, Albero...)</option>
+          <option value="pokemon">Pokémon (12 Mostriciattoli Iconici)</option>
+          <option value="zodiaco">Segni Zodiacali (12 Glifi Astrali)</option>
         </select>
 
         <div class="icon-grid-container" id="iconGrid">
@@ -1856,7 +1858,7 @@
             viewer.updateGeometry(data, getViewerPalette(), 0, 1);
             
             if (data.dimensions) {
-              const maxW = isDeskSign ? data.dimensions.width : Math.min(data.dimensions.width, 80.0);
+              const maxW = isDeskSign ? Math.min(data.dimensions.width, 130.0) : Math.min(data.dimensions.width, 80.0);
               const wCm = (maxW / 10).toFixed(1).replace('.', ',');
               const hCm = (data.dimensions.height / 10).toFixed(1).replace('.', ',');
               const defaultDepth = isDeskSign ? 24.0 : 4.6;
