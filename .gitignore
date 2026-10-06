@@ -27,3 +27,5 @@ generator_u1/web/uploads/fonts/*
 # OS
 .DS_Store
 Thumbs.db
+txt_*.jpg
+

@@ -113,6 +113,34 @@ def _extrude_geometry(geom: Any, height: float) -> trimesh.Trimesh:
         return sub_meshes[0]
     return trimesh.util.concatenate(sub_meshes)
 
+def _boolean_union_meshes(meshes: List[trimesh.Trimesh]) -> trimesh.Trimesh:
+    """
+    Unisce solidamente un insieme di mesh manifold in un unico corpo monolitico continuo.
+    Utilizza il motore 'manifold' (manifold3d) per generare una superficie chiusa
+    senza gusci o facce interne separate. Effettua fallback trasparente in caso di errore.
+    """
+    valid_meshes = [m for m in meshes if isinstance(m, trimesh.Trimesh) and not m.is_empty and len(m.faces) > 0]
+    if not valid_meshes:
+        return trimesh.Trimesh()
+    if len(valid_meshes) == 1:
+        return valid_meshes[0]
+
+    try:
+        u = trimesh.boolean.union(valid_meshes, engine="manifold")
+        if isinstance(u, trimesh.Trimesh) and not u.is_empty and len(u.faces) > 0:
+            return u
+    except Exception:
+        pass
+
+    try:
+        u = trimesh.boolean.union(valid_meshes)
+        if isinstance(u, trimesh.Trimesh) and not u.is_empty and len(u.faces) > 0:
+            return u
+    except Exception:
+        pass
+
+    return trimesh.util.concatenate(valid_meshes)
+
 def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     """
     Genera le mesh 3D manifold per la Targhetta da Tavolo (Desk Sign).
@@ -353,24 +381,23 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         z_anchor = 0.0
 
         # 1. Piedistallo Posteriore di Sostegno (Standing Footing):
-        # Appoggio a terra piatto (Z = 0, profondità ~24 mm), agganciato ESCLUSIVAMENTE sul RETRO
-        # della sagoma (t <= 0) con ZERO bordo/labbra frontale sporgente davanti alle lettere.
-        v_attach = max(10.0, min(h_contour * 0.45, 14.0))
-        delta_t = 0.4  # Leggera compenetrazione nella schiena della placca per solida fusione volumetrica
-
-        back_y_attach = y_anchor - (-delta_t) * np.sin(tilt_angle) + v_attach * np.cos(tilt_angle)
-        back_z_attach = z_anchor + (-delta_t) * np.cos(tilt_angle) + v_attach * np.sin(tilt_angle)
-        back_y_bot = y_anchor - (-delta_t) * np.sin(tilt_angle)
-        back_z_bot = z_anchor + (-delta_t) * np.cos(tilt_angle)
-
+        # Appoggio a terra piatto (Z = 0, profondità ~24 mm).
+        # Compenetrazione volumetrica profonda di 2.0 - 2.4 mm DENTRO lo spessore della placca
+        # lungo la normale della superficie inclinata a 76°, eliminando tassativamente qualsiasi gap o fessura d'aria.
+        v_attach = max(12.0, min(h_contour * 0.55, 18.0))
+        t_penetrate = min(2.4, plate_thickness * 0.70)  # Profonda compenetrazione dentro la placca
         y_rear_foot = 24.0  # Profondità totale di appoggio sul tavolo (anti-ribaltamento)
 
-        p_front_bot = (back_y_bot, 0.0)
-        p_front_attach = (back_y_attach, back_z_attach)
+        p_front_bot = (-t_penetrate / np.sin(tilt_angle), 0.0)
+        p_front_top = (
+            v_attach * np.cos(tilt_angle) - t_penetrate * np.sin(tilt_angle),
+            v_attach * np.sin(tilt_angle) + t_penetrate * np.cos(tilt_angle)
+        )
+        p_back_top = (v_attach * np.cos(tilt_angle), v_attach * np.sin(tilt_angle))
         p_rear_top = (y_rear_foot - 3.0, 3.5)
         p_rear_bot = (y_rear_foot, 0.0)
 
-        poly_footing_yz = sg.Polygon([p_front_bot, p_front_attach, p_rear_top, p_rear_bot])
+        poly_footing_yz = sg.Polygon([p_front_bot, p_front_top, p_back_top, p_rear_top, p_rear_bot])
 
         # Larghezza piedistallo: centrato dietro la sagoma, leggermente rastremato per non sporgere dai lati curvi
         w_footing = max(40.0, min(w_contour - 8.0, w_contour * 0.88))
@@ -396,7 +423,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         ], dtype=float)
         mesh_plate.apply_transform(M_plate)
 
-        mesh_base_total = trimesh.util.concatenate([mesh_footing, mesh_plate])
+        # Fusione booleana esplicita in unico corpo solido manifold (zero facce interne / gusci separati)
+        mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=extruder_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
@@ -525,7 +553,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         m_tie.apply_transform(T_tie)
         sub_stand_meshes.append(m_tie)
 
-        mesh_stand_total = trimesh.util.concatenate(sub_stand_meshes)
+        mesh_stand_total = _boolean_union_meshes(sub_stand_meshes)
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_stand_total, extruder=extruder_base))
 
         M_face = np.array([
