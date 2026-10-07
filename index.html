@@ -1831,8 +1831,9 @@
       
       let desc = 'Portachiavi Standard';
       if (currentConfig.productType === 'desk_sign') {
-        desc = 'Targhetta da Tavolo Professionale';
-      } else if (price > 4.90) {
+        const hasLine2 = Boolean(currentConfig.line2Enabled || (currentConfig.textLine2 && currentConfig.textLine2.trim()));
+        desc = hasLine2 ? 'Targhetta da Tavolo (2 Righe)' : 'Targhetta da Tavolo Professionale';
+      } else if (price > 4.90 || price >= 3.90) {
         const reasons = [];
         if (currentConfig.line2Enabled) reasons.push('2 righe');
         if (currentConfig.hasCustomIconColor) reasons.push('3 Colori');

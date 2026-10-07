@@ -428,13 +428,18 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     t2_norm = None
     w2, h2 = 0.0, 0.0
     if line2_enabled and text_line2:
+        clean_txt2 = text_line2.strip().upper()
         try:
-            t2_raw = _generate_text_line_2d(text_line2, fp2, font_size_line2, letter_spacing_line2, dilation_offset=offset2)
+            if clean_txt2 == "TXT ENNOVA":
+                from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
+                t2_raw = get_txt_letters_geometry(target_height=font_size_line2)
+            else:
+                t2_raw = _generate_text_line_2d(text_line2, fp2, font_size_line2, letter_spacing_line2, dilation_offset=offset2)
             t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
             w2 = t2_maxx - t2_minx
             h2 = t2_maxy - t2_miny
             t2_norm = affinity.translate(t2_raw, xoff=-t2_minx, yoff=-t2_miny)
-        except Exception:
+        except Exception as e:
             print(f"Avviso: impossibile generare riga 2 '{text_line2}': {e}")
             t2_norm = None
 
@@ -464,16 +469,18 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     if is_txt_logo:
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_modular_components
-            s_mod, d_mod, _ = get_txt_modular_components()
+            s_mod, _, _ = get_txt_modular_components()
             h_ref = maxy - miny
-            s_scale = h_ref / 5.451072445428663
+            s_scale = h1 / 5.451072445428663
+            protrusion = (7.4555 - 5.45107) / 2.0 * s_scale
 
-            # Barretta Verticale Divisoria: unita alla mesh del testo (colore testo)
-            d_minx, d_miny, d_maxx, d_maxy = d_mod.bounds
-            d_norm = affinity.translate(d_mod, xoff=-d_minx, yoff=-d_miny)
-            d_scaled = affinity.scale(d_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
-            d_sw = (d_maxx - d_minx) * s_scale
-            d_sh = (d_maxy - d_miny) * s_scale
+            # Barretta Verticale Divisoria: estesa a tutta altezza se sono presenti 2 righe
+            d_sw = 0.950 * s_scale
+            if text2_2d is not None:
+                d_sh = h_ref + 2.0 * protrusion
+            else:
+                d_sh = 7.4555 * s_scale
+            d_scaled = sg.box(0, 0, d_sw, d_sh)
             gap_bar_text = 1.727 * s_scale
             spacing_icon = 1.867 * s_scale
 

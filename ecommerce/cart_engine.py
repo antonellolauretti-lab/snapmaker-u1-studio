@@ -97,17 +97,20 @@ def determine_item_price(item: Dict[str, Any], settings: Optional[Dict[str, Any]
     price_keychain_standard = Decimal(str(settings.get("keychain_standard", 2.90)))
 
     product_type = str(item.get("productType") or item.get("product_type") or "").lower()
+    line2_enabled = bool(item.get("line2Enabled") or item.get("line2_enabled"))
+    text_line2 = (item.get("textLine2") or item.get("text_line2") or "").strip()
+    has_line2 = line2_enabled or len(text_line2) > 0
+
     if product_type in ["desk_sign", "targhetta"]:
+        if has_line2:
+            extra_line2 = Decimal(str(settings.get("extra_line2", 2.00)))
+            return (price_desk_sign + extra_line2).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return price_desk_sign
     
     if product_type in ["keychain_complex", "portachiavi_complesso"]:
         return price_keychain_complex
     
     # Portachiavi
-    line2_enabled = bool(item.get("line2Enabled") or item.get("line2_enabled"))
-    text_line2 = (item.get("textLine2") or item.get("text_line2") or "").strip()
-    has_line2 = line2_enabled and len(text_line2) > 0
-    
     icon_id = (item.get("iconId") or item.get("icon_id") or item.get("icon_name") or "").strip()
     has_icon = bool(icon_id and icon_id.lower() not in ("none", ""))
     has_custom_icon_color = bool(item.get("hasCustomIconColor") or item.get("has_custom_icon_color"))

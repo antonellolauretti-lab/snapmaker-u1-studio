@@ -260,11 +260,17 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     t2_norm = None
     w2, h2 = 0.0, 0.0
     if line2_enabled:
+        clean_txt2 = text_line2.strip().upper()
+        is_txt_text2 = (clean_txt2 == "TXT ENNOVA")
         try:
-            t2_raw = _generate_text_2d(
-                text_line2, font_family_line2, font_path_line2,
-                font_size_line2, letter_spacing_line2, dilation_offset=offset2
-            )
+            if is_txt_text2:
+                from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
+                t2_raw = get_txt_letters_geometry(target_height=font_size_line2)
+            else:
+                t2_raw = _generate_text_2d(
+                    text_line2, font_family_line2, font_path_line2,
+                    font_size_line2, letter_spacing_line2, dilation_offset=offset2
+                )
             t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
             w2 = t2_maxx - t2_minx
             h2 = t2_maxy - t2_miny
@@ -281,39 +287,28 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     # 3. Generazione e Scalatura Simbolo Vettoriale (se selezionato)
     icon_norm = None
     iw, ih = 0.0, 0.0
+    bar_geom = None
     if is_txt_logo:
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_modular_components
-            s_mod, d_mod, _ = get_txt_modular_components()
+            s_mod, _, _ = get_txt_modular_components()
             
             s_scale = h1 / 5.451072445428663
-            
-            # 3a. Barretta Verticale Divisoria: unita alla mesh del testo (colore testo)
-            d_minx, d_miny, d_maxx, d_maxy = d_mod.bounds
-            d_norm = affinity.translate(d_mod, xoff=-d_minx, yoff=-d_miny)
-            d_scaled = affinity.scale(d_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
-            d_sw = (d_maxx - d_minx) * s_scale
-            d_sh = (d_maxy - d_miny) * s_scale
+            d_sw = 0.950 * s_scale
             gap_bar_text = 1.727 * s_scale
             spacing_icon = 1.867 * s_scale
-            
-            if icon_position == "left":
-                x_bar_offset = -(d_sw + gap_bar_text)
+            protrusion = (7.4555 - 5.45107) / 2.0 * s_scale
+
+            # Barretta Verticale Divisoria:
+            # - Su doppia riga: si estende a tutta altezza dalla sommità di riga 1 fino alla base di riga 2
+            # - Su riga singola: si calibra esattamente all'altezza 1:1 della riga 1
+            if line2_enabled and t2_norm is not None:
+                bar_h = h_text_content + 2.0 * protrusion
             else:
-                x_bar_offset = w1 + gap_bar_text
-            y_bar_offset = (h1 - d_sh) / 2.0
-            d_placed = affinity.translate(d_scaled, xoff=x_bar_offset, yoff=y_bar_offset)
-            
-            t1_norm = unary_union([t1_norm, d_placed])
-            t1_b = t1_norm.bounds
-            t1_norm = affinity.translate(t1_norm, xoff=-t1_b[0], yoff=-t1_b[1])
-            w1 = t1_norm.bounds[2] - t1_norm.bounds[0]
-            h1 = t1_norm.bounds[3] - t1_norm.bounds[1]
-            w_text_content = max(w1, w2)
-            if not line2_enabled:
-                h_text_content = h1
-            
-            # 3b. Simbolo Fluido (solo la nuvoletta quadrata a onde, colore simbolo)
+                bar_h = 7.4555 * s_scale
+            bar_geom = sg.box(0, 0, d_sw, bar_h)
+
+            # Simbolo Fluido (solo nuvoletta quadrata a onde, colore simbolo)
             s_minx, s_miny, s_maxx, s_maxy = s_mod.bounds
             s_norm = affinity.translate(s_mod, xoff=-s_minx, yoff=-s_miny)
             icon_norm = affinity.scale(s_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
@@ -322,6 +317,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Errore gestione logo TXT: {e}")
             is_txt_logo = False
+            bar_geom = None
             spacing_icon = 4.0
     else:
         icon_raw = _get_vector_icon(icon_name)
@@ -334,9 +330,13 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             ih = imaxy - iminy
             icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
 
-    # Calcolo ingombro orizzontale combinato (Testo + Icona)
-    w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
-    h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
+    # Calcolo ingombro orizzontale combinato (Testo + Icona + eventuale barretta)
+    if is_txt_logo and bar_geom is not None:
+        w_content_total = iw + spacing_icon + d_sw + gap_bar_text + w_text_content
+        h_content_total = max(h_text_content, bar_h, ih)
+    else:
+        w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
+        h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
 
     # Auto-scaling su larghezza X (larghezza massima assoluta 130.0 mm / 13,0 cm)
     MAX_DESK_SIGN_WIDTH = 130.0
@@ -360,28 +360,53 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             icon_norm = affinity.scale(icon_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             iw *= scale_factor
             ih *= scale_factor
+        if is_txt_logo and bar_geom is not None:
+            bar_geom = affinity.scale(bar_geom, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            d_sw *= scale_factor
+            bar_h *= scale_factor
+            protrusion *= scale_factor
+            gap_bar_text *= scale_factor
+            spacing_icon *= scale_factor
         line_spacing *= scale_factor
-        spacing_icon *= scale_factor
         w_text_content = max(w1, w2)
         h_text_content = (h1 + line_spacing + h2) if line2_enabled else h1
-        w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
-        h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
+        if is_txt_logo and bar_geom is not None:
+            w_content_total = iw + spacing_icon + d_sw + gap_bar_text + w_text_content
+            h_content_total = max(h_text_content, bar_h, ih)
+        else:
+            w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content
+            h_content_total = max(h_text_content, ih) if (icon_norm is not None) else h_text_content
 
     # Disposizione orizzontale centrata attorno a u = 0
-    if icon_norm is not None:
+    if is_txt_logo and bar_geom is not None:
         if icon_position == "left":
             x_icon = -w_content_total / 2.0
-            x_text_start = -w_content_total / 2.0 + iw + spacing_icon
+            x_bar = x_icon + iw + spacing_icon
+            x_text_start = x_bar + d_sw + gap_bar_text
         else:
             x_text_start = -w_content_total / 2.0
-            x_icon = -w_content_total / 2.0 + w_text_content + spacing_icon
+            x_bar = x_text_start + w_text_content + gap_bar_text
+            x_icon = x_bar + d_sw + spacing_icon
 
         x1 = x_text_start + (w_text_content - w1) / 2.0
         x2 = x_text_start + (w_text_content - w2) / 2.0
+        bar_local = affinity.translate(bar_geom, xoff=x_bar, yoff=-protrusion)
     else:
-        x_icon = 0.0
-        x1 = -w1 / 2.0
-        x2 = -w2 / 2.0
+        bar_local = None
+        if icon_norm is not None:
+            if icon_position == "left":
+                x_icon = -w_content_total / 2.0
+                x_text_start = -w_content_total / 2.0 + iw + spacing_icon
+            else:
+                x_text_start = -w_content_total / 2.0
+                x_icon = -w_content_total / 2.0 + w_text_content + spacing_icon
+
+            x1 = x_text_start + (w_text_content - w1) / 2.0
+            x2 = x_text_start + (w_text_content - w2) / 2.0
+        else:
+            x_icon = 0.0
+            x1 = -w1 / 2.0
+            x2 = -w2 / 2.0
 
     # Disposizione verticale
     if line2_enabled and t2_norm is not None:
@@ -397,6 +422,11 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
     t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2) if (line2_enabled and t2_norm is not None) else None
     icon_local = affinity.translate(icon_norm, xoff=x_icon, yoff=y_icon) if (icon_norm is not None) else None
+
+    # Unione della barretta divisoria a t1_local:
+    # Eredita lo stesso identico estrusore e colore del testo (Extruder 1)
+    if bar_local is not None:
+        t1_local = unary_union([t1_local, bar_local])
 
     # Unione elementi in rilievo frontale
     fg_items = [t1_local]
@@ -562,10 +592,12 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         # Piedistallo posteriore d'appoggio monolitico anti-ribaltamento a terra su Z=0.
         # Rimossa qualsiasi cornice/bordo perimetrale tagliato o aperto (Border_Frame).
         w_face = min(MAX_DESK_SIGN_WIDTH, max(w_content_total + 2.0 * padding_x, 68.0))
-        h_face = max(h_content_total + 2.0 * padding_y, 28.0)
-
         # Centratura verticale e orizzontale del testo/simbolo sulla faccia della targa
-        v_start = (h_face - h_content_total) / 2.0
+        v_min_fg = min(t1_local.bounds[1], t2_local.bounds[1] if t2_local else 999.0, icon_local.bounds[1] if icon_local else 999.0)
+        v_max_fg = max(t1_local.bounds[3], t2_local.bounds[3] if t2_local else -999.0, icon_local.bounds[3] if icon_local else -999.0)
+        h_fg_actual = v_max_fg - v_min_fg
+        h_face = max(h_fg_actual + 2.0 * padding_y, 28.0)
+        v_start = (h_face - h_fg_actual) / 2.0 - v_min_fg
         t1_2d_aligned = affinity.translate(t1_local, yoff=v_start)
         t2_2d_aligned = affinity.translate(t2_local, yoff=v_start) if t2_local else None
         icon_2d_aligned = affinity.translate(icon_local, yoff=v_start) if icon_local else None
