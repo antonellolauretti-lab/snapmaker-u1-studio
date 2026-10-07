@@ -374,12 +374,18 @@ def export_keyring(
             bed_center_y=135.0,
         )
         packager.export(parts, str(pkg_3mf_path))
-        shutil.copy2(pkg_3mf_path, pkg_3mf_alt)
+        try:
+            shutil.copy2(pkg_3mf_path, pkg_3mf_alt)
+        except Exception as e:
+            print(f"   Note: copia alternativa {pkg_3mf_alt.name} non riuscita ({e})")
         print(f"   -> {pkg_3mf_path.name} (3MF multi-volume nativo Snapmaker U1)")
     else:
         scene = trimesh.Scene([mesh_base, mesh_sym, mesh_text])
         scene.export(str(pkg_3mf_path))
-        shutil.copy2(pkg_3mf_path, pkg_3mf_alt)
+        try:
+            shutil.copy2(pkg_3mf_path, pkg_3mf_alt)
+        except Exception as e:
+            print(f"   Note: copia alternativa {pkg_3mf_alt.name} non riuscita ({e})")
         print(f"   -> {pkg_3mf_path.name} (3MF fallback)")
 
     # 6. Generazione anteprima grafica 2D e 3D fotorealistica
@@ -452,19 +458,23 @@ def export_keyring(
         print(f"   Warning: generazione anteprima non riuscita: {e}")
 
     # 7. Archiviazione in PROGETTI DEFINITIVI (Regola AGENTS.md)
-    definitivi_dir = PROJECT_ROOT / "PROGETTI DEFINITIVI" / "Portachiavi_TXT_ENNOVA"
-    definitivi_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(stl_base, definitivi_dir / "txt_base.stl")
-    shutil.copy2(stl_text, definitivi_dir / "txt_text.stl")
-    shutil.copy2(stl_sym, definitivi_dir / "txt_symbol.stl")
-    shutil.copy2(out_path / "base.stl", definitivi_dir / "base.stl")
-    shutil.copy2(out_path / "text.stl", definitivi_dir / "text.stl")
-    shutil.copy2(out_path / "symbol.stl", definitivi_dir / "symbol.stl")
-    shutil.copy2(pkg_3mf_path, definitivi_dir / "TXT_ENNOVA_Keyring.3mf")
-    shutil.copy2(pkg_3mf_alt, definitivi_dir / "txt_ennova_keyring.3mf")
-    if preview_img_path.exists():
-        shutil.copy2(preview_img_path, definitivi_dir / "txt_ennova_keyring_preview.png")
-    print(f"   -> Copia archiviata in: {definitivi_dir.relative_to(PROJECT_ROOT)}")
+    try:
+        definitivi_dir = PROJECT_ROOT / "PROGETTI DEFINITIVI" / "Portachiavi_TXT_ENNOVA"
+        definitivi_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(stl_base, definitivi_dir / "txt_base.stl")
+        shutil.copy2(stl_text, definitivi_dir / "txt_text.stl")
+        shutil.copy2(stl_sym, definitivi_dir / "txt_symbol.stl")
+        shutil.copy2(out_path / "base.stl", definitivi_dir / "base.stl")
+        shutil.copy2(out_path / "text.stl", definitivi_dir / "text.stl")
+        shutil.copy2(out_path / "symbol.stl", definitivi_dir / "symbol.stl")
+        shutil.copy2(pkg_3mf_path, definitivi_dir / "TXT_ENNOVA_Keyring.3mf")
+        if pkg_3mf_alt.exists():
+            shutil.copy2(pkg_3mf_alt, definitivi_dir / "txt_ennova_keyring.3mf")
+        if preview_img_path.exists():
+            shutil.copy2(preview_img_path, definitivi_dir / "txt_ennova_keyring_preview.png")
+        print(f"   -> Copia archiviata in: {definitivi_dir.relative_to(PROJECT_ROOT)}")
+    except Exception as e:
+        print(f"   Note: archiviazione parziale in PROGETTI DEFINITIVI ({e})")
 
     print("-" * 68)
     print("  COMPLETATO CON SUCCESSO! File pronti per la stampa.")
