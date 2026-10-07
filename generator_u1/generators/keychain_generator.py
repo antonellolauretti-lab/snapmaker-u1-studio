@@ -97,12 +97,15 @@ def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
         merged = merged.buffer(0)
     return merged
 
-def _normalize_to_unit(geom: Any) -> Any:
+def _normalize_to_unit(geom: Any, by_height: bool = False) -> Any:
     """Trasla e scala una forma in un rettangolo normalizzato di altezza unitaria."""
     minx, miny, maxx, maxy = geom.bounds
     w = maxx - minx
     h = maxy - miny
-    scale = max(w, h)
+    if by_height:
+        scale = h if h > 1e-6 else 1.0
+    else:
+        scale = max(w, h)
     if scale <= 1e-6:
         return geom
     g = affinity.translate(geom, xoff=-minx, yoff=-miny)
@@ -192,7 +195,7 @@ try:
 except Exception:
     ICONS_DICT = {}
 
-def _parse_svg_file_to_shapely(svg_path: Path) -> Optional[Any]:
+def _parse_svg_file_to_shapely(svg_path: Path, by_height: bool = False) -> Optional[Any]:
     """Converte un file SVG in una geometria Shapely manifold e normalizzata."""
     try:
         content = svg_path.read_text(encoding="utf-8")
@@ -223,7 +226,7 @@ def _parse_svg_file_to_shapely(svg_path: Path) -> Optional[Any]:
 
         # Inverti asse Y (SVG ha origine top-left, 3D cartesiano bottom-left)
         combined = affinity.scale(combined, yfact=-1.0, origin=(0, 0))
-        return _normalize_to_unit(combined)
+        return _normalize_to_unit(combined, by_height=by_height)
     except Exception as e:
         print(f"Errore parsing SVG {svg_path}: {e}")
         return None
@@ -239,6 +242,7 @@ def _get_vector_icon(name: str) -> Optional[Any]:
 
     name_clean = name.lower().strip()
     target_stem = ICON_ALIASES.get(name_clean, name_clean)
+    is_txt_logo = target_stem in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
 
     if target_stem in _PARSED_SVG_CACHE:
         return _PARSED_SVG_CACHE[target_stem]
@@ -247,7 +251,7 @@ def _get_vector_icon(name: str) -> Optional[Any]:
     if ICONS_DIR.is_dir():
         svg_candidate = ICONS_DIR / f"{target_stem}.svg"
         if svg_candidate.is_file():
-            geom = _parse_svg_file_to_shapely(svg_candidate)
+            geom = _parse_svg_file_to_shapely(svg_candidate, by_height=is_txt_logo)
             if geom is not None:
                 _PARSED_SVG_CACHE[target_stem] = geom
                 return geom
@@ -255,7 +259,7 @@ def _get_vector_icon(name: str) -> Optional[Any]:
         # Cerca tra tutti i file .svg senza distinzione maiuscole/minuscole
         for f in ICONS_DIR.glob("*.svg"):
             if f.stem.lower() in (target_stem, name_clean):
-                geom = _parse_svg_file_to_shapely(f)
+                geom = _parse_svg_file_to_shapely(f, by_height=is_txt_logo)
                 if geom is not None:
                     _PARSED_SVG_CACHE[target_stem] = geom
                     return geom
@@ -335,7 +339,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     Genera le mesh 3D della Base, del Testo (1 o 2 righe sovrapposte) e dell'eventuale Icona
     rispettando la configurazione degli utensili Snapmaker U1 (T0..T3).
     """
-    text = params.get("text", "TUO NOME").strip()
+    text = (params.get("text_line1") or params.get("text") or "TUO NOME").strip()
     font_family = params.get("font_family", "Anton")
     font_path = params.get("font_path")
     font_size = float(params.get("font_size", 14.0))
@@ -373,6 +377,36 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     extruder_icon = int(params.get("extruder_icon", -1))
     if extruder_icon == -1:
         extruder_icon = extruder_text
+
+    # Controllo speciale TXT ENNOVA: sincronizzazione 100% con TXT_ENNOVA_Keyring.3mf
+    clean_txt = text.strip().upper()
+    is_txt_model = (
+        clean_txt == "TXT ENNOVA"
+        and not line2_enabled
+        and (
+            str(font_family).lower().strip() in ("minimal tech", "corporate tech", "minimaltech", "corporatetech")
+            or str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
+        )
+        and base_style == "contour"
+    )
+    if is_txt_model:
+        try:
+            from generator_u1.assets.txt_logo_geometry import get_exact_txt_keyring_geometries
+            b2d, t2d, s2d = get_exact_txt_keyring_geometries()
+
+            m_base = _extrude_geometry(b2d, height=base_thickness)
+            m_text = _extrude_geometry(t2d, height=text_thickness)
+            m_text.apply_translation([0, 0, base_thickness])
+            m_sym = _extrude_geometry(s2d, height=text_thickness)
+            m_sym.apply_translation([0, 0, base_thickness])
+
+            return [
+                PartItem(name="Base_Portachiavi", mesh=m_base, extruder=extruder_base),
+                PartItem(name="Simbolo_Fluido_Logo", mesh=m_sym, extruder=2),
+                PartItem(name="Testo_TXT_ENNOVA", mesh=m_text, extruder=extruder_text)
+            ]
+        except Exception as e:
+            print(f"Avviso generatore TXT ENNOVA dedicato: {e}")
 
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
     fp1 = get_font_properties(font_family, font_path)
@@ -424,7 +458,15 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     icon_raw = _get_vector_icon(icon_name)
     icon_2d = None
     if icon_raw is not None:
-        icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
+        is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
+        if is_txt_logo:
+            # Rapporto 1:1 in altezza rispetto alle lettere maiuscole del testo e spaziatura coerente al 3MF
+            icon_h = maxy - miny
+            spacing_icon = 1.73
+        else:
+            icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
+            spacing_icon = 2.5
+
         icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
         iminx, iminy, imaxx, imaxy = icon_scaled.bounds
         iw = imaxx - iminx
@@ -432,7 +474,6 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
 
-        spacing_icon = 2.5
         if str(icon_position).lower() == "left":
             ix = minx - iw - spacing_icon
             iy = mid_y - (ih / 2.0)

@@ -268,10 +268,15 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     icon_raw = _get_vector_icon(icon_name)
     icon_norm = None
     iw, ih = 0.0, 0.0
-    spacing_icon = 4.0 if (icon_raw is not None) else 0.0
+    is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
+    spacing_icon = (1.73 if is_txt_logo else 4.0) if (icon_raw is not None) else 0.0
 
     if icon_raw is not None:
-        icon_h = min(font_size_line1 * 1.05, max(h_text_content * 0.90, 14.0))
+        if is_txt_logo:
+            # Rapporto 1:1 in altezza rispetto all'altezza del testo adiacente
+            icon_h = h_text_content * 1.0
+        else:
+            icon_h = min(font_size_line1 * 1.05, max(h_text_content * 0.90, 14.0))
         icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
         iminx, iminy, imaxx, imaxy = icon_scaled.bounds
         iw = imaxx - iminx

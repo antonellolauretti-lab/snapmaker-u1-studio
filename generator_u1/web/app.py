@@ -178,7 +178,7 @@ CURATED_FONTS = [
         "name": "Minimal Tech",
         "desc": "Geometrico Arrotondato High-Tech",
         "category": "sans-serif",
-        "family": "'Montserrat', sans-serif",
+        "family": "'Minimal Tech', 'Righteous', sans-serif",
         "file": "MinimalTech.ttf",
     },
     {

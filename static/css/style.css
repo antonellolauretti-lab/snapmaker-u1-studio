@@ -1,5 +1,11 @@
 /* Font-Face Fallback e Varianti Heavy/Bold per Stampa 3D FDM */
 @font-face {
+  font-family: 'Minimal Tech';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/MinimalTech.ttf') format('truetype');
+}
+@font-face {
   font-family: 'Montserrat';
   font-style: normal;
   font-weight: 900;

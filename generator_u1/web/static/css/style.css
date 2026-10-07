@@ -1,5 +1,11 @@
 /* Font-Face Fallback per Corsivi e Script nel Cloud e Mobile */
 @font-face {
+  font-family: 'Minimal Tech';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/MinimalTech.ttf') format('truetype');
+}
+@font-face {
   font-family: 'Segoe Script';
   font-style: normal;
   font-weight: 700;
