@@ -383,10 +383,6 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     is_txt_model = (
         clean_txt == "TXT ENNOVA"
         and not line2_enabled
-        and (
-            str(font_family).lower().strip() in ("minimal tech", "corporate tech", "minimaltech", "corporatetech")
-            or str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
-        )
         and base_style == "contour"
     )
     if is_txt_model:
@@ -415,7 +411,14 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     offset2 = get_font_dilation_offset(font_family_line2)
 
     # 2. Generazione vettoriale Riga 1 (con eventuale offset di dilatazione per tratti sottili)
-    t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
+    if clean_txt == "TXT ENNOVA":
+        try:
+            from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
+            t1_raw = get_txt_letters_geometry(target_height=font_size)
+        except Exception:
+            t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
+    else:
+        t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
     t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
     w1 = t1_maxx - t1_minx
     h1 = t1_maxy - t1_miny
@@ -431,7 +434,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             w2 = t2_maxx - t2_minx
             h2 = t2_maxy - t2_miny
             t2_norm = affinity.translate(t2_raw, xoff=-t2_minx, yoff=-t2_miny)
-        except Exception as e:
+        except Exception:
             print(f"Avviso: impossibile generare riga 2 '{text_line2}': {e}")
             t2_norm = None
 
@@ -455,23 +458,56 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     mid_y = (miny + maxy) / 2.0
 
     # 5. Generazione e posizionamento dell'Icona Vettoriale
-    icon_raw = _get_vector_icon(icon_name)
+    is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
+    icon_raw = _get_vector_icon(icon_name) if not is_txt_logo else None
     icon_2d = None
-    if icon_raw is not None:
-        is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
-        if is_txt_logo:
-            # Rapporto 1:1 in altezza rispetto alle lettere maiuscole del testo e spaziatura coerente al 3MF
-            icon_h = maxy - miny
-            spacing_icon = 1.73
-        else:
-            icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
-            spacing_icon = 2.5
+    if is_txt_logo:
+        try:
+            from generator_u1.assets.txt_logo_geometry import get_txt_modular_components
+            s_mod, d_mod, _ = get_txt_modular_components()
+            h_ref = maxy - miny
+            s_scale = h_ref / 5.451072445428663
 
+            # Barretta Verticale Divisoria: unita alla mesh del testo (colore testo)
+            d_minx, d_miny, d_maxx, d_maxy = d_mod.bounds
+            d_norm = affinity.translate(d_mod, xoff=-d_minx, yoff=-d_miny)
+            d_scaled = affinity.scale(d_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
+            d_sw = (d_maxx - d_minx) * s_scale
+            d_sh = (d_maxy - d_miny) * s_scale
+            gap_bar_text = 1.727 * s_scale
+            spacing_icon = 1.867 * s_scale
+
+            if str(icon_position).lower() == "left":
+                x_bar_offset = minx - d_sw - gap_bar_text
+            else:
+                x_bar_offset = maxx + gap_bar_text
+            y_bar_offset = mid_y - (d_sh / 2.0)
+            d_placed = affinity.translate(d_scaled, xoff=x_bar_offset, yoff=y_bar_offset)
+            text1_2d = unary_union([text1_2d, d_placed])
+            text_2d = unary_union([text1_2d] + ([text2_2d] if text2_2d else []))
+            minx, miny, maxx, maxy = text_2d.bounds
+
+            # Simbolo Fluido (solo nuvoletta quadrata, colore simbolo)
+            s_minx, s_miny, s_maxx, s_maxy = s_mod.bounds
+            s_norm = affinity.translate(s_mod, xoff=-s_minx, yoff=-s_miny)
+            icon_scaled = affinity.scale(s_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
+            iw = (s_maxx - s_minx) * s_scale
+            ih = (s_maxy - s_miny) * s_scale
+            if str(icon_position).lower() == "left":
+                ix = minx - iw - spacing_icon
+            else:
+                ix = maxx + spacing_icon
+            iy = mid_y - (ih / 2.0)
+            icon_2d = affinity.translate(icon_scaled, xoff=ix, yoff=iy)
+        except Exception as e:
+            print(f"Errore gestione logo TXT portachiavi: {e}")
+    elif icon_raw is not None:
+        icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
+        spacing_icon = 2.5
         icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
         iminx, iminy, imaxx, imaxy = icon_scaled.bounds
         iw = imaxx - iminx
         ih = imaxy - iminy
-
         icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
 
         if str(icon_position).lower() == "left":

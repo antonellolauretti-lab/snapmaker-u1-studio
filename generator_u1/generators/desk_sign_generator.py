@@ -208,14 +208,16 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     # Simbolo / Icona 3D
     icon_name = params.get("icon_name") or params.get("icon_id") or "none"
-    icon_position = str(params.get("icon_position", "right")).lower()
+    is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
+    default_icon_pos = "left" if is_txt_logo else "right"
+    icon_position = str(params.get("icon_position", default_icon_pos)).lower()
     has_custom_icon_color = bool(
         params.get("has_custom_icon_color") or 
         params.get("hasCustomIconColor") or 
         params.get("custom_icon_color") or 
         (int(params.get("extruder_icon", 1)) == 2)
     )
-    if has_custom_icon_color:
+    if is_txt_logo or has_custom_icon_color:
         extruder_icon = 2
     else:
         extruder_icon = extruder_line1
@@ -233,10 +235,22 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     offset2 = get_font_dilation_offset(font_family_line2)
 
     # 1. Generazione 2D Testo Riga 1
-    t1_raw = _generate_text_2d(
-        text_line1, font_family_line1, font_path_line1,
-        font_size_line1, letter_spacing_line1, dilation_offset=offset1
-    )
+    clean_txt1 = text_line1.strip().upper()
+    is_txt_text = (clean_txt1 == "TXT ENNOVA")
+    if is_txt_text:
+        try:
+            from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
+            t1_raw = get_txt_letters_geometry(target_height=font_size_line1)
+        except Exception:
+            t1_raw = _generate_text_2d(
+                text_line1, font_family_line1, font_path_line1,
+                font_size_line1, letter_spacing_line1, dilation_offset=offset1
+            )
+    else:
+        t1_raw = _generate_text_2d(
+            text_line1, font_family_line1, font_path_line1,
+            font_size_line1, letter_spacing_line1, dilation_offset=offset1
+        )
     t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
     w1 = t1_maxx - t1_minx
     h1 = t1_maxy - t1_miny
@@ -265,23 +279,60 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         h_text_content = h1
 
     # 3. Generazione e Scalatura Simbolo Vettoriale (se selezionato)
-    icon_raw = _get_vector_icon(icon_name)
     icon_norm = None
     iw, ih = 0.0, 0.0
-    is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
-    spacing_icon = (1.73 if is_txt_logo else 4.0) if (icon_raw is not None) else 0.0
-
-    if icon_raw is not None:
-        if is_txt_logo:
-            # Rapporto 1:1 in altezza rispetto all'altezza del testo adiacente
-            icon_h = h_text_content * 1.0
-        else:
+    if is_txt_logo:
+        try:
+            from generator_u1.assets.txt_logo_geometry import get_txt_modular_components
+            s_mod, d_mod, _ = get_txt_modular_components()
+            
+            s_scale = h1 / 5.451072445428663
+            
+            # 3a. Barretta Verticale Divisoria: unita alla mesh del testo (colore testo)
+            d_minx, d_miny, d_maxx, d_maxy = d_mod.bounds
+            d_norm = affinity.translate(d_mod, xoff=-d_minx, yoff=-d_miny)
+            d_scaled = affinity.scale(d_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
+            d_sw = (d_maxx - d_minx) * s_scale
+            d_sh = (d_maxy - d_miny) * s_scale
+            gap_bar_text = 1.727 * s_scale
+            spacing_icon = 1.867 * s_scale
+            
+            if icon_position == "left":
+                x_bar_offset = -(d_sw + gap_bar_text)
+            else:
+                x_bar_offset = w1 + gap_bar_text
+            y_bar_offset = (h1 - d_sh) / 2.0
+            d_placed = affinity.translate(d_scaled, xoff=x_bar_offset, yoff=y_bar_offset)
+            
+            t1_norm = unary_union([t1_norm, d_placed])
+            t1_b = t1_norm.bounds
+            t1_norm = affinity.translate(t1_norm, xoff=-t1_b[0], yoff=-t1_b[1])
+            w1 = t1_norm.bounds[2] - t1_norm.bounds[0]
+            h1 = t1_norm.bounds[3] - t1_norm.bounds[1]
+            w_text_content = max(w1, w2)
+            if not line2_enabled:
+                h_text_content = h1
+            
+            # 3b. Simbolo Fluido (solo la nuvoletta quadrata a onde, colore simbolo)
+            s_minx, s_miny, s_maxx, s_maxy = s_mod.bounds
+            s_norm = affinity.translate(s_mod, xoff=-s_minx, yoff=-s_miny)
+            icon_norm = affinity.scale(s_norm, xfact=s_scale, yfact=s_scale, origin=(0, 0))
+            iw = (s_maxx - s_minx) * s_scale
+            ih = (s_maxy - s_miny) * s_scale
+        except Exception as e:
+            print(f"Errore gestione logo TXT: {e}")
+            is_txt_logo = False
+            spacing_icon = 4.0
+    else:
+        icon_raw = _get_vector_icon(icon_name)
+        spacing_icon = 4.0 if (icon_raw is not None) else 0.0
+        if icon_raw is not None:
             icon_h = min(font_size_line1 * 1.05, max(h_text_content * 0.90, 14.0))
-        icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
-        iminx, iminy, imaxx, imaxy = icon_scaled.bounds
-        iw = imaxx - iminx
-        ih = imaxy - iminy
-        icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
+            icon_scaled = affinity.scale(icon_raw, xfact=icon_h, yfact=icon_h, origin=(0, 0))
+            iminx, iminy, imaxx, imaxy = icon_scaled.bounds
+            iw = imaxx - iminx
+            ih = imaxy - iminy
+            icon_norm = affinity.translate(icon_scaled, xoff=-iminx, yoff=-iminy)
 
     # Calcolo ingombro orizzontale combinato (Testo + Icona)
     w_content_total = (w_text_content + spacing_icon + iw) if (icon_norm is not None) else w_text_content

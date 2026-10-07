@@ -305,7 +305,7 @@ class ModelViewer {
 
       // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
       let ext = p.extruder;
-      if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon"))) {
+      if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon") || p.name.includes("Simbolo") || p.name.includes("simbolo"))) {
         ext = 2;
       }
       const colorDef = palette[ext] || "#ffffff";
@@ -332,7 +332,7 @@ class ModelViewer {
   updateColors(palette) {
     this.partMeshes.forEach((mesh) => {
       let ext = mesh.userData.extruder;
-      if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon"))) {
+      if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon") || mesh.userData.partName.includes("Simbolo") || mesh.userData.partName.includes("simbolo"))) {
         ext = 2;
       }
       const colorDef = palette[ext];

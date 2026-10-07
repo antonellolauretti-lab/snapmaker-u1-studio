@@ -1473,7 +1473,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1.1 GESTIONE SELETTORE PRODOTTO (TABS)
   // ==========================================
   function setProduct(product, skipPreview = false) {
+    const prevProduct = currentProduct;
     currentProduct = product;
+
+    // Sincronizzazione persistente tra le modalità (Keychain <-> Desk Sign)
+    if (prevProduct === "keychain" && product === "desk_sign") {
+      if (textInput && dsText1Input && textInput.value) {
+        dsText1Input.value = textInput.value;
+      }
+      if (fontSelect && dsFont1Select && fontSelect.value) {
+        dsFont1Select.value = fontSelect.value;
+        if (dropdownDs1) dropdownDs1.updateFromSelect();
+      }
+    } else if (prevProduct === "desk_sign" && product === "keychain") {
+      if (dsText1Input && textInput && dsText1Input.value) {
+        textInput.value = dsText1Input.value;
+      }
+      if (dsFont1Select && fontSelect && dsFont1Select.value) {
+        fontSelect.value = dsFont1Select.value;
+        if (dropdownKeychain) dropdownKeychain.updateFromSelect();
+      }
+    }
+
     if (product === "desk_sign") {
       if (tabDeskSign) tabDeskSign.classList.add("active");
       if (tabKeychain) tabKeychain.classList.remove("active");
