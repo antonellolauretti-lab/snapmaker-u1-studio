@@ -350,6 +350,22 @@
     }
 
     /* Selettore Icone con Categorie */
+    .icon-search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 8px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .icon-search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+    }
     .icon-category-select {
       width: 100%;
       background: var(--bg-card);
@@ -1120,9 +1136,9 @@
           <option value="sport">Sport & Hobby (Calcio, Bici, Montagna...)</option>
           <option value="veicoli">Veicoli & Motori (Auto, Moto, Aereo...)</option>
           <option value="simboli">Simboli & Natura (Fuoco, Ancora, Albero...)</option>
-          <option value="pokemon">Pokémon (12 Mostriciattoli Iconici)</option>
           <option value="zodiaco">Segni Zodiacali (12 Glifi Astrali)</option>
         </select>
+        <input type="text" id="symbol-search-input" placeholder="🔍 Cerca simbolo (es. cuore, stella...)" class="icon-search-input">
 
         <div class="icon-grid-container" id="iconGrid">
           <!-- Caricato dinamicamente con tracciati SVG razor-sharp -->
@@ -1608,6 +1624,7 @@
       }
       if (!fontsCatalog || fontsCatalog.length === 0) {
         fontsCatalog = [
+          { id: 'Minimal Tech', name: 'Minimal Tech', family: "'Montserrat', sans-serif" },
           { id: 'Montserrat', name: 'Montserrat Black', family: "'Montserrat', sans-serif" },
           { id: 'Bebas Neue', name: 'Bebas Neue', family: "'Bebas Neue', sans-serif" },
           { id: 'Pacifico', name: 'Pacifico Script', family: "'Pacifico', cursive" },
@@ -1773,8 +1790,21 @@
       const grid = document.getElementById('iconGrid');
       const catSelect = document.getElementById('iconCategorySelect');
       const catFilter = catSelect ? catSelect.value : 'all';
+      const searchInput = document.getElementById('symbol-search-input');
+      const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
 
       const filtered = iconsCatalog.filter(ic => {
+        const isSecret = Boolean(ic.secret || ic.hidden || ic.category === 'easter_egg');
+        if (isSecret) {
+          return query.includes('txt') || query.includes('ennova');
+        }
+        if (query) {
+          const matchName = (ic.name || '').toLowerCase().includes(query);
+          const matchId = (ic.id || '').toLowerCase().includes(query);
+          const matchDesc = (ic.desc || '').toLowerCase().includes(query);
+          const matchCat = (ic.category || '').toLowerCase().includes(query);
+          return matchName || matchId || matchDesc || matchCat;
+        }
         if (catFilter === 'all') return true;
         return (ic.category || '').toLowerCase().includes(catFilter);
       });
@@ -1991,8 +2021,11 @@
         }
       });
 
-      // Filtro Categoria Icone
+      // Filtro Categoria e Barra di Ricerca Icone
       document.getElementById('iconCategorySelect')?.addEventListener('change', () => {
+        renderIconsGrid();
+      });
+      document.getElementById('symbol-search-input')?.addEventListener('input', () => {
         renderIconsGrid();
       });
 

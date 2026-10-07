@@ -176,6 +176,12 @@ ICON_ALIASES = {
     "peace": "pace", "pace": "pace",
     "gift": "regalo", "regalo": "regalo",
     "coffee": "caffe", "mug": "caffe", "caffe": "caffe",
+    # Easter Egg Aziendale
+    "txt": "txt_ennova_logo",
+    "ennova": "txt_ennova_logo",
+    "txt ennova": "txt_ennova_logo",
+    "txt_ennova": "txt_ennova_logo",
+    "txt_ennova_logo": "txt_ennova_logo",
 }
 
 _PARSED_SVG_CACHE: Dict[str, Any] = {}

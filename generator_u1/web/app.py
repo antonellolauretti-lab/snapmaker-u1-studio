@@ -174,6 +174,14 @@ CURATED_FONTS = [
         "file": "Orbitron.ttf",
     },
     {
+        "id": "Minimal Tech",
+        "name": "Minimal Tech",
+        "desc": "Geometrico Arrotondato High-Tech",
+        "category": "sans-serif",
+        "family": "'Montserrat', sans-serif",
+        "file": "MinimalTech.ttf",
+    },
+    {
         "id": "Montserrat",
         "name": "Montserrat Black",
         "desc": "Geometrico Moderno Black 900",

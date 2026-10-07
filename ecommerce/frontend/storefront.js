@@ -35,6 +35,7 @@ export class SnapmakerStorefront {
     };
 
     this.curatedFonts = [
+      { id: 'Minimal Tech', name: 'Minimal Tech', previewText: 'GEOMETRICO ARROTONDATO' },
       { id: 'Montserrat', name: 'Montserrat Bold', previewText: 'MODERNO GEOMETRICO' },
       { id: 'Bebas Neue', name: 'Bebas Neue', previewText: 'ALTO IMPATTO' },
       { id: 'Pacifico', name: 'Pacifico Script', previewText: 'Elegante Corsivo' },

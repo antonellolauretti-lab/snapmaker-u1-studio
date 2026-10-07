@@ -41,6 +41,10 @@ FONT_ALIAS_MAP: Dict[str, str] = {
     "permanent marker": "Permanent_Marker.ttf",
     "permanentmarker": "Permanent_Marker.ttf",
     # Sans-serif & Serif (Rigorosamente varianti Heavy / Bold per estrusione FDM)
+    "minimal tech": "MinimalTech.ttf",
+    "minimaltech": "MinimalTech.ttf",
+    "corporate tech": "MinimalTech.ttf",
+    "corporatetech": "MinimalTech.ttf",
     "montserrat": "Montserrat-Black.ttf",
     "montserrat black": "Montserrat-Black.ttf",
     "montserrat bold": "Montserrat-Black.ttf",
@@ -143,6 +147,12 @@ def get_font_dilation_offset(font_name: Optional[str]) -> float:
         "playfair", "cinzel", "georgia"
     ]):
         return 0.28
+
+    # Minimal Tech / Corporate Tech (progetto TXT ENNOVA): 0.22 mm calibrato per nozzle 0.4 mm
+    if any(s in fn for s in [
+        "minimal tech", "minimaltech", "corporate tech", "corporatetech"
+    ]):
+        return 0.22
 
     # Montserrat e Segoe UI: 0.18 mm per dare una presenza solida e monolitica
     if any(s in fn for s in [
