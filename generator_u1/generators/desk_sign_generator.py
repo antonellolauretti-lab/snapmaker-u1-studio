@@ -237,10 +237,20 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     # 1. Generazione 2D Testo Riga 1
     clean_txt1 = text_line1.strip().upper()
     is_txt_text = (clean_txt1 == "TXT ENNOVA")
+    is_pokemon_text = (clean_txt1 in ("POKEMON", "POKÉMON"))
     if is_txt_text:
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
             t1_raw = get_txt_letters_geometry(target_height=font_size_line1)
+        except Exception:
+            t1_raw = _generate_text_2d(
+                text_line1, font_family_line1, font_path_line1,
+                font_size_line1, letter_spacing_line1, dilation_offset=offset1
+            )
+    elif is_pokemon_text:
+        try:
+            from generator_u1.assets.pokemon_geometry import get_pokemon_letters_geometry
+            t1_raw = get_pokemon_letters_geometry(target_height=font_size_line1)
         except Exception:
             t1_raw = _generate_text_2d(
                 text_line1, font_family_line1, font_path_line1,
@@ -262,10 +272,14 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     if line2_enabled:
         clean_txt2 = text_line2.strip().upper()
         is_txt_text2 = (clean_txt2 == "TXT ENNOVA")
+        is_pokemon_text2 = (clean_txt2 in ("POKEMON", "POKÉMON"))
         try:
             if is_txt_text2:
                 from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
                 t2_raw = get_txt_letters_geometry(target_height=font_size_line2)
+            elif is_pokemon_text2:
+                from generator_u1.assets.pokemon_geometry import get_pokemon_letters_geometry
+                t2_raw = get_pokemon_letters_geometry(target_height=font_size_line2)
             else:
                 t2_raw = _generate_text_2d(
                     text_line2, font_family_line2, font_path_line2,

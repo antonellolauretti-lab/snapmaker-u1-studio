@@ -145,6 +145,7 @@ ICON_ALIASES = {
     "frog": "rana", "rana": "rana",
     "crow": "corvo", "corvo": "corvo",
     # Gaming
+    "pokeball": "pokeball", "pokéball": "pokeball", "poke_ball": "pokeball", "sfera_pokemon": "pokeball",
     "gamepad": "gamepad",
     "ghost": "fantasma", "fantasma": "fantasma",
     "shield": "scudo", "scudo": "scudo",
@@ -417,6 +418,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             t1_raw = get_txt_letters_geometry(target_height=font_size)
         except Exception:
             t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
+    elif clean_txt in ("POKEMON", "POKÉMON"):
+        try:
+            from generator_u1.assets.pokemon_geometry import get_pokemon_letters_geometry
+            t1_raw = get_pokemon_letters_geometry(target_height=font_size)
+        except Exception:
+            t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
     else:
         t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
     t1_minx, t1_miny, t1_maxx, t1_maxy = t1_raw.bounds
@@ -433,6 +440,9 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             if clean_txt2 == "TXT ENNOVA":
                 from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
                 t2_raw = get_txt_letters_geometry(target_height=font_size_line2)
+            elif clean_txt2 in ("POKEMON", "POKÉMON"):
+                from generator_u1.assets.pokemon_geometry import get_pokemon_letters_geometry
+                t2_raw = get_pokemon_letters_geometry(target_height=font_size_line2)
             else:
                 t2_raw = _generate_text_line_2d(text_line2, fp2, font_size_line2, letter_spacing_line2, dilation_offset=offset2)
             t2_minx, t2_miny, t2_maxx, t2_maxy = t2_raw.bounds
