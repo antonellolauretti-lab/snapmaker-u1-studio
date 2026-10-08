@@ -729,7 +729,11 @@ def generate_3mf(params: Dict[str, Any]):
     out_path = temp_dir / filename
 
     fil_colors = params.get("filament_colors")
-    if not fil_colors:
+    has_pokemon = any("pokemon" in p.name.lower() or "pokeball" in p.name.lower() for p in parts)
+    if has_pokemon:
+        b_col = params.get("base_color", "#080A0D")
+        fil_colors = [b_col, "#2A75BB", "#FFCB05", "#EE1515"]
+    elif not fil_colors:
         b_col = params.get("base_color", "#080A0D")
         t_col = params.get("text_color", "#D9DFE5")
         i_col = params.get("symbolColor") or params.get("icon_color") or "#E72F1D"

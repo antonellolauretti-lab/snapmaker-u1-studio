@@ -284,6 +284,68 @@ class ModelViewer {
   }
 
   /**
+   * Override forzato dei materiali ufficiali di Brand (Pokémon, Pokéball, ecc.)
+   */
+  getBrandHardcodedMaterial(partName, wireframe = false) {
+    if (!partName) return null;
+    const name = partName.toLowerCase();
+
+    // 1. Scritta Pokémon Ufficiale (Doppio Layer)
+    if (name.includes("pokemon_outline") || name.includes("text_pokemon_outline")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x2A75BB,
+        roughness: 0.4,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pokemon_letters") || name.includes("text_pokemon_letters")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFCB05,
+        roughness: 0.3,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+
+    // 2. Icona Pokéball Ufficiale (4 Volumi Separati)
+    if (name.includes("pokeball_top") || name.includes("icon_pokeball_top")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xEE1515,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pokeball_bottom") || name.includes("icon_pokeball_bottom")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFFFFF,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pokeball_band") || name.includes("icon_pokeball_band")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x1A1A1A,
+        roughness: 0.4,
+        metalness: 0.1,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pokeball_button") || name.includes("icon_pokeball_button")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFFFFF,
+        roughness: 0.25,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+
+    return null;
+  }
+
+  /**
    * Aggiorna la geometria della scena con i dati ricevuti da /api/preview
    */
   updateGeometry(previewData, palette, extruderBase, extruderText) {
@@ -303,18 +365,33 @@ class ModelViewer {
       geom.setIndex(p.faces);
       geom.computeVertexNormals();
 
-      // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
-      let ext = p.extruder;
-      if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon") || p.name.includes("Simbolo") || p.name.includes("simbolo"))) {
-        ext = 2;
+      // Check se esiste un override forzato per brand
+      const brandMat = this.getBrandHardcodedMaterial(p.name, this.wireframeMode);
+      let mat;
+      let isBrandLocked = false;
+
+      if (brandMat) {
+        mat = brandMat;
+        isBrandLocked = true;
+      } else {
+        // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
+        let ext = p.extruder;
+        if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon") || p.name.includes("Simbolo") || p.name.includes("simbolo"))) {
+          ext = 2;
+        }
+        const colorDef = p.color || palette[ext] || "#ffffff";
+        mat = this.createMaterial(colorDef, this.wireframeMode);
       }
-      const colorDef = palette[ext] || "#ffffff";
-      const mat = this.createMaterial(colorDef, this.wireframeMode);
 
       const mesh = new THREE.Mesh(geom, mat);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.userData = { partName: p.name, extruder: ext };
+      mesh.userData = { 
+        partName: p.name, 
+        extruder: p.extruder, 
+        customColor: p.color || null,
+        isBrandLocked: isBrandLocked
+      };
 
       this.modelGroup.add(mesh);
       this.partMeshes.push(mesh);
@@ -331,6 +408,13 @@ class ModelViewer {
    */
   updateColors(palette) {
     this.partMeshes.forEach((mesh) => {
+      // Priorità assoluta: se il pezzo è un elemento di Brand (Pokémon/Pokéball), non cambiare materiale
+      if (mesh.userData.isBrandLocked || this.getBrandHardcodedMaterial(mesh.userData.partName)) {
+        return;
+      }
+      if (mesh.userData.customColor) {
+        return;
+      }
       let ext = mesh.userData.extruder;
       if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon") || mesh.userData.partName.includes("Simbolo") || mesh.userData.partName.includes("simbolo"))) {
         ext = 2;
