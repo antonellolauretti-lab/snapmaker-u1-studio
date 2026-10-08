@@ -308,13 +308,13 @@ class ModelViewer {
       if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon") || p.name.includes("Simbolo") || p.name.includes("simbolo"))) {
         ext = 2;
       }
-      const colorDef = palette[ext] || "#ffffff";
+      const colorDef = p.color || palette[ext] || "#ffffff";
       const mat = this.createMaterial(colorDef, this.wireframeMode);
 
       const mesh = new THREE.Mesh(geom, mat);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.userData = { partName: p.name, extruder: ext };
+      mesh.userData = { partName: p.name, extruder: ext, customColor: p.color || null };
 
       this.modelGroup.add(mesh);
       this.partMeshes.push(mesh);
@@ -331,6 +331,9 @@ class ModelViewer {
    */
   updateColors(palette) {
     this.partMeshes.forEach((mesh) => {
+      if (mesh.userData.customColor) {
+        return;
+      }
       let ext = mesh.userData.extruder;
       if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon") || mesh.userData.partName.includes("Simbolo") || mesh.userData.partName.includes("simbolo"))) {
         ext = 2;

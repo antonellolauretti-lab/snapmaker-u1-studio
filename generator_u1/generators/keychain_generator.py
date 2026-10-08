@@ -412,6 +412,9 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     offset2 = get_font_dilation_offset(font_family_line2)
 
     # 2. Generazione vettoriale Riga 1 (con eventuale offset di dilatazione per tratti sottili)
+    # 2. Generazione vettoriale Riga 1 (con eventuale offset di dilatazione per tratti sottili)
+    t1_norm_letters = None
+    t1_norm_outline = None
     if clean_txt == "TXT ENNOVA":
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
@@ -420,8 +423,18 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
     elif clean_txt in ("POKEMON", "POKÉMON"):
         try:
-            from generator_u1.assets.pokemon_geometry import get_pokemon_letters_geometry
-            t1_raw = get_pokemon_letters_geometry(target_height=font_size)
+            from generator_u1.assets.pokemon_geometry import (
+                get_pokemon_letters_geometry,
+                get_pokemon_outline_border_geometry,
+                get_pokemon_contour_geometry,
+            )
+            g_letters = get_pokemon_letters_geometry(target_height=font_size)
+            g_outline = get_pokemon_outline_border_geometry(target_height=font_size)
+            g_contour = get_pokemon_contour_geometry(target_height=font_size)
+            c_minx, c_miny, c_maxx, c_maxy = g_contour.bounds
+            t1_norm_letters = affinity.translate(g_letters, xoff=-c_minx, yoff=-c_miny)
+            t1_norm_outline = affinity.translate(g_outline, xoff=-c_minx, yoff=-c_miny)
+            t1_raw = affinity.translate(g_contour, xoff=-c_minx, yoff=-c_miny)
         except Exception:
             t1_raw = _generate_text_line_2d(text, fp1, font_size, letter_spacing, dilation_offset=offset1)
     else:
@@ -465,17 +478,28 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         text2_2d = affinity.translate(t2_norm, xoff=x2, yoff=y2)
         text_2d = unary_union([text1_2d, text2_2d])
     else:
+        x1 = 0.0
+        y1 = 0.0
         text1_2d = t1_norm
         text2_2d = None
         text_2d = t1_norm
+
+    text1_letters_2d = affinity.translate(t1_norm_letters, xoff=x1, yoff=y1) if t1_norm_letters else None
+    text1_outline_2d = affinity.translate(t1_norm_outline, xoff=x1, yoff=y1) if t1_norm_outline else None
 
     minx, miny, maxx, maxy = text_2d.bounds
     mid_y = (miny + maxy) / 2.0
 
     # 5. Generazione e posizionamento dell'Icona Vettoriale
     is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
-    icon_raw = _get_vector_icon(icon_name) if not is_txt_logo else None
+    is_pokeball = str(icon_name).lower().strip() in ("pokeball", "poke_ball", "pokéball", "poke ball", "sfera_pokemon")
+    pokeball_top_2d = None
+    pokeball_bottom_2d = None
+    pokeball_band_2d = None
+    pokeball_button_2d = None
+    icon_raw = _get_vector_icon(icon_name) if (not is_txt_logo and not is_pokeball) else None
     icon_2d = None
+
     if is_txt_logo:
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_modular_components
@@ -518,6 +542,43 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             icon_2d = affinity.translate(icon_scaled, xoff=ix, yoff=iy)
         except Exception as e:
             print(f"Errore gestione logo TXT portachiavi: {e}")
+    elif is_pokeball:
+        try:
+            from generator_u1.assets.pokeball_geometry import (
+                get_pokeball_modular_components,
+                get_pokeball_geometry,
+            )
+            if clean_txt in ("POKEMON", "POKÉMON"):
+                h_P = 10.9400897 * (font_size / 14.0)
+                pokeball_diam = 0.78 * h_P
+            else:
+                pokeball_diam = min(font_size * 0.75, (maxy - miny) * 0.75)
+                if pokeball_diam < 6.0:
+                    pokeball_diam = 8.5
+
+            p_top, p_bot, p_band, p_btn = get_pokeball_modular_components(target_diameter=pokeball_diam)
+            p_full = get_pokeball_geometry(target_diameter=pokeball_diam)
+            iw = pokeball_diam
+            ih = pokeball_diam
+            spacing_icon = 2.5
+            if clean_txt in ("POKEMON", "POKÉMON"):
+                y_center_P = y1 + (10.9400897 * (font_size / 14.0)) / 2.0
+                iy = y_center_P - (ih / 2.0)
+            else:
+                iy = mid_y - (ih / 2.0)
+
+            if str(icon_position).lower() == "left":
+                ix = minx - iw - spacing_icon
+            else:
+                ix = maxx + spacing_icon
+
+            pokeball_top_2d = affinity.translate(p_top, xoff=ix, yoff=iy)
+            pokeball_bottom_2d = affinity.translate(p_bot, xoff=ix, yoff=iy)
+            pokeball_band_2d = affinity.translate(p_band, xoff=ix, yoff=iy)
+            pokeball_button_2d = affinity.translate(p_btn, xoff=ix, yoff=iy)
+            icon_2d = affinity.translate(p_full, xoff=ix, yoff=iy)
+        except Exception as e:
+            print(f"Errore gestione Pokeball portachiavi: {e}")
     elif icon_raw is not None:
         icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
         spacing_icon = 2.5
@@ -645,10 +706,19 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         scale_factor = max(0.25, min(scale_factor, 1.0))
 
         text1_2d = affinity.scale(text1_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if text1_letters_2d is not None:
+            text1_letters_2d = affinity.scale(text1_letters_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if text1_outline_2d is not None:
+            text1_outline_2d = affinity.scale(text1_outline_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         if text2_2d is not None:
             text2_2d = affinity.scale(text2_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         if icon_2d is not None:
             icon_2d = affinity.scale(icon_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if is_pokeball and pokeball_top_2d is not None:
+            pokeball_top_2d = affinity.scale(pokeball_top_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pokeball_bottom_2d = affinity.scale(pokeball_bottom_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pokeball_band_2d = affinity.scale(pokeball_band_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pokeball_button_2d = affinity.scale(pokeball_button_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
 
         foreground_items = [text1_2d]
         if text2_2d is not None:
@@ -665,10 +735,19 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         if current_w > MAX_KEYCHAIN_LENGTH:
             clamp_scale = MAX_KEYCHAIN_LENGTH / current_w
             text1_2d = affinity.scale(text1_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            if text1_letters_2d is not None:
+                text1_letters_2d = affinity.scale(text1_letters_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            if text1_outline_2d is not None:
+                text1_outline_2d = affinity.scale(text1_outline_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             if text2_2d is not None:
                 text2_2d = affinity.scale(text2_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             if icon_2d is not None:
                 icon_2d = affinity.scale(icon_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            if is_pokeball and pokeball_top_2d is not None:
+                pokeball_top_2d = affinity.scale(pokeball_top_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+                pokeball_bottom_2d = affinity.scale(pokeball_bottom_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+                pokeball_band_2d = affinity.scale(pokeball_band_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+                pokeball_button_2d = affinity.scale(pokeball_button_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             foreground_items = [text1_2d]
             if text2_2d is not None:
                 foreground_items.append(text2_2d)
@@ -684,10 +763,19 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     base_2d = affinity.translate(base_2d, xoff=-cx, yoff=-cy)
     text1_2d = affinity.translate(text1_2d, xoff=-cx, yoff=-cy)
+    if text1_letters_2d is not None:
+        text1_letters_2d = affinity.translate(text1_letters_2d, xoff=-cx, yoff=-cy)
+    if text1_outline_2d is not None:
+        text1_outline_2d = affinity.translate(text1_outline_2d, xoff=-cx, yoff=-cy)
     if text2_2d is not None:
         text2_2d = affinity.translate(text2_2d, xoff=-cx, yoff=-cy)
     if icon_2d is not None:
         icon_2d = affinity.translate(icon_2d, xoff=-cx, yoff=-cy)
+    if is_pokeball and pokeball_top_2d is not None:
+        pokeball_top_2d = affinity.translate(pokeball_top_2d, xoff=-cx, yoff=-cy)
+        pokeball_bottom_2d = affinity.translate(pokeball_bottom_2d, xoff=-cx, yoff=-cy)
+        pokeball_band_2d = affinity.translate(pokeball_band_2d, xoff=-cx, yoff=-cy)
+        pokeball_button_2d = affinity.translate(pokeball_button_2d, xoff=-cx, yoff=-cy)
 
     # 10. Estrusione 3D e Definizione Parti
     parts: List[PartItem] = []
@@ -696,10 +784,20 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
         parts.append(PartItem(name="Base", mesh=mesh_base, extruder=extruder_base))
 
-        clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
-        mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness)
-        mesh_text1.apply_translation([0, 0, base_thickness])
-        parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=extruder_text))
+        if text1_letters_2d is not None and text1_outline_2d is not None:
+            # Doppio strato ufficiale Pokémon: Bordo Blu spesso Z=1.0mm + Lettere Gialle Z=1.4mm
+            mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0)
+            mesh_outline.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=1, color="#2a75bb"))
+
+            mesh_letters = _extrude_geometry(text1_letters_2d, height=text_thickness)
+            mesh_letters.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+        else:
+            clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
+            mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness)
+            mesh_text1.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=extruder_text))
 
         if text2_2d is not None:
             clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
@@ -707,7 +805,23 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_text2.apply_translation([0, 0, base_thickness])
             parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=extruder_line2))
 
-        if icon_2d is not None:
+        if is_pokeball and pokeball_top_2d is not None:
+            m_top = _extrude_geometry(pokeball_top_2d, height=text_thickness)
+            m_top.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pokeball_Top", mesh=m_top, extruder=3, color="#ee1515"))
+
+            m_bot = _extrude_geometry(pokeball_bottom_2d, height=text_thickness)
+            m_bot.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pokeball_Bottom", mesh=m_bot, extruder=1, color="#ffffff"))
+
+            m_band = _extrude_geometry(pokeball_band_2d, height=text_thickness)
+            m_band.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pokeball_Band", mesh=m_band, extruder=0, color="#1a1a1a"))
+
+            m_btn = _extrude_geometry(pokeball_button_2d, height=text_thickness)
+            m_btn.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pokeball_Button", mesh=m_btn, extruder=1, color="#ffffff"))
+        elif icon_2d is not None:
             mesh_icon = _extrude_geometry(icon_2d, height=text_thickness)
             mesh_icon.apply_translation([0, 0, base_thickness])
             parts.append(PartItem(name=f"Icon_{icon_name}", mesh=mesh_icon, extruder=extruder_icon))
@@ -728,16 +842,31 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base = trimesh.util.concatenate([mesh_base_bottom, mesh_base_top])
         parts.append(PartItem(name="Base", mesh=mesh_base, extruder=extruder_base))
 
-        clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
-        mesh_text1 = _extrude_geometry(text1_2d, height=inlay_depth)
-        parts.append(PartItem(name=f"Text_{clean_t1}_Inlay", mesh=mesh_text1, extruder=extruder_text))
+        if text1_letters_2d is not None and text1_outline_2d is not None:
+            mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0)
+            parts.append(PartItem(name="Text_Pokemon_Outline_Inlay", mesh=mesh_outline, extruder=1, color="#2a75bb"))
+            mesh_letters = _extrude_geometry(text1_letters_2d, height=inlay_depth)
+            parts.append(PartItem(name="Text_Pokemon_Letters_Inlay", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+        else:
+            clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
+            mesh_text1 = _extrude_geometry(text1_2d, height=inlay_depth)
+            parts.append(PartItem(name=f"Text_{clean_t1}_Inlay", mesh=mesh_text1, extruder=extruder_text))
 
         if text2_2d is not None:
             clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
             mesh_text2 = _extrude_geometry(text2_2d, height=inlay_depth)
             parts.append(PartItem(name=f"Text_{clean_t2}_Inlay", mesh=mesh_text2, extruder=extruder_line2))
 
-        if icon_2d is not None:
+        if is_pokeball and pokeball_top_2d is not None:
+            m_top = _extrude_geometry(pokeball_top_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pokeball_Top_Inlay", mesh=m_top, extruder=3, color="#ee1515"))
+            m_bot = _extrude_geometry(pokeball_bottom_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pokeball_Bottom_Inlay", mesh=m_bot, extruder=1, color="#ffffff"))
+            m_band = _extrude_geometry(pokeball_band_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pokeball_Band_Inlay", mesh=m_band, extruder=0, color="#1a1a1a"))
+            m_btn = _extrude_geometry(pokeball_button_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pokeball_Button_Inlay", mesh=m_btn, extruder=1, color="#ffffff"))
+        elif icon_2d is not None:
             mesh_icon = _extrude_geometry(icon_2d, height=inlay_depth)
             parts.append(PartItem(name=f"Icon_{icon_name}_Inlay", mesh=mesh_icon, extruder=extruder_icon))
 

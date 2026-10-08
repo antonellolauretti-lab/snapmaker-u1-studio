@@ -639,6 +639,7 @@ def preview_model(params: Dict[str, Any]):
         preview_parts.append({
             "name": part.name,
             "extruder": part.extruder,
+            "color": getattr(part, "color", None),
             "vertices": v.flatten().tolist(),
             "faces": f.flatten().tolist(),
             "vertex_count": len(v),

@@ -1198,6 +1198,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Preset Palettes U1 (Filamenti Ufficiali Snapmaker da Fattura)
   const PALETTE_PRESETS = {
     snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
+    pokemon: ["#080A0D", "#2A75BB", "#FFCB05", "#EE1515"],
     sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
     silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
     contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
@@ -1415,6 +1416,39 @@ document.addEventListener("DOMContentLoaded", () => {
     viewer.updateColors([c0, c1, c2, c3]);
     syncAllQuickSelects();
     saveCurrentStateToLocalStorage();
+  }
+
+  function checkAndApplyPokemonPreset() {
+    const isDeskSign = (tabDeskSign && tabDeskSign.classList.contains("active")) || 
+                       (headerTabDeskSign && headerTabDeskSign.classList.contains("active"));
+    const t = isDeskSign 
+      ? (dsText1Input ? dsText1Input.value.trim().toLowerCase() : "")
+      : (textInput ? textInput.value.trim().toLowerCase() : "");
+    const ic = iconSelect ? iconSelect.value.trim().toLowerCase() : "";
+
+    const isPokemonText = (t === "pokemon" || t === "pokémon");
+    const isPokeball = (ic === "pokeball" || ic === "pokéball" || ic === "poke_ball" || ic === "sfera_pokemon");
+
+    if (isPokemonText || isPokeball) {
+      if (colorT0 && colorT1 && colorT2 && colorT3) {
+        if (colorT1.value.toLowerCase() !== "#2a75bb" || colorT2.value.toLowerCase() !== "#ffcb05") {
+          colorT0.value = "#080A0D";
+          colorT1.value = "#2A75BB";
+          colorT2.value = "#FFCB05";
+          colorT3.value = "#EE1515";
+          syncAllQuickSelects();
+          onPaletteChange();
+          if (typeof ToastManager !== "undefined" && ToastManager.show) {
+            ToastManager.show({
+              type: "info",
+              title: "Palette Pokémon Attivata",
+              message: "Colori ufficiali impostati: Base Nera, Bordo Blu (#2A75BB), Lettere Gialle (#FFCB05), Pokéball Rossa (#EE1515).",
+              duration: 2500
+            });
+          }
+        }
+      }
+    }
   }
 
   setupQuickColorSelect(colorT0, quickColorT0, 0);
@@ -1754,6 +1788,9 @@ document.addEventListener("DOMContentLoaded", () => {
         cornerRadius: dsCornerRadiusInput ? parseFloat(dsCornerRadiusInput.value) : 3.0,
         extruder_border: dsExtruderBorderSelect ? parseInt(dsExtruderBorderSelect.value) : 3,
         extruder_base: baseExtruder,
+        icon_name: iconSelect ? iconSelect.value : "none",
+        icon_position: document.querySelector('input[name="iconPos"]:checked')?.value || "right",
+        extruder_icon: extruderIconSelect ? parseInt(extruderIconSelect.value) : 1,
       }
     };
   }
@@ -3016,6 +3053,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (iconOptionsWrap) {
       iconOptionsWrap.style.display = (val && val !== "none") ? "flex" : "none";
     }
+    checkAndApplyPokemonPreset();
     triggerPreview(true);
   });
 
@@ -3026,7 +3064,10 @@ document.addEventListener("DOMContentLoaded", () => {
   safeAddListener(extruderIconSelect, "change", () => triggerPreview(true));
 
   // Portachiavi Slider
-  safeAddListener(textInput, "input", () => triggerPreview(false));
+  safeAddListener(textInput, "input", () => {
+    checkAndApplyPokemonPreset();
+    triggerPreview(false);
+  });
   safeAddListener(fontSelect, "change", () => triggerPreview(true));
 
   safeAddListener(fontSizeInput, "input", (e) => {
@@ -3123,7 +3164,10 @@ document.addEventListener("DOMContentLoaded", () => {
     triggerPreview(false);
   });
 
-  safeAddListener(dsText1Input, "input", () => triggerPreview(false));
+  safeAddListener(dsText1Input, "input", () => {
+    checkAndApplyPokemonPreset();
+    triggerPreview(false);
+  });
   safeAddListener(dsFont1Select, "change", () => triggerPreview(true));
   safeAddListener(dsFontSize1Input, "input", (e) => {
     if (dsFontSize1Val) dsFontSize1Val.textContent = `${e.target.value} mm`;
@@ -3235,6 +3279,9 @@ document.addEventListener("DOMContentLoaded", () => {
         border_thickness: dsBorderThicknessInput ? parseFloat(dsBorderThicknessInput.value) : 1.0,
         extruder_border: dsExtruderBorderSelect ? parseInt(dsExtruderBorderSelect.value) : 3,
         extruder_base: baseExtruder,
+        icon_name: iconSelect ? iconSelect.value : "none",
+        icon_position: document.querySelector('input[name="iconPos"]:checked')?.value || "right",
+        extruder_icon: extruderIconSelect ? parseInt(extruderIconSelect.value) : -1,
         filament_colors: palette,
         filament_types: filamentTypes,
       };

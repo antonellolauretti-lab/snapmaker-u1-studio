@@ -14,6 +14,7 @@ class PartItem:
     name: str
     mesh: trimesh.Trimesh
     extruder: int  # 0=T0, 1=T1, 2=T2, 3=T3
+    color: Optional[str] = None
 
 class Snapmaker3MFPackager:
     """
@@ -98,7 +99,7 @@ class Snapmaker3MFPackager:
             f = part.mesh.faces
             triangles = v[f]
             color_idx = part.extruder % len(self.filament_colors)
-            col = self.filament_colors[color_idx]
+            col = part.color if part.color else self.filament_colors[color_idx]
             poly = Poly3DCollection(triangles, facecolors=col, edgecolors="none", alpha=0.98)
             ax.add_collection3d(poly)
 

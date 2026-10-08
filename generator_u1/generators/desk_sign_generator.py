@@ -238,6 +238,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     clean_txt1 = text_line1.strip().upper()
     is_txt_text = (clean_txt1 == "TXT ENNOVA")
     is_pokemon_text = (clean_txt1 in ("POKEMON", "POKÉMON"))
+    t1_norm_letters = None
+    t1_norm_outline = None
     if is_txt_text:
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_letters_geometry
@@ -249,8 +251,18 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             )
     elif is_pokemon_text:
         try:
-            from generator_u1.assets.pokemon_geometry import get_pokemon_letters_geometry
-            t1_raw = get_pokemon_letters_geometry(target_height=font_size_line1)
+            from generator_u1.assets.pokemon_geometry import (
+                get_pokemon_letters_geometry,
+                get_pokemon_outline_border_geometry,
+                get_pokemon_contour_geometry,
+            )
+            g_letters = get_pokemon_letters_geometry(target_height=font_size_line1)
+            g_outline = get_pokemon_outline_border_geometry(target_height=font_size_line1)
+            g_contour = get_pokemon_contour_geometry(target_height=font_size_line1)
+            c_minx, c_miny, c_maxx, c_maxy = g_contour.bounds
+            t1_norm_letters = affinity.translate(g_letters, xoff=-c_minx, yoff=-c_miny)
+            t1_norm_outline = affinity.translate(g_outline, xoff=-c_minx, yoff=-c_miny)
+            t1_raw = affinity.translate(g_contour, xoff=-c_minx, yoff=-c_miny)
         except Exception:
             t1_raw = _generate_text_2d(
                 text_line1, font_family_line1, font_path_line1,
@@ -302,6 +314,12 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     icon_norm = None
     iw, ih = 0.0, 0.0
     bar_geom = None
+    is_pokeball = str(icon_name).lower().strip() in ("pokeball", "poke_ball", "pokéball", "poke ball", "sfera_pokemon")
+    pokeball_top_norm = None
+    pokeball_bot_norm = None
+    pokeball_band_norm = None
+    pokeball_btn_norm = None
+
     if is_txt_logo:
         try:
             from generator_u1.assets.txt_logo_geometry import get_txt_modular_components
@@ -332,6 +350,31 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             print(f"Errore gestione logo TXT: {e}")
             is_txt_logo = False
             bar_geom = None
+            spacing_icon = 4.0
+    elif is_pokeball:
+        try:
+            from generator_u1.assets.pokeball_geometry import (
+                get_pokeball_modular_components,
+                get_pokeball_geometry,
+            )
+            if is_pokemon_text:
+                h_P = 10.9400897 * (font_size_line1 / 14.0)
+                pokeball_diam = 0.78 * h_P
+            else:
+                pokeball_diam = min(font_size_line1 * 0.85, max(h_text_content * 0.75, 10.0))
+
+            p_top, p_bot, p_band, p_btn = get_pokeball_modular_components(target_diameter=pokeball_diam)
+            p_full = get_pokeball_geometry(target_diameter=pokeball_diam)
+            iw = pokeball_diam
+            ih = pokeball_diam
+            spacing_icon = 4.0
+            icon_norm = p_full
+            pokeball_top_norm = p_top
+            pokeball_bot_norm = p_bot
+            pokeball_band_norm = p_band
+            pokeball_btn_norm = p_btn
+        except Exception as e:
+            print(f"Errore gestione Pokeball desk sign: {e}")
             spacing_icon = 4.0
     else:
         icon_raw = _get_vector_icon(icon_name)
@@ -364,6 +407,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         scale_factor = target_max_fg_w / w_content_total
         scale_factor = max(0.20, min(scale_factor, 1.0))
         t1_norm = affinity.scale(t1_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if t1_norm_letters is not None:
+            t1_norm_letters = affinity.scale(t1_norm_letters, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if t1_norm_outline is not None:
+            t1_norm_outline = affinity.scale(t1_norm_outline, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         w1 *= scale_factor
         h1 *= scale_factor
         if line2_enabled and t2_norm is not None:
@@ -374,6 +421,11 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             icon_norm = affinity.scale(icon_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             iw *= scale_factor
             ih *= scale_factor
+        if is_pokeball and pokeball_top_norm is not None:
+            pokeball_top_norm = affinity.scale(pokeball_top_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pokeball_bot_norm = affinity.scale(pokeball_bot_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pokeball_band_norm = affinity.scale(pokeball_band_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pokeball_btn_norm = affinity.scale(pokeball_btn_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         if is_txt_logo and bar_geom is not None:
             bar_geom = affinity.scale(bar_geom, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             d_sw *= scale_factor
@@ -423,7 +475,18 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             x2 = -w2 / 2.0
 
     # Disposizione verticale
-    if line2_enabled and t2_norm is not None:
+    if is_pokemon_text and is_pokeball:
+        eff_scale = scale_factor if 'scale_factor' in locals() else 1.0
+        y_center_P = (10.9400897 * (font_size_line1 / 14.0) * eff_scale) / 2.0
+        if line2_enabled and t2_norm is not None:
+            y1 = h2 + line_spacing
+            y2 = 0.0
+            y_icon = max(0.0, y1 + y_center_P - (ih / 2.0))
+        else:
+            y1 = 0.0
+            y2 = 0.0
+            y_icon = max(0.0, y_center_P - (ih / 2.0))
+    elif line2_enabled and t2_norm is not None:
         y1 = h2 + line_spacing
         y2 = 0.0
         mid_y = h_text_content / 2.0
@@ -434,8 +497,14 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         y_icon = max(0.0, (h1 - ih) / 2.0)
 
     t1_local = affinity.translate(t1_norm, xoff=x1, yoff=y1)
+    t1_letters_local = affinity.translate(t1_norm_letters, xoff=x1, yoff=y1) if t1_norm_letters else None
+    t1_outline_local = affinity.translate(t1_norm_outline, xoff=x1, yoff=y1) if t1_norm_outline else None
     t2_local = affinity.translate(t2_norm, xoff=x2, yoff=y2) if (line2_enabled and t2_norm is not None) else None
     icon_local = affinity.translate(icon_norm, xoff=x_icon, yoff=y_icon) if (icon_norm is not None) else None
+    pokeball_top_local = affinity.translate(pokeball_top_norm, xoff=x_icon, yoff=y_icon) if pokeball_top_norm else None
+    pokeball_bot_local = affinity.translate(pokeball_bot_norm, xoff=x_icon, yoff=y_icon) if pokeball_bot_norm else None
+    pokeball_band_local = affinity.translate(pokeball_band_norm, xoff=x_icon, yoff=y_icon) if pokeball_band_norm else None
+    pokeball_btn_local = affinity.translate(pokeball_btn_norm, xoff=x_icon, yoff=y_icon) if pokeball_btn_norm else None
 
     # Unione della barretta divisoria a t1_local:
     # Eredita lo stesso identico estrusore e colore del testo (Extruder 1)
@@ -499,10 +568,19 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             cy = (c_miny + c_maxy) / 2.0
             contour_2d = affinity.scale(contour_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
             t1_local = affinity.scale(t1_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            if t1_letters_local is not None:
+                t1_letters_local = affinity.scale(t1_letters_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            if t1_outline_local is not None:
+                t1_outline_local = affinity.scale(t1_outline_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
             if t2_local is not None:
                 t2_local = affinity.scale(t2_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
             if icon_local is not None:
                 icon_local = affinity.scale(icon_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            if is_pokeball and pokeball_top_local is not None:
+                pokeball_top_local = affinity.scale(pokeball_top_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+                pokeball_bot_local = affinity.scale(pokeball_bot_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+                pokeball_band_local = affinity.scale(pokeball_band_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+                pokeball_btn_local = affinity.scale(pokeball_btn_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
             c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
             w_contour = c_maxx - c_minx
             h_contour = c_maxy - c_miny
@@ -512,8 +590,14 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         v_offset = -c_miny
         contour_2d_aligned = affinity.translate(contour_2d, yoff=v_offset)
         t1_2d_aligned = affinity.translate(t1_local, yoff=v_offset)
+        t1_letters_aligned = affinity.translate(t1_letters_local, yoff=v_offset) if t1_letters_local else None
+        t1_outline_aligned = affinity.translate(t1_outline_local, yoff=v_offset) if t1_outline_local else None
         t2_2d_aligned = affinity.translate(t2_local, yoff=v_offset) if t2_local else None
         icon_2d_aligned = affinity.translate(icon_local, yoff=v_offset) if icon_local else None
+        pokeball_top_aligned = affinity.translate(pokeball_top_local, yoff=v_offset) if pokeball_top_local else None
+        pokeball_bot_aligned = affinity.translate(pokeball_bot_local, yoff=v_offset) if pokeball_bot_local else None
+        pokeball_band_aligned = affinity.translate(pokeball_band_local, yoff=v_offset) if pokeball_band_local else None
+        pokeball_btn_aligned = affinity.translate(pokeball_btn_local, yoff=v_offset) if pokeball_btn_local else None
 
         # Parametri Geometrici Inclinazione ed Ergonomia da Scrivania
         tilt_angle_deg = float(params.get("tilt_angle", 76.0)) # Angolo ergonomico da scrivania
@@ -578,10 +662,19 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         ], dtype=float)
 
         # 4. Estrusione Testo Riga 1
-        mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
-        mesh_t1.apply_transform(M_face_elements)
-        clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
-        parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
+        if t1_letters_aligned is not None and t1_outline_aligned is not None:
+            mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0)
+            mesh_outline.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=1, color="#2a75bb"))
+
+            mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1)
+            mesh_letters.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+        else:
+            mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
+            mesh_t1.apply_transform(M_face_elements)
+            clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
+            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
 
         # 5. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
@@ -591,7 +684,23 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
 
         # 6. Estrusione Simbolo 3D (se presente)
-        if icon_2d_aligned is not None:
+        if is_pokeball and pokeball_top_aligned is not None:
+            mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
+            mesh_top.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Top", mesh=mesh_top, extruder=3, color="#ee1515"))
+
+            mesh_bot = _extrude_geometry(pokeball_bot_aligned, height=thickness_line1)
+            mesh_bot.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Bottom", mesh=mesh_bot, extruder=1, color="#ffffff"))
+
+            mesh_band = _extrude_geometry(pokeball_band_aligned, height=thickness_line1)
+            mesh_band.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Band", mesh=mesh_band, extruder=0, color="#1a1a1a"))
+
+            mesh_btn = _extrude_geometry(pokeball_btn_aligned, height=thickness_line1)
+            mesh_btn.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Button", mesh=mesh_btn, extruder=1, color="#ffffff"))
+        elif icon_2d_aligned is not None:
             mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1)
             mesh_icon.apply_transform(M_face_elements)
             clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
@@ -613,8 +722,14 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         h_face = max(h_fg_actual + 2.0 * padding_y, 28.0)
         v_start = (h_face - h_fg_actual) / 2.0 - v_min_fg
         t1_2d_aligned = affinity.translate(t1_local, yoff=v_start)
+        t1_letters_aligned = affinity.translate(t1_letters_local, yoff=v_start) if t1_letters_local else None
+        t1_outline_aligned = affinity.translate(t1_outline_local, yoff=v_start) if t1_outline_local else None
         t2_2d_aligned = affinity.translate(t2_local, yoff=v_start) if t2_local else None
         icon_2d_aligned = affinity.translate(icon_local, yoff=v_start) if icon_local else None
+        pokeball_top_aligned = affinity.translate(pokeball_top_local, yoff=v_start) if pokeball_top_local else None
+        pokeball_bot_aligned = affinity.translate(pokeball_bot_local, yoff=v_start) if pokeball_bot_local else None
+        pokeball_band_aligned = affinity.translate(pokeball_band_local, yoff=v_start) if pokeball_band_local else None
+        pokeball_btn_aligned = affinity.translate(pokeball_btn_local, yoff=v_start) if pokeball_btn_local else None
 
         # Geometria 2D piastra rettangolare con angoli raccordati (fillet r = 2.0 mm)
         r = 2.0
@@ -674,10 +789,19 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         ], dtype=float)
 
         # 3. Estrusione Testo Riga 1
-        mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
-        mesh_t1.apply_transform(M_face_elements)
-        clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
-        parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
+        if t1_letters_aligned is not None and t1_outline_aligned is not None:
+            mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0)
+            mesh_outline.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=1, color="#2a75bb"))
+
+            mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1)
+            mesh_letters.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+        else:
+            mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
+            mesh_t1.apply_transform(M_face_elements)
+            clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
+            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
 
         # 4. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
@@ -687,7 +811,23 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
 
         # 5. Estrusione Simbolo 3D (se presente)
-        if icon_2d_aligned is not None:
+        if is_pokeball and pokeball_top_aligned is not None:
+            mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
+            mesh_top.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Top", mesh=mesh_top, extruder=3, color="#ee1515"))
+
+            mesh_bot = _extrude_geometry(pokeball_bot_aligned, height=thickness_line1)
+            mesh_bot.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Bottom", mesh=mesh_bot, extruder=1, color="#ffffff"))
+
+            mesh_band = _extrude_geometry(pokeball_band_aligned, height=thickness_line1)
+            mesh_band.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Band", mesh=mesh_band, extruder=0, color="#1a1a1a"))
+
+            mesh_btn = _extrude_geometry(pokeball_btn_aligned, height=thickness_line1)
+            mesh_btn.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pokeball_Button", mesh=mesh_btn, extruder=1, color="#ffffff"))
+        elif icon_2d_aligned is not None:
             mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1)
             mesh_icon.apply_transform(M_face_elements)
             clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
