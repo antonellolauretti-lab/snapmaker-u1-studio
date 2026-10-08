@@ -626,9 +626,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 # =====================================================================
                 # SAGOMA BASE TONDEGGIANTE PER POKÉBALL (OFFSET RADIALE CIRCOLARE)
                 # =====================================================================
-                cx_pb = ix
-                cy_pb = iy
-                r_pb_base = (pokeball_diam / 2.0) + padding_y
+                pb_u = unary_union([pokeball_top_2d, pokeball_bottom_2d])
+                pb_minx, pb_miny, pb_maxx, pb_maxy = pb_u.bounds
+                cx_pb = (pb_minx + pb_maxx) / 2.0
+                cy_pb = (pb_miny + pb_maxy) / 2.0
+                curr_pb_diam = pb_maxx - pb_minx
+                r_pb_base = (curr_pb_diam / 2.0) + padding_y
                 pb_circle_base = sg.Point(cx_pb, cy_pb).buffer(r_pb_base, resolution=64)
 
                 # Contorno sagomato del testo isolato
@@ -645,39 +648,56 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 t_mid_y = (t_miny + t_maxy) / 2.0
                 spine_y0 = t_mid_y - (min_structural_h / 2.0)
                 spine_y1 = t_mid_y + (min_structural_h / 2.0)
-                spine_box = sg.box(t_minx, spine_y0, t_maxx - padding_y, spine_y1)
+                spine_box = sg.box(t_minx, spine_y0, t_maxx, spine_y1)
 
                 base_elements = [pb_circle_base, text_contour, spine_box]
 
                 # Raccordo armonioso con asola anello portachiavi
                 if hole_enabled:
-                    if str(hole_position).lower() == "left":
-                        hx = cx_pb - r_pb_base - (hole_radius * 0.7)
-                        hy = cy_pb
-                        hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
-                        hole_bridge = unary_union([hole_ear, sg.Point(cx_pb, cy_pb).buffer(outer_radius, resolution=64)]).convex_hull
-                        base_elements.extend([hole_ear, hole_bridge])
-                    elif str(hole_position).lower() == "right":
-                        hx = cx_pb + r_pb_base + (hole_radius * 0.7)
-                        hy = cy_pb
-                        hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
-                        hole_bridge = unary_union([hole_ear, sg.Point(cx_pb, cy_pb).buffer(outer_radius, resolution=64)]).convex_hull
-                        base_elements.extend([hole_ear, hole_bridge])
+                    pos = str(hole_position).lower().strip()
+                    is_icon_left = (cx_pb < t_minx)
+                    if pos == "left":
+                        if is_icon_left:
+                            # Icona a sinistra: asola ancorata all'estremo sinistro della Pokéball
+                            hx = cx_pb - r_pb_base - (hole_radius * 0.7)
+                            hy = cy_pb
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            hole_bridge = unary_union([hole_ear, sg.Point(cx_pb, cy_pb).buffer(outer_radius, resolution=64)]).convex_hull
+                            base_elements.extend([hole_ear, hole_bridge])
+                        else:
+                            # Icona a destra: asola ancorata all'estremo sinistro del testo ('P')
+                            hx = t_minx - hole_radius - (hole_wall * 0.2)
+                            hy = t_mid_y
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            bridge = sg.box(hx, hy - outer_radius * 0.75, t_minx + padding_x, hy + outer_radius * 0.75)
+                            base_elements.extend([hole_ear, bridge])
+                    elif pos == "right":
+                        if not is_icon_left:
+                            # Icona a destra: asola ancorata all'estremo destro della Pokéball
+                            hx = cx_pb + r_pb_base + (hole_radius * 0.7)
+                            hy = cy_pb
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            hole_bridge = unary_union([hole_ear, sg.Point(cx_pb, cy_pb).buffer(outer_radius, resolution=64)]).convex_hull
+                            base_elements.extend([hole_ear, hole_bridge])
+                        else:
+                            # Icona a sinistra: asola ancorata all'estremo destro del testo ('n')
+                            hx = t_maxx + hole_radius + (hole_wall * 0.2)
+                            hy = t_mid_y
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            bridge = sg.box(t_maxx - padding_x, hy - outer_radius * 0.75, hx, hy + outer_radius * 0.75)
+                            base_elements.extend([hole_ear, bridge])
                     else:
-                        hx = cx_pb
-                        hy = cy_pb + r_pb_base + (hole_radius * 0.7)
+                        # In alto / Top: centrato orizzontalmente sull'intero pezzo unificato (tra la 'é' e la 'k', mai sopra la Pokéball)
+                        hx = (fg_u_minx + fg_u_maxx) / 2.0
+                        hy = max(fg_u_maxy, t_maxy) + hole_radius + (hole_wall * 0.2)
                         hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
-                        hole_bridge = unary_union([hole_ear, sg.Point(cx_pb, cy_pb).buffer(outer_radius, resolution=64)]).convex_hull
-                        base_elements.extend([hole_ear, hole_bridge])
+                        bridge = sg.box(hx - outer_radius * 0.75, fg_u_mid_y, hx + outer_radius * 0.75, hy)
+                        base_elements.extend([hole_ear, bridge])
 
                 b_contour = unary_union(base_elements).buffer(0)
-                # Raccordo armonioso ad arco tra la curva della sfera, l'asola dell'anello e la sommità della lettera P
+                # Raccordo armonioso ad arco tra la curva della sfera, l'asola dell'anello e il testo
                 close_arc = 3.5
                 b_contour = b_contour.buffer(close_arc, resolution=32).buffer(-close_arc, resolution=32)
-
-                if hole_enabled:
-                    hole = sg.Point(hx, hy).buffer(hole_radius, resolution=32)
-                    b_contour = b_contour.difference(hole)
             else:
                 # Morphological closing per colmare gole profonde tra lettere e righe sovrapposte
                 close_r = max(4.0, current_fs * 0.30)
@@ -836,17 +856,18 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     parts: List[PartItem] = []
 
     is_pokemon_or_pokeball = (clean_txt in ("POKEMON", "POKÉMON")) or is_pokeball
-    actual_extruder_base = 3 if is_pokemon_or_pokeball else extruder_base
+    actual_extruder_base = 2 if is_pokemon_or_pokeball else extruder_base
+    color_base = "#ffcb05" if is_pokemon_or_pokeball else None
 
     if text_mode == "embossed":
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
-        parts.append(PartItem(name="Base", mesh=mesh_base, extruder=actual_extruder_base, color="#2a75bb" if is_pokemon_or_pokeball else None))
+        parts.append(PartItem(name="Base", mesh=mesh_base, extruder=actual_extruder_base, color=color_base))
 
         if text1_letters_2d is not None and text1_outline_2d is not None:
-            # Doppio strato ufficiale Pokémon: Bordo Blu spesso Z=1.0mm (Slot 4) + Lettere Gialle Z=1.4mm (Slot 3)
+            # Doppio strato ufficiale Pokémon: Bordo Blu spesso Z=1.0mm (Slot 4 / T3) + Lettere Gialle Z=1.4mm (Slot 3 / T2)
             mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0)
             mesh_outline.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#2a75bb"))
+            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
             mesh_letters = _extrude_geometry(text1_letters_2d, height=text_thickness)
             mesh_letters.apply_translation([0, 0, base_thickness])
@@ -894,11 +915,11 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base_top = _extrude_geometry(base_2d, height=base_thickness - inlay_depth)
         mesh_base_top.apply_translation([0, 0, inlay_depth])
         mesh_base = trimesh.util.concatenate([mesh_base_bottom, mesh_base_top])
-        parts.append(PartItem(name="Base", mesh=mesh_base, extruder=actual_extruder_base, color="#2a75bb" if is_pokemon_or_pokeball else None))
+        parts.append(PartItem(name="Base", mesh=mesh_base, extruder=actual_extruder_base, color=color_base))
 
         if text1_letters_2d is not None and text1_outline_2d is not None:
             mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0)
-            parts.append(PartItem(name="Text_Pokemon_Outline_Inlay", mesh=mesh_outline, extruder=3, color="#2a75bb"))
+            parts.append(PartItem(name="Text_Pokemon_Outline_Inlay", mesh=mesh_outline, extruder=3, color="#003776"))
             mesh_letters = _extrude_geometry(text1_letters_2d, height=inlay_depth)
             parts.append(PartItem(name="Text_Pokemon_Letters_Inlay", mesh=mesh_letters, extruder=2, color="#ffcb05"))
         else:

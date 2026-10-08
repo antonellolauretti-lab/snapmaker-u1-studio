@@ -293,7 +293,7 @@ class ModelViewer {
     // 1. Scritta Pokémon Ufficiale (Doppio Layer)
     if (name.includes("pokemon_outline") || name.includes("text_pokemon_outline")) {
       return new THREE.MeshStandardMaterial({
-        color: 0x2A75BB,
+        color: 0x003776,
         roughness: 0.4,
         metalness: 0.05,
         wireframe: wireframe

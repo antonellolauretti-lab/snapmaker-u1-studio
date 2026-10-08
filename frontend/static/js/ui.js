@@ -1198,7 +1198,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Preset Palettes U1 (Filamenti Ufficiali Snapmaker da Fattura)
   const PALETTE_PRESETS = {
     snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
-    pokemon: ["#FFFFFF", "#EE1515", "#FFCB05", "#2A75BB"],
+    pokemon: ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"],
     sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
     silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
     contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
@@ -1435,19 +1435,19 @@ document.addEventListener("DOMContentLoaded", () => {
           colorT0.value.toLowerCase() !== "#ffffff" ||
           colorT1.value.toLowerCase() !== "#ee1515" ||
           colorT2.value.toLowerCase() !== "#ffcb05" ||
-          colorT3.value.toLowerCase() !== "#2a75bb"
+          colorT3.value.toLowerCase() !== "#003776"
         ) {
           colorT0.value = "#FFFFFF";
           colorT1.value = "#EE1515";
           colorT2.value = "#FFCB05";
-          colorT3.value = "#2A75BB";
+          colorT3.value = "#003776";
           syncAllQuickSelects();
           onPaletteChange();
           if (typeof ToastManager !== "undefined" && ToastManager.show) {
             ToastManager.show({
               type: "info",
               title: "Palette U1 4 Colori Pokémon Attivata",
-              message: "Colori U1 impostati: T0 Bianco (#FFFFFF), T1 Rosso (#EE1515), T2 Giallo (#FFCB05), T3 Blu (#2A75BB).",
+              message: "Colori U1 impostati: T0 Bianco (#FFFFFF), T1 Rosso (#EE1515), T2 Giallo Base+Lettere (#FFCB05), T3 Blu SnapSpeed (#003776).",
               duration: 2500
             });
           }

@@ -656,8 +656,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Fusione booleana esplicita in unico corpo solido manifold (zero facce interne / gusci separati)
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 3 if (is_pokemon_text or is_pokeball) else extruder_base
-        color_base = "#2a75bb" if (is_pokemon_text or is_pokeball) else None
+        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
+        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else None
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
@@ -672,7 +672,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         if t1_letters_aligned is not None and t1_outline_aligned is not None:
             mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0)
             mesh_outline.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#2a75bb"))
+            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
             mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1)
             mesh_letters.apply_transform(M_face_elements)
@@ -780,8 +780,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Unione booleana monolitica placca + supporto
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 3 if (is_pokemon_text or is_pokeball) else extruder_base
-        color_base = "#2a75bb" if (is_pokemon_text or is_pokeball) else None
+        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
+        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else None
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per elementi in rilievo frontale (poggiano perfettamente a filo della faccia)
@@ -796,7 +796,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         if t1_letters_aligned is not None and t1_outline_aligned is not None:
             mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0)
             mesh_outline.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#2a75bb"))
+            parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
             mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1)
             mesh_letters.apply_transform(M_face_elements)
