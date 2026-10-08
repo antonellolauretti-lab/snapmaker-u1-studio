@@ -731,8 +731,7 @@ def generate_3mf(params: Dict[str, Any]):
     fil_colors = params.get("filament_colors")
     has_pokemon = any("pokemon" in p.name.lower() or "pokeball" in p.name.lower() for p in parts)
     if has_pokemon:
-        b_col = params.get("base_color", "#080A0D")
-        fil_colors = [b_col, "#2A75BB", "#FFCB05", "#EE1515"]
+        fil_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#2A75BB"]
     elif not fil_colors:
         b_col = params.get("base_color", "#080A0D")
         t_col = params.get("text_color", "#D9DFE5")

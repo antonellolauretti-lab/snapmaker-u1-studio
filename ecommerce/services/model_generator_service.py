@@ -128,7 +128,7 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
 
     has_pokemon = any("pokemon" in p.name.lower() or "pokeball" in p.name.lower() for p in parts)
     if has_pokemon:
-        filament_colors = [base_hex, "#2A75BB", "#FFCB05", "#EE1515"]
+        filament_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#2A75BB"]
 
     # Packager con preferenze Snapmaker U1
     packager = Snapmaker3MFPackager(

@@ -1198,7 +1198,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Preset Palettes U1 (Filamenti Ufficiali Snapmaker da Fattura)
   const PALETTE_PRESETS = {
     snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
-    pokemon: ["#080A0D", "#2A75BB", "#FFCB05", "#EE1515"],
+    pokemon: ["#FFFFFF", "#EE1515", "#FFCB05", "#2A75BB"],
     sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
     silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
     contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
@@ -1431,18 +1431,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isPokemonText || isPokeball) {
       if (colorT0 && colorT1 && colorT2 && colorT3) {
-        if (colorT1.value.toLowerCase() !== "#2a75bb" || colorT2.value.toLowerCase() !== "#ffcb05") {
-          colorT0.value = "#080A0D";
-          colorT1.value = "#2A75BB";
+        if (
+          colorT0.value.toLowerCase() !== "#ffffff" ||
+          colorT1.value.toLowerCase() !== "#ee1515" ||
+          colorT2.value.toLowerCase() !== "#ffcb05" ||
+          colorT3.value.toLowerCase() !== "#2a75bb"
+        ) {
+          colorT0.value = "#FFFFFF";
+          colorT1.value = "#EE1515";
           colorT2.value = "#FFCB05";
-          colorT3.value = "#EE1515";
+          colorT3.value = "#2A75BB";
           syncAllQuickSelects();
           onPaletteChange();
           if (typeof ToastManager !== "undefined" && ToastManager.show) {
             ToastManager.show({
               type: "info",
-              title: "Palette Pokémon Attivata",
-              message: "Colori ufficiali impostati: Base Nera, Bordo Blu (#2A75BB), Lettere Gialle (#FFCB05), Pokéball Rossa (#EE1515).",
+              title: "Palette U1 4 Colori Pokémon Attivata",
+              message: "Colori U1 impostati: T0 Bianco (#FFFFFF), T1 Rosso (#EE1515), T2 Giallo (#FFCB05), T3 Blu (#2A75BB).",
               duration: 2500
             });
           }

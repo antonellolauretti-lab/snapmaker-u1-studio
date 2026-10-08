@@ -325,14 +325,7 @@ class ModelViewer {
         wireframe: wireframe
       });
     }
-    if (name.includes("pokeball_band") || name.includes("icon_pokeball_band")) {
-      return new THREE.MeshStandardMaterial({
-        color: 0x1A1A1A,
-        roughness: 0.4,
-        metalness: 0.1,
-        wireframe: wireframe
-      });
-    }
+
     if (name.includes("pokeball_button") || name.includes("icon_pokeball_button")) {
       return new THREE.MeshStandardMaterial({
         color: 0xFFFFFF,
