@@ -387,7 +387,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
                 get_pikachu_modular_components,
                 get_pikachu_geometry,
             )
-            pikachu_h = min(font_size_line1 * 1.05, max(h_text_content * 0.90, 16.0))
+            # Scala proporzionata: altezza Pikachu pari a 1.25x - 1.30x rispetto all'altezza del testo adiacente
+            h_text_ref = h1 if (t2_norm is None) else h_text_content
+            pikachu_h = round(h_text_ref * 1.28, 2)
+            pikachu_h = max(13.0, min(pikachu_h, round(h_text_ref * 1.30, 2)))
             p_y, p_b, p_r, p_w, p_full = get_pikachu_modular_components(target_h=pikachu_h)
             minx_p, miny_p, maxx_p, maxy_p = p_full.bounds
             iw = maxx_p - minx_p
@@ -704,8 +707,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Fusione booleana esplicita in unico corpo solido manifold (zero facce interne / gusci separati)
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else (1 if is_pikachu and extruder_base == 0 else extruder_base)
-        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else ("#1a1a1a" if is_pikachu and extruder_base == 1 else None)
+        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
+        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else params.get("base_color")
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
@@ -729,7 +732,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
             mesh_t1.apply_transform(M_face_elements)
             clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
-            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
+            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1, color=params.get("text_color")))
 
         # 5. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
@@ -848,8 +851,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Unione booleana monolitica placca + supporto
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else (1 if is_pikachu and extruder_base == 0 else extruder_base)
-        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else ("#1a1a1a" if is_pikachu and extruder_base == 1 else None)
+        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
+        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else params.get("base_color")
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per elementi in rilievo frontale (poggiano perfettamente a filo della faccia)
@@ -873,7 +876,7 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
             mesh_t1.apply_transform(M_face_elements)
             clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
-            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1))
+            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1, color=params.get("text_color")))
 
         # 4. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:

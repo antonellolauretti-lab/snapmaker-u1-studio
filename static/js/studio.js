@@ -375,8 +375,15 @@ class ModelViewer {
   /**
    * Aggiorna la geometria della scena con i dati ricevuti da /api/preview
    */
+  /**
+   * Aggiorna la geometria della scena con i dati ricevuti da /api/preview
+   */
   updateGeometry(previewData, palette, extruderBase, extruderText) {
-    // Rimuovi mesh precedenti
+    // Memorizza estrusori assegnati per Base e Testo
+    this.extruderBase = (extruderBase !== undefined && extruderBase !== null) ? Number(extruderBase) : 0;
+    this.extruderText = (extruderText !== undefined && extruderText !== null) ? Number(extruderText) : 1;
+
+    // Rimuovi mesh precedenti liberando le risorse GPU
     while (this.modelGroup.children.length > 0) {
       const obj = this.modelGroup.children[0];
       obj.geometry.dispose();
@@ -392,23 +399,59 @@ class ModelViewer {
       geom.setIndex(p.faces);
       geom.computeVertexNormals();
 
-      // Check se esiste un override forzato per brand
-      const brandMat = this.getBrandHardcodedMaterial(p.name, this.wireframeMode);
+      const pName = p.name || "";
+      const pNameLower = pName.toLowerCase();
+
+      // Check se esiste un override forzato per brand (Pokémon, Pokéball, Pikachu multi-color)
+      const brandMat = this.getBrandHardcodedMaterial(pName, this.wireframeMode);
       let mat;
       let isBrandLocked = false;
+      let role = "other"; // "base", "text", "icon", "brand"
 
       if (brandMat) {
         mat = brandMat;
         isBrandLocked = true;
+        role = "brand";
+      } else if (
+        pNameLower === "base" ||
+        pNameLower === "base_portachiavi" ||
+        pNameLower === "base_contour_rail" ||
+        pNameLower === "base_rectangle_stand" ||
+        pNameLower.startsWith("base_") ||
+        pNameLower.startsWith("base") ||
+        pNameLower.includes("base_") ||
+        pNameLower.includes("_base") ||
+        pNameLower.includes("stand") ||
+        pNameLower.includes("plate")
+      ) {
+        // Base (fondo sagomato / rettangolare + asola anello portachiavi):
+        // Riceve ESCLUSIVAMENTE il colore della Base (Slot 7)
+        role = "base";
+        const baseColorDef = palette[this.extruderBase] || palette[0] || "#080A0D";
+        mat = this.createMaterial(baseColorDef, this.wireframeMode);
+      } else if (
+        pNameLower.startsWith("text_") ||
+        pNameLower.startsWith("text") ||
+        pNameLower.includes("letters") ||
+        pNameLower.includes("riga1") ||
+        pNameLower.includes("riga2")
+      ) {
+        // Testo standard (lettere):
+        // Riceve ESCLUSIVAMENTE il colore del Testo (Slot 8)
+        role = "text";
+        const textColorDef = palette[this.extruderText] || palette[1] || "#D9DFE5";
+        mat = this.createMaterial(textColorDef, this.wireframeMode);
+      } else if (
+        pNameLower.startsWith("icon_") ||
+        pNameLower.startsWith("icon") ||
+        pNameLower.includes("simbolo")
+      ) {
+        // Icona / Simbolo monocromatico
+        role = "icon";
+        const iconColorDef = p.color || palette[2] || palette[this.extruderText] || palette[1] || "#E72F1D";
+        mat = this.createMaterial(iconColorDef, this.wireframeMode);
       } else {
-        // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
-        let ext = p.extruder;
-        if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon") || p.name.includes("Simbolo") || p.name.includes("simbolo"))) {
-          if (!p.name.toLowerCase().includes("pikachu") && !p.name.toLowerCase().includes("pokeball")) {
-            ext = 2;
-          }
-        }
-        const colorDef = p.color || palette[ext] || "#ffffff";
+        const colorDef = p.color || palette[p.extruder] || palette[0] || "#ffffff";
         mat = this.createMaterial(colorDef, this.wireframeMode);
       }
 
@@ -417,7 +460,8 @@ class ModelViewer {
       mesh.receiveShadow = true;
       mesh.userData = { 
         partName: p.name, 
-        extruder: p.extruder, 
+        role: role,
+        extruder: (role === "base") ? this.extruderBase : ((role === "text") ? this.extruderText : p.extruder), 
         customColor: p.color || null,
         isBrandLocked: isBrandLocked
       };
@@ -434,30 +478,92 @@ class ModelViewer {
 
   /**
    * Aggiornamento istantaneo dei soli colori (zero millisecondi, senza chiamare il server)
+   * Disaccoppiamento rigido: Base riceve ESCLUSIVAMENTE Colore Base, Testo riceve ESCLUSIVAMENTE Colore Testo.
    */
   updateColors(palette) {
+    if (!palette || !Array.isArray(palette)) return;
+
+    const baseIdx = (this.extruderBase !== undefined && this.extruderBase !== null) ? this.extruderBase : 0;
+    const textIdx = (this.extruderText !== undefined && this.extruderText !== null) ? this.extruderText : 1;
+    const baseColorDef = palette[baseIdx] || palette[0];
+    const textColorDef = palette[textIdx] || palette[1];
+    const iconColorDef = palette[2] || palette[textIdx] || palette[1];
+
     this.partMeshes.forEach((mesh) => {
-      // Priorità assoluta: se il pezzo è un elemento di Brand (Pokémon/Pokéball), non cambiare materiale
+      const name = (mesh.userData.partName || "").toLowerCase();
+
+      // 1. Elementi di Brand complessi / multicolore (Pikachu, Pokéball, Logo Pokémon):
+      // I loro sottomateriali interni devono rimanere RIGIDAMENTE intatti e non essere sovrascritti
       if (mesh.userData.isBrandLocked || this.getBrandHardcodedMaterial(mesh.userData.partName)) {
         return;
       }
+
+      // 2. Base (fondo sagomato / rettangolare + asola anello):
+      // Riceve ESCLUSIVAMENTE il colore selezionato in "7. COLORE DELLA BASE"
+      if (
+        mesh.userData.role === "base" ||
+        name === "base" ||
+        name === "base_portachiavi" ||
+        name === "base_contour_rail" ||
+        name === "base_rectangle_stand" ||
+        name.startsWith("base_") ||
+        name.startsWith("base") ||
+        name.includes("base_") ||
+        name.includes("_base") ||
+        name.includes("stand") ||
+        name.includes("plate")
+      ) {
+        if (baseColorDef) {
+          const oldMat = mesh.material;
+          mesh.material = this.createMaterial(baseColorDef, this.wireframeMode);
+          if (oldMat && oldMat !== mesh.material) oldMat.dispose();
+        }
+        return;
+      }
+
+      // 3. Testo standard (lettere e testi):
+      // Riceve ESCLUSIVAMENTE il colore selezionato in "8. COLORE DEL TESTO"
+      if (
+        mesh.userData.role === "text" ||
+        name.startsWith("text_") ||
+        name.startsWith("text") ||
+        name.includes("letters") ||
+        name.includes("riga1") ||
+        name.includes("riga2")
+      ) {
+        if (textColorDef) {
+          const oldMat = mesh.material;
+          mesh.material = this.createMaterial(textColorDef, this.wireframeMode);
+          if (oldMat && oldMat !== mesh.material) oldMat.dispose();
+        }
+        return;
+      }
+
+      // 4. Icona / Simbolo generico monocromatico (se non brand-locked):
+      if (
+        mesh.userData.role === "icon" ||
+        name.startsWith("icon_") ||
+        name.startsWith("icon") ||
+        name.includes("simbolo")
+      ) {
+        if (iconColorDef) {
+          const oldMat = mesh.material;
+          mesh.material = this.createMaterial(iconColorDef, this.wireframeMode);
+          if (oldMat && oldMat !== mesh.material) oldMat.dispose();
+        }
+        return;
+      }
+
+      // 5. Altri componenti generici
       if (mesh.userData.customColor) {
         return;
       }
       let ext = mesh.userData.extruder;
-      if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon") || mesh.userData.partName.includes("Simbolo") || mesh.userData.partName.includes("simbolo"))) {
-        if (!mesh.userData.partName.toLowerCase().includes("pikachu") && !mesh.userData.partName.toLowerCase().includes("pokeball")) {
-          ext = 2;
-        }
-      }
       const colorDef = palette[ext];
       if (colorDef) {
         const oldMat = mesh.material;
-        const newMat = this.createMaterial(colorDef, this.wireframeMode);
-        mesh.material = newMat;
-        if (oldMat && oldMat !== newMat) {
-          oldMat.dispose();
-        }
+        mesh.material = this.createMaterial(colorDef, this.wireframeMode);
+        if (oldMat && oldMat !== mesh.material) oldMat.dispose();
       }
     });
   }

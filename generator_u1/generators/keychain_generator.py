@@ -592,9 +592,10 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 get_pikachu_modular_components,
                 get_pikachu_geometry,
             )
-            pikachu_h = min(font_size * 0.95, (maxy - miny) * 0.90)
-            if pikachu_h < 14.0:
-                pikachu_h = 17.0
+            # Scala proporzionata: altezza Pikachu pari a 1.25x - 1.30x rispetto all'altezza del testo adiacente
+            h_text_ref = (maxy - miny) if (text2_2d is None) else h1
+            pikachu_h = round(h_text_ref * 1.28, 2)
+            pikachu_h = max(11.0, min(pikachu_h, round(h_text_ref * 1.30, 2)))
             p_y, p_b, p_r, p_w, p_full = get_pikachu_modular_components(target_h=pikachu_h)
             minx_p, miny_p, maxx_p, maxy_p = p_full.bounds
             iw = maxx_p - minx_p
@@ -904,8 +905,8 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     parts: List[PartItem] = []
 
     is_pokemon_or_pokeball = (clean_txt in ("POKEMON", "POKÉMON")) or is_pokeball
-    actual_extruder_base = 2 if is_pokemon_or_pokeball else (1 if is_pikachu and extruder_base == 0 else extruder_base)
-    color_base = "#ffcb05" if is_pokemon_or_pokeball else ("#1a1a1a" if is_pikachu and extruder_base == 1 else None)
+    actual_extruder_base = 2 if is_pokemon_or_pokeball else extruder_base
+    color_base = "#ffcb05" if is_pokemon_or_pokeball else params.get("base_color")
 
     if text_mode == "embossed":
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
@@ -924,7 +925,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
             mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness)
             mesh_text1.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=extruder_text))
+            parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=extruder_text, color=params.get("text_color")))
 
         if text2_2d is not None:
             clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
@@ -989,7 +990,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         else:
             clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
             mesh_text1 = _extrude_geometry(text1_2d, height=inlay_depth)
-            parts.append(PartItem(name=f"Text_{clean_t1}_Inlay", mesh=mesh_text1, extruder=extruder_text))
+            parts.append(PartItem(name=f"Text_{clean_t1}_Inlay", mesh=mesh_text1, extruder=extruder_text, color=params.get("text_color")))
 
         if text2_2d is not None:
             clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
