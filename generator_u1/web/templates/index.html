@@ -424,6 +424,14 @@
     }
     .swatch-item:hover { transform: scale(1.1); }
     .swatch-item.active { border-color: #fff; transform: scale(1.08); box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+    .swatch-item.disabled {
+      opacity: 0.20;
+      cursor: not-allowed;
+      pointer-events: none;
+      filter: grayscale(0.85);
+      transform: none !important;
+      box-shadow: none;
+    }
     .swatch-check {
       position: absolute;
       inset: 0;
@@ -1129,6 +1137,7 @@
         
         <select class="icon-category-select" id="iconCategorySelect">
           <option value="all">📂 Tutte le Categorie (50+ Simboli)</option>
+          <option value="pokemon">⚡ Pokémon (Pokéball, Pikachu...)</option>
           <option value="forme">Forme Classiche (Cuore, Stella, Corona...)</option>
           <option value="animali">Animali (Zampa, Cane, Gatto...)</option>
           <option value="gaming">Gaming & Geek (Gamepad, Trofeo...)</option>
@@ -1204,17 +1213,22 @@
       <!-- 9. Colore del Simbolo / Icona (Uguale al testo oppure Personalizzato a 3 colori) -->
       <div class="config-group" id="groupIconColor" style="display: none;">
         <div class="section-title">9. Colore del Simbolo / Icona</div>
-        <div class="tab-grid-2" style="margin-bottom: 8px;">
-          <button type="button" class="btn-choice active" id="btnIconColorSame">
-            🎨 Uguale al Testo (2 Colori)
-          </button>
-          <button type="button" class="btn-choice" id="btnIconColorCustom">
-            🌈 Personalizzato (3 Colori)
-          </button>
+        <div id="noticeBrandLocked" style="display: none; padding: 10px 14px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 8px;">
+          🎨 Colori icona ufficiali bloccati
         </div>
-        <div id="wrapIconSwatches" style="display: none;">
-          <div class="color-swatches-grid" id="iconSwatches"></div>
-          <div class="color-label-preview" id="iconColorLabel">Caricamento colori...</div>
+        <div id="wrapIconColorControls">
+          <div class="tab-grid-2" style="margin-bottom: 8px;">
+            <button type="button" class="btn-choice active" id="btnIconColorSame">
+              🎨 Uguale al Testo (2 Colori)
+            </button>
+            <button type="button" class="btn-choice" id="btnIconColorCustom">
+              🌈 Personalizzato (3 Colori)
+            </button>
+          </div>
+          <div id="wrapIconSwatches" style="display: none;">
+            <div class="color-swatches-grid" id="iconSwatches"></div>
+            <div class="color-label-preview" id="iconColorLabel">Caricamento colori...</div>
+          </div>
         </div>
       </div>
 
@@ -1538,6 +1552,122 @@
       return [baseDef, textDef, iconDef, '#F8F81C'];
     }
 
+    function getColorFamily(filOrHex, name = '') {
+      let hex = '';
+      let fName = '';
+      if (typeof filOrHex === 'object' && filOrHex !== null) {
+        hex = (filOrHex.hex_color || filOrHex.color || '').toLowerCase();
+        fName = (filOrHex.name || '').toLowerCase();
+      } else {
+        hex = (filOrHex || '').toLowerCase();
+        fName = (name || '').toLowerCase();
+      }
+
+      if (fName.includes('black') || fName.includes('nero') || hex === '#080a0d' || hex === '#1a1a1a' || hex === '#000000') {
+        return 'black';
+      }
+      if (fName.includes('white') || fName.includes('bianco') || hex === '#d9dfe5' || hex === '#e2dedb' || hex === '#ffffff') {
+        return 'white';
+      }
+      if (fName.includes('red') || fName.includes('rosso') || hex === '#e72f1d' || hex === '#ee1515') {
+        return 'red';
+      }
+      if (fName.includes('yellow') || fName.includes('giallo') || hex === '#f8f81c' || hex === '#ffcb05') {
+        return 'yellow';
+      }
+      return hex || fName;
+    }
+
+    function isBrandIcon(iconId) {
+      if (!iconId || iconId === 'none') return false;
+      const id = iconId.toLowerCase();
+      if (id === 'pokeball' || id === 'pikachu') return true;
+      const ic = iconsCatalog.find(i => i.id === iconId);
+      return Boolean(ic && (ic.category === 'pokemon' || (ic.category_name && ic.category_name.toLowerCase().includes('pok'))));
+    }
+
+    function enforceBrandConstraints() {
+      const isPika = (currentConfig.iconId === 'pikachu');
+      const isPoke = (currentConfig.iconId === 'pokeball');
+
+      if (isPika) {
+        const pikaAllowed = ['yellow', 'black', 'red', 'white'];
+        let baseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
+        let textFam = getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
+
+        if (!pikaAllowed.includes(baseFam)) {
+          const blackFil = availableFilaments.find(f => getColorFamily(f) === 'black') || availableFilaments[0];
+          if (blackFil) {
+            currentConfig.baseFilamentId = blackFil.id;
+            currentConfig.baseSku = blackFil.sku;
+            currentConfig.baseColorHex = blackFil.hex_color;
+            currentConfig.baseSecondaryHex = blackFil.secondary_hex_color || null;
+            currentConfig.baseColorName = blackFil.name;
+            currentConfig.baseGroupName = blackFil.group_name;
+            baseFam = 'black';
+          }
+        }
+
+        if (!pikaAllowed.includes(textFam) || textFam === baseFam) {
+          const targetFam = (baseFam === 'yellow') ? 'black' : 'yellow';
+          const textFil = availableFilaments.find(f => getColorFamily(f) === targetFam) ||
+                          availableFilaments.find(f => pikaAllowed.includes(getColorFamily(f)) && getColorFamily(f) !== baseFam) ||
+                          availableFilaments[1];
+          if (textFil) {
+            currentConfig.textFilamentId = textFil.id;
+            currentConfig.textSku = textFil.sku;
+            currentConfig.textColorHex = textFil.hex_color;
+            currentConfig.textSecondaryHex = textFil.secondary_hex_color || null;
+            currentConfig.textColorName = textFil.name;
+            currentConfig.textGroupName = textFil.group_name;
+          }
+        }
+        currentConfig.hasCustomIconColor = false;
+      } else if (isPoke) {
+        let baseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
+        let textFam = getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
+        const set = new Set(['white', 'red', baseFam, textFam]);
+        if (set.size > 4) {
+          const whiteFil = availableFilaments.find(f => getColorFamily(f) === 'white') || availableFilaments[0];
+          if (whiteFil) {
+            currentConfig.textFilamentId = whiteFil.id;
+            currentConfig.textSku = whiteFil.sku;
+            currentConfig.textColorHex = whiteFil.hex_color;
+            currentConfig.textSecondaryHex = whiteFil.secondary_hex_color || null;
+            currentConfig.textColorName = whiteFil.name;
+            currentConfig.textGroupName = whiteFil.group_name;
+          }
+        }
+        currentConfig.hasCustomIconColor = false;
+      }
+
+      updateBrandSection9UI();
+    }
+
+    function updateBrandSection9UI() {
+      const groupIconColor = document.getElementById('groupIconColor');
+      const noticeBrandLocked = document.getElementById('noticeBrandLocked');
+      const wrapIconColorControls = document.getElementById('wrapIconColorControls');
+
+      if (!groupIconColor) return;
+
+      if (currentConfig.iconId === 'none') {
+        groupIconColor.style.display = 'none';
+        if (noticeBrandLocked) noticeBrandLocked.style.display = 'none';
+        if (wrapIconColorControls) wrapIconColorControls.style.display = 'block';
+        currentConfig.hasCustomIconColor = false;
+      } else if (isBrandIcon(currentConfig.iconId)) {
+        groupIconColor.style.display = 'block';
+        if (noticeBrandLocked) noticeBrandLocked.style.display = 'block';
+        if (wrapIconColorControls) wrapIconColorControls.style.display = 'none';
+        currentConfig.hasCustomIconColor = false;
+      } else {
+        groupIconColor.style.display = 'block';
+        if (noticeBrandLocked) noticeBrandLocked.style.display = 'none';
+        if (wrapIconColorControls) wrapIconColorControls.style.display = 'block';
+      }
+    }
+
     // 2. INIZIALIZZAZIONE 3D THREE.JS
     function initViewer() {
       viewer = new ModelViewer('webglContainer');
@@ -1713,9 +1843,11 @@
         console.warn("Caricamento listino dinamico:", e);
       }
 
+      enforceBrandConstraints();
       renderSwatches();
       renderFontGrid();
       renderIconsGrid();
+      updateBrandSection9UI();
       updateLivePrice();
     }
 
@@ -1724,6 +1856,13 @@
       const baseGrid = document.getElementById('baseSwatches');
       const textGrid = document.getElementById('textSwatches');
       const iconGrid = document.getElementById('iconSwatches');
+
+      const isPika = (currentConfig.iconId === 'pikachu');
+      const isPoke = (currentConfig.iconId === 'pokeball');
+      const pikaAllowed = ['yellow', 'black', 'red', 'white'];
+
+      const currentBaseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
+      const currentTextFam = getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
 
       const buildHtml = (type, currentFilId, currentSku, currentHex) => {
         return availableFilaments.map(fil => {
@@ -1734,8 +1873,31 @@
             ? `background: linear-gradient(135deg, ${fil.hex_color} 50%, ${fil.secondary_hex_color} 50%)`
             : `background: ${fil.hex_color}`;
 
+          let isDisabled = false;
+          let tooltip = `${fil.name} (${fil.group_name})`;
+
+          const filFam = getColorFamily(fil);
+
+          if (isPika && (type === 'base' || type === 'text')) {
+            if (!pikaAllowed.includes(filFam)) {
+              isDisabled = true;
+              tooltip = "Disponibile solo con la palette di Pikachu per vincoli di stampa a 4 colori";
+            }
+          } else if (isPoke && (type === 'base' || type === 'text')) {
+            const hypotheticalFamBase = (type === 'base') ? filFam : currentBaseFam;
+            const hypotheticalFamText = (type === 'text') ? filFam : currentTextFam;
+            const testSet = new Set(['white', 'red', hypotheticalFamBase, hypotheticalFamText]);
+            if (testSet.size > 4) {
+              isDisabled = true;
+              tooltip = "Limite massimo di 4 colori per Snapmaker U1 raggiunto (Pokéball usa già Bianco e Rosso)";
+            }
+          }
+
+          const disabledAttr = isDisabled ? 'data-disabled="true"' : '';
+          const disabledClass = isDisabled ? 'disabled' : '';
+
           return `
-            <div class="swatch-item ${isSel ? 'active' : ''}" 
+            <div class="swatch-item ${isSel ? 'active' : ''} ${disabledClass}" 
                  data-type="${type}" 
                  data-id="${fil.id || ''}"
                  data-sku="${fil.sku || ''}"
@@ -1743,8 +1905,9 @@
                  data-secondary-hex="${fil.secondary_hex_color || ''}"
                  data-name="${fil.name}" 
                  data-group="${fil.group_name}" 
+                 ${disabledAttr}
                  style="${bg}" 
-                 title="${fil.name} (${fil.group_name})">
+                 title="${tooltip}">
               ${isSel ? '<span class="swatch-check">✓</span>' : ''}
             </div>
           `;
@@ -1918,11 +2081,7 @@
         document.getElementById('groupHolePosition').style.display = 'block';
         document.getElementById('groupIcon').style.display = 'block';
         document.getElementById('section-icon-position').style.display = 'block';
-        if (currentConfig.iconId !== 'none') {
-          document.getElementById('groupIconColor').style.display = 'block';
-        } else {
-          document.getElementById('groupIconColor').style.display = 'none';
-        }
+        updateBrandSection9UI();
         currentConfig.productType = 'keychain';
         if (viewer) viewer.resetView();
         updateLivePrice();
@@ -1937,11 +2096,7 @@
         document.getElementById('groupHolePosition').style.display = 'none';
         document.getElementById('groupIcon').style.display = 'block';
         document.getElementById('section-icon-position').style.display = 'block';
-        if (currentConfig.iconId !== 'none') {
-          document.getElementById('groupIconColor').style.display = 'block';
-        } else {
-          document.getElementById('groupIconColor').style.display = 'none';
-        }
+        updateBrandSection9UI();
         currentConfig.productType = 'desk_sign';
         currentConfig.baseStyle = 'contour';
         document.getElementById('btnBaseContour')?.classList.add('active');
@@ -2041,15 +2196,14 @@
           card.classList.add('active');
           currentConfig.iconId = card.dataset.icon;
 
-          const groupIconColor = document.getElementById('groupIconColor');
-          if (currentConfig.iconId !== 'none') {
-            if (groupIconColor) groupIconColor.style.display = 'block';
-          } else {
-            if (groupIconColor) groupIconColor.style.display = 'none';
-            currentConfig.hasCustomIconColor = false;
-          }
+          enforceBrandConstraints();
+          renderSwatches();
+          updateBrandSection9UI();
 
           updateLivePrice();
+          if (viewer) {
+            viewer.updateColors(getViewerPalette());
+          }
           request3DPreview();
         }
       });
@@ -2102,6 +2256,9 @@
       document.addEventListener('click', (e) => {
         const swatch = e.target.closest('.swatch-item');
         if (swatch) {
+          if (swatch.classList.contains('disabled') || swatch.dataset.disabled === 'true') {
+            return;
+          }
           const type = swatch.dataset.type;
           const filId = swatch.dataset.id;
           const sku = swatch.dataset.sku;
@@ -2110,26 +2267,6 @@
           const name = swatch.dataset.name;
           const group = swatch.dataset.group;
 
-          // Rimuovi tassativamente la selezione da TUTTI gli swatch del rispettivo contenitore
-          const containerId = type === 'base' ? 'baseSwatches' : (type === 'text' ? 'textSwatches' : 'iconSwatches');
-          const container = document.getElementById(containerId);
-          if (container) {
-            container.querySelectorAll('.swatch-item').forEach(el => {
-              el.classList.remove('active', 'selected');
-              const chk = el.querySelector('.swatch-check');
-              if (chk) chk.remove();
-            });
-          }
-
-          // Attiva solo l'elemento cliccato
-          swatch.classList.add('active');
-          if (!swatch.querySelector('.swatch-check')) {
-            const chkSpan = document.createElement('span');
-            chkSpan.className = 'swatch-check';
-            chkSpan.textContent = '✓';
-            swatch.appendChild(chkSpan);
-          }
-
           if (type === 'base') {
             currentConfig.baseFilamentId = filId;
             currentConfig.baseSku = sku;
@@ -2137,7 +2274,6 @@
             currentConfig.baseSecondaryHex = secHex;
             currentConfig.baseColorName = name;
             currentConfig.baseGroupName = group;
-            document.getElementById('baseColorLabel').textContent = `${name} (${group})`;
           } else if (type === 'text') {
             currentConfig.textFilamentId = filId;
             currentConfig.textSku = sku;
@@ -2145,7 +2281,6 @@
             currentConfig.textSecondaryHex = secHex;
             currentConfig.textColorName = name;
             currentConfig.textGroupName = group;
-            document.getElementById('textColorLabel').textContent = `${name} (${group})`;
             if (!currentConfig.hasCustomIconColor) {
               currentConfig.iconColorHex = hex;
               currentConfig.symbolColor = hex;
@@ -2163,14 +2298,15 @@
             document.getElementById('btnIconColorCustom')?.classList.add('active');
             document.getElementById('btnIconColorSame')?.classList.remove('active');
             document.getElementById('wrapIconSwatches').style.display = 'block';
-            document.getElementById('iconColorLabel').textContent = `${name} (${group})`;
           }
 
+          renderSwatches();
           updateLivePrice();
           
           if (viewer) {
             viewer.updateColors(getViewerPalette());
           }
+          request3DPreview();
         }
       });
 

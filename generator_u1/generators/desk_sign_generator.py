@@ -16,7 +16,12 @@ from generator_u1.font_resolver import (
     apply_text_polygon_buffer,
     resolve_font_path
 )
-from generator_u1.generators.keychain_generator import _get_vector_icon
+from generator_u1.generators.keychain_generator import (
+    _get_vector_icon,
+    _color_family,
+    _map_pikachu_extruder,
+    _map_pokeball_extruders
+)
 
 def _extract_shapely_polygons_from_textpath(tp: TextPath) -> sg.MultiPolygon:
     """
@@ -707,8 +712,29 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Fusione booleana esplicita in unico corpo solido manifold (zero facce interne / gusci separati)
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
-        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else params.get("base_color")
+
+        if is_pikachu:
+            actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=1)
+            actual_extruder_line1 = _map_pikachu_extruder(params.get("text_color") or params.get("text_line1_color"), default_idx=0)
+            actual_extruder_line2 = _map_pikachu_extruder(params.get("text_line2_color") or params.get("text_color"), default_idx=actual_extruder_line1)
+            color_base = params.get("base_color")
+        elif is_pokeball and not is_pokemon_text:
+            poke_base, poke_t1, poke_l2 = _map_pokeball_extruders(params.get("base_color"), params.get("text_color") or params.get("text_line1_color"), params.get("text_line2_color"))
+            actual_extruder_base = poke_base
+            actual_extruder_line1 = poke_t1
+            actual_extruder_line2 = poke_l2
+            color_base = params.get("base_color")
+        elif is_pokemon_text:
+            actual_extruder_base = 2
+            actual_extruder_line1 = extruder_line1
+            actual_extruder_line2 = extruder_line2
+            color_base = "#ffcb05"
+        else:
+            actual_extruder_base = extruder_base
+            actual_extruder_line1 = extruder_line1
+            actual_extruder_line2 = extruder_line2
+            color_base = params.get("base_color")
+
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
@@ -732,14 +758,14 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
             mesh_t1.apply_transform(M_face_elements)
             clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
-            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1, color=params.get("text_color")))
+            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=actual_extruder_line1, color=params.get("text_color")))
 
         # 5. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
             mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
             mesh_t2.apply_transform(M_face_elements)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
-            parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
+            parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=actual_extruder_line2))
 
         # 6. Estrusione Simbolo 3D (se presente)
         if is_pikachu and pikachu_yellow_aligned is not None:
@@ -851,8 +877,29 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Unione booleana monolitica placca + supporto
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
-        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else params.get("base_color")
+
+        if is_pikachu:
+            actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=1)
+            actual_extruder_line1 = _map_pikachu_extruder(params.get("text_color") or params.get("text_line1_color"), default_idx=0)
+            actual_extruder_line2 = _map_pikachu_extruder(params.get("text_line2_color") or params.get("text_color"), default_idx=actual_extruder_line1)
+            color_base = params.get("base_color")
+        elif is_pokeball and not is_pokemon_text:
+            poke_base, poke_t1, poke_l2 = _map_pokeball_extruders(params.get("base_color"), params.get("text_color") or params.get("text_line1_color"), params.get("text_line2_color"))
+            actual_extruder_base = poke_base
+            actual_extruder_line1 = poke_t1
+            actual_extruder_line2 = poke_l2
+            color_base = params.get("base_color")
+        elif is_pokemon_text:
+            actual_extruder_base = 2
+            actual_extruder_line1 = extruder_line1
+            actual_extruder_line2 = extruder_line2
+            color_base = "#ffcb05"
+        else:
+            actual_extruder_base = extruder_base
+            actual_extruder_line1 = extruder_line1
+            actual_extruder_line2 = extruder_line2
+            color_base = params.get("base_color")
+
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per elementi in rilievo frontale (poggiano perfettamente a filo della faccia)
@@ -876,14 +923,14 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
             mesh_t1.apply_transform(M_face_elements)
             clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
-            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=extruder_line1, color=params.get("text_color")))
+            parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=actual_extruder_line1, color=params.get("text_color")))
 
         # 4. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
             mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
             mesh_t2.apply_transform(M_face_elements)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
-            parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
+            parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=actual_extruder_line2))
 
         # 5. Estrusione Simbolo 3D (se presente)
         if is_pikachu and pikachu_yellow_aligned is not None:

@@ -17,6 +17,66 @@ from generator_u1.font_resolver import (
     apply_text_polygon_buffer
 )
 
+def _color_family(c_str: Any) -> str:
+    if not c_str:
+        return ""
+    c = str(c_str).lower().strip()
+    if any(k in c for k in ("black", "nero", "#080a0d", "#1a1a1a", "#000000")):
+        return "black"
+    if any(k in c for k in ("white", "bianco", "#ffffff", "#d9dfe5", "#e2dedb")):
+        return "white"
+    if any(k in c for k in ("red", "rosso", "#ee1515", "#e72f1d")):
+        return "red"
+    if any(k in c for k in ("yellow", "giallo", "#ffcb05", "#f8f81c")):
+        return "yellow"
+    return c
+
+def _map_pikachu_extruder(c_str: Any, default_idx: int = 1) -> int:
+    fam = _color_family(c_str)
+    if fam == "yellow":
+        return 0
+    if fam == "black":
+        return 1
+    if fam == "red":
+        return 2
+    if fam == "white":
+        return 3
+    return default_idx
+
+def _map_pokeball_extruders(base_color: Any, text_color: Any, line2_color: Any = None):
+    base_fam = _color_family(base_color)
+    text_fam = _color_family(text_color)
+    line2_fam = _color_family(line2_color) if line2_color else text_fam
+
+    if base_fam == "white":
+        ext_base = 0
+    elif base_fam == "red":
+        ext_base = 1
+    else:
+        ext_base = 2
+
+    if text_fam == "white":
+        ext_text = 0
+    elif text_fam == "red":
+        ext_text = 1
+    elif text_fam == base_fam:
+        ext_text = ext_base
+    else:
+        ext_text = 3 if ext_base == 2 else 2
+
+    if line2_fam == "white":
+        ext_line2 = 0
+    elif line2_fam == "red":
+        ext_line2 = 1
+    elif line2_fam == base_fam:
+        ext_line2 = ext_base
+    elif line2_fam == text_fam:
+        ext_line2 = ext_text
+    else:
+        ext_line2 = ext_text
+
+    return ext_base, ext_text, ext_line2
+
 def _ensure_single_connected_polygon(geom: Any, bridge_width: float = 4.0) -> sg.Polygon:
     """
     Garantisce che la geometria della base sia un singolo poligono compatto e continuo (Polygon).
@@ -904,9 +964,29 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     # 10. Estrusione 3D e Definizione Parti
     parts: List[PartItem] = []
 
-    is_pokemon_or_pokeball = (clean_txt in ("POKEMON", "POKÉMON")) or is_pokeball
-    actual_extruder_base = 2 if is_pokemon_or_pokeball else extruder_base
-    color_base = "#ffcb05" if is_pokemon_or_pokeball else params.get("base_color")
+    is_pokemon_brand_text = (clean_txt in ("POKEMON", "POKÉMON"))
+
+    if is_pikachu:
+        actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=1)
+        actual_extruder_text = _map_pikachu_extruder(params.get("text_color"), default_idx=0)
+        actual_extruder_line2 = _map_pikachu_extruder(params.get("text_line2_color") or params.get("text_color"), default_idx=actual_extruder_text)
+        color_base = params.get("base_color")
+    elif is_pokeball and not is_pokemon_brand_text:
+        poke_base, poke_text, poke_l2 = _map_pokeball_extruders(params.get("base_color"), params.get("text_color"), params.get("text_line2_color"))
+        actual_extruder_base = poke_base
+        actual_extruder_text = poke_text
+        actual_extruder_line2 = poke_l2
+        color_base = params.get("base_color")
+    elif is_pokemon_brand_text:
+        actual_extruder_base = 2
+        actual_extruder_text = extruder_text
+        actual_extruder_line2 = extruder_line2
+        color_base = "#ffcb05"
+    else:
+        actual_extruder_base = extruder_base
+        actual_extruder_text = extruder_text
+        actual_extruder_line2 = extruder_line2
+        color_base = params.get("base_color")
 
     if text_mode == "embossed":
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
@@ -925,13 +1005,13 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
             mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness)
             mesh_text1.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=extruder_text, color=params.get("text_color")))
+            parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=actual_extruder_text, color=params.get("text_color")))
 
         if text2_2d is not None:
             clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
             mesh_text2 = _extrude_geometry(text2_2d, height=text_thickness)
             mesh_text2.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=extruder_line2))
+            parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=actual_extruder_line2))
 
         if is_pikachu and pikachu_yellow_2d is not None:
             m_yellow = _extrude_geometry(pikachu_yellow_2d, height=text_thickness)

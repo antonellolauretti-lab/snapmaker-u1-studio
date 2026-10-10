@@ -29,7 +29,7 @@ try:
 except ImportError:
     pass
 
-from generator_u1.generators.keychain_generator import generate_keychain_parts
+from generator_u1.generators.keychain_generator import generate_keychain_parts, _color_family
 from generator_u1.generators.desk_sign_generator import generate_desk_sign_parts
 from generator_u1.packager.snapmaker_3mf import Snapmaker3MFPackager
 from ecommerce.api_router import router as ecommerce_router, verify_admin_auth
@@ -729,9 +729,37 @@ def generate_3mf(params: Dict[str, Any]):
     out_path = temp_dir / filename
 
     fil_colors = params.get("filament_colors")
-    has_pokemon = any("pokemon" in p.name.lower() or "pokeball" in p.name.lower() for p in parts)
-    if has_pokemon:
+    has_pikachu = any("pikachu" in p.name.lower() for p in parts)
+    has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
+    has_pokeball = any("pokeball" in p.name.lower() for p in parts)
+
+    if has_pikachu:
+        fil_colors = ["#FFCB05", "#1A1A1A", "#EE1515", "#FFFFFF"]
+    elif has_pokemon_logo:
         fil_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"]
+    elif has_pokeball:
+        b_col = params.get("base_color", "#080A0D")
+        t_col = params.get("text_color", "#D9DFE5")
+        slots = ["#FFFFFF", "#EE1515", None, None]
+        base_fam = _color_family(b_col)
+        text_fam = _color_family(t_col)
+
+        next_slot = 2
+        if base_fam not in ("white", "red") and next_slot < 4:
+            slots[next_slot] = b_col
+            next_slot += 1
+        if text_fam not in ("white", "red") and text_fam != base_fam and next_slot < 4:
+            slots[next_slot] = t_col
+            next_slot += 1
+
+        fallbacks = ["#080A0D", "#003776", "#FFCB05"]
+        for i in range(4):
+            if slots[i] is None:
+                for fb in fallbacks:
+                    if fb not in slots:
+                        slots[i] = fb
+                        break
+        fil_colors = slots
     elif not fil_colors:
         b_col = params.get("base_color", "#080A0D")
         t_col = params.get("text_color", "#D9DFE5")
