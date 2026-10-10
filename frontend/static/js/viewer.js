@@ -335,6 +335,40 @@ class ModelViewer {
       });
     }
 
+    // 3. Icona Pikachu Ufficiale (4 Volumi Separati / 4 Colori FDM)
+    if (name.includes("pikachu_yellow") || name.includes("icon_pikachu_yellow") || name.includes("pikachu_face")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFCB05,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pikachu_black") || name.includes("icon_pikachu_black") || name.includes("pikachu_outline")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x1A1A1A,
+        roughness: 0.4,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pikachu_red") || name.includes("icon_pikachu_red") || name.includes("pikachu_cheeks") || name.includes("pikachu_mouth")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xEE1515,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("pikachu_white") || name.includes("icon_pikachu_white") || name.includes("pikachu_pupils")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFFFFF,
+        roughness: 0.25,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+
     return null;
   }
 
@@ -370,7 +404,9 @@ class ModelViewer {
         // Colore/Materiale filamento associato all'estrusore (mono o dual-color)
         let ext = p.extruder;
         if (p.name && (p.name.startsWith("Icon_") || p.name.startsWith("icon_") || p.name.includes("Icon") || p.name.includes("Simbolo") || p.name.includes("simbolo"))) {
-          ext = 2;
+          if (!p.name.toLowerCase().includes("pikachu") && !p.name.toLowerCase().includes("pokeball")) {
+            ext = 2;
+          }
         }
         const colorDef = p.color || palette[ext] || "#ffffff";
         mat = this.createMaterial(colorDef, this.wireframeMode);
@@ -410,7 +446,9 @@ class ModelViewer {
       }
       let ext = mesh.userData.extruder;
       if (mesh.userData.partName && (mesh.userData.partName.startsWith("Icon_") || mesh.userData.partName.startsWith("icon_") || mesh.userData.partName.includes("Icon") || mesh.userData.partName.includes("Simbolo") || mesh.userData.partName.includes("simbolo"))) {
-        ext = 2;
+        if (!mesh.userData.partName.toLowerCase().includes("pikachu") && !mesh.userData.partName.toLowerCase().includes("pokeball")) {
+          ext = 2;
+        }
       }
       const colorDef = palette[ext];
       if (colorDef) {

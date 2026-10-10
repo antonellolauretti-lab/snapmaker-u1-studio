@@ -315,10 +315,15 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     iw, ih = 0.0, 0.0
     bar_geom = None
     is_pokeball = str(icon_name).lower().strip() in ("pokeball", "poke_ball", "pokéball", "poke ball", "sfera_pokemon")
+    is_pikachu = str(icon_name).lower().strip() in ("pikachu", "pika")
     pokeball_top_norm = None
     pokeball_bot_norm = None
     pokeball_band_norm = None
     pokeball_btn_norm = None
+    pikachu_yellow_norm = None
+    pikachu_black_norm = None
+    pikachu_red_norm = None
+    pikachu_white_norm = None
 
     if is_txt_logo:
         try:
@@ -376,6 +381,26 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Errore gestione Pokeball desk sign: {e}")
             spacing_icon = 4.0
+    elif is_pikachu:
+        try:
+            from generator_u1.assets.pikachu_geometry import (
+                get_pikachu_modular_components,
+                get_pikachu_geometry,
+            )
+            pikachu_h = min(font_size_line1 * 1.05, max(h_text_content * 0.90, 16.0))
+            p_y, p_b, p_r, p_w, p_full = get_pikachu_modular_components(target_h=pikachu_h)
+            minx_p, miny_p, maxx_p, maxy_p = p_full.bounds
+            iw = maxx_p - minx_p
+            ih = maxy_p - miny_p
+            spacing_icon = 4.0
+            icon_norm = p_full
+            pikachu_yellow_norm = p_y
+            pikachu_black_norm = p_b
+            pikachu_red_norm = p_r
+            pikachu_white_norm = p_w
+        except Exception as e:
+            print(f"Errore gestione Pikachu desk sign: {e}")
+            spacing_icon = 4.0
     else:
         icon_raw = _get_vector_icon(icon_name)
         spacing_icon = 4.0 if (icon_raw is not None) else 0.0
@@ -425,6 +450,11 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             pokeball_top_norm = affinity.scale(pokeball_top_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             pokeball_bot_norm = affinity.scale(pokeball_bot_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             pokeball_btn_norm = affinity.scale(pokeball_btn_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if is_pikachu and pikachu_yellow_norm is not None:
+            pikachu_yellow_norm = affinity.scale(pikachu_yellow_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pikachu_black_norm = affinity.scale(pikachu_black_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pikachu_red_norm = affinity.scale(pikachu_red_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pikachu_white_norm = affinity.scale(pikachu_white_norm, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         if is_txt_logo and bar_geom is not None:
             bar_geom = affinity.scale(bar_geom, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             d_sw *= scale_factor
@@ -503,6 +533,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
     pokeball_top_local = affinity.translate(pokeball_top_norm, xoff=x_icon, yoff=y_icon) if pokeball_top_norm else None
     pokeball_bot_local = affinity.translate(pokeball_bot_norm, xoff=x_icon, yoff=y_icon) if pokeball_bot_norm else None
     pokeball_btn_local = affinity.translate(pokeball_btn_norm, xoff=x_icon, yoff=y_icon) if pokeball_btn_norm else None
+    pikachu_yellow_local = affinity.translate(pikachu_yellow_norm, xoff=x_icon, yoff=y_icon) if pikachu_yellow_norm else None
+    pikachu_black_local = affinity.translate(pikachu_black_norm, xoff=x_icon, yoff=y_icon) if pikachu_black_norm else None
+    pikachu_red_local = affinity.translate(pikachu_red_norm, xoff=x_icon, yoff=y_icon) if pikachu_red_norm else None
+    pikachu_white_local = affinity.translate(pikachu_white_norm, xoff=x_icon, yoff=y_icon) if pikachu_white_norm else None
 
     # Unione della barretta divisoria a t1_local:
     # Eredita lo stesso identico estrusore e colore del testo (Extruder 1)
@@ -530,8 +564,13 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         closed_fg = fg_union.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
         contour_raw = closed_fg.buffer(contour_pad, resolution=16).buffer(0)
 
-        # Se è presente la Pokéball, applica raccordo radiale circolare uniforme per eliminare tagli piatti
-        if is_pokeball and pokeball_top_local is not None and icon_local is not None:
+        # Se è presente Pikachu o Pokéball, applica raccordo radiale circolare uniforme per eliminare tagli piatti
+        if is_pikachu and icon_local is not None:
+            pika_c_base = icon_local.buffer(contour_pad, resolution=32)
+            contour_raw = unary_union([contour_raw, pika_c_base]).buffer(0)
+            close_arc = 3.5
+            contour_raw = contour_raw.buffer(close_arc, resolution=32).buffer(-close_arc, resolution=32)
+        elif is_pokeball and pokeball_top_local is not None and icon_local is not None:
             pb_c = icon_local.centroid
             eff_sc = scale_factor if 'scale_factor' in locals() else 1.0
             pb_circle_base = pb_c.buffer((pokeball_diam * eff_sc / 2.0) + contour_pad, resolution=64)
@@ -587,6 +626,11 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
                 pokeball_top_local = affinity.scale(pokeball_top_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
                 pokeball_bot_local = affinity.scale(pokeball_bot_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
                 pokeball_btn_local = affinity.scale(pokeball_btn_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+            if is_pikachu and pikachu_yellow_local is not None:
+                pikachu_yellow_local = affinity.scale(pikachu_yellow_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+                pikachu_black_local = affinity.scale(pikachu_black_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+                pikachu_red_local = affinity.scale(pikachu_red_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
+                pikachu_white_local = affinity.scale(pikachu_white_local, xfact=clamp_scale, yfact=clamp_scale, origin=(cx, cy))
             c_minx, c_miny, c_maxx, c_maxy = contour_2d.bounds
             w_contour = c_maxx - c_minx
             h_contour = c_maxy - c_miny
@@ -603,6 +647,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         pokeball_top_aligned = affinity.translate(pokeball_top_local, yoff=v_offset) if pokeball_top_local else None
         pokeball_bot_aligned = affinity.translate(pokeball_bot_local, yoff=v_offset) if pokeball_bot_local else None
         pokeball_btn_aligned = affinity.translate(pokeball_btn_local, yoff=v_offset) if pokeball_btn_local else None
+        pikachu_yellow_aligned = affinity.translate(pikachu_yellow_local, yoff=v_offset) if pikachu_yellow_local else None
+        pikachu_black_aligned = affinity.translate(pikachu_black_local, yoff=v_offset) if pikachu_black_local else None
+        pikachu_red_aligned = affinity.translate(pikachu_red_local, yoff=v_offset) if pikachu_red_local else None
+        pikachu_white_aligned = affinity.translate(pikachu_white_local, yoff=v_offset) if pikachu_white_local else None
 
         # Parametri Geometrici Inclinazione ed Ergonomia da Scrivania
         tilt_angle_deg = float(params.get("tilt_angle", 76.0)) # Angolo ergonomico da scrivania
@@ -656,8 +704,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Fusione booleana esplicita in unico corpo solido manifold (zero facce interne / gusci separati)
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
-        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else None
+        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else (1 if is_pikachu and extruder_base == 0 else extruder_base)
+        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else ("#1a1a1a" if is_pikachu and extruder_base == 1 else None)
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per gli elementi in rilievo sulla faccia inclinata
@@ -691,7 +739,23 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
 
         # 6. Estrusione Simbolo 3D (se presente)
-        if is_pokeball and pokeball_top_aligned is not None:
+        if is_pikachu and pikachu_yellow_aligned is not None:
+            mesh_yellow = _extrude_geometry(pikachu_yellow_aligned, height=thickness_line1)
+            mesh_yellow.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=mesh_yellow, extruder=0, color="#ffcb05"))
+
+            mesh_black = _extrude_geometry(pikachu_black_aligned, height=thickness_line1)
+            mesh_black.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=mesh_black, extruder=1, color="#1a1a1a"))
+
+            mesh_red = _extrude_geometry(pikachu_red_aligned, height=thickness_line1)
+            mesh_red.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=mesh_red, extruder=2, color="#ee1515"))
+
+            mesh_white = _extrude_geometry(pikachu_white_aligned, height=thickness_line1)
+            mesh_white.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_White", mesh=mesh_white, extruder=3, color="#ffffff"))
+        elif is_pokeball and pokeball_top_aligned is not None:
             mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
             mesh_top.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Top", mesh=mesh_top, extruder=1, color="#ee1515"))
@@ -732,6 +796,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         pokeball_top_aligned = affinity.translate(pokeball_top_local, yoff=v_start) if pokeball_top_local else None
         pokeball_bot_aligned = affinity.translate(pokeball_bot_local, yoff=v_start) if pokeball_bot_local else None
         pokeball_btn_aligned = affinity.translate(pokeball_btn_local, yoff=v_start) if pokeball_btn_local else None
+        pikachu_yellow_aligned = affinity.translate(pikachu_yellow_local, yoff=v_start) if pikachu_yellow_local else None
+        pikachu_black_aligned = affinity.translate(pikachu_black_local, yoff=v_start) if pikachu_black_local else None
+        pikachu_red_aligned = affinity.translate(pikachu_red_local, yoff=v_start) if pikachu_red_local else None
+        pikachu_white_aligned = affinity.translate(pikachu_white_local, yoff=v_start) if pikachu_white_local else None
 
         # Geometria 2D piastra rettangolare con angoli raccordati (fillet r = 2.0 mm)
         r = 2.0
@@ -780,8 +848,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Unione booleana monolitica placca + supporto
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
-        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else extruder_base
-        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else None
+        actual_extruder_base = 2 if (is_pokemon_text or is_pokeball) else (1 if is_pikachu and extruder_base == 0 else extruder_base)
+        color_base = "#ffcb05" if (is_pokemon_text or is_pokeball) else ("#1a1a1a" if is_pikachu and extruder_base == 1 else None)
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
         # Matrice comune per elementi in rilievo frontale (poggiano perfettamente a filo della faccia)
@@ -815,7 +883,23 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=extruder_line2))
 
         # 5. Estrusione Simbolo 3D (se presente)
-        if is_pokeball and pokeball_top_aligned is not None:
+        if is_pikachu and pikachu_yellow_aligned is not None:
+            mesh_yellow = _extrude_geometry(pikachu_yellow_aligned, height=thickness_line1)
+            mesh_yellow.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=mesh_yellow, extruder=0, color="#ffcb05"))
+
+            mesh_black = _extrude_geometry(pikachu_black_aligned, height=thickness_line1)
+            mesh_black.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=mesh_black, extruder=1, color="#1a1a1a"))
+
+            mesh_red = _extrude_geometry(pikachu_red_aligned, height=thickness_line1)
+            mesh_red.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=mesh_red, extruder=2, color="#ee1515"))
+
+            mesh_white = _extrude_geometry(pikachu_white_aligned, height=thickness_line1)
+            mesh_white.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_White", mesh=mesh_white, extruder=3, color="#ffffff"))
+        elif is_pokeball and pokeball_top_aligned is not None:
             mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
             mesh_top.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Top", mesh=mesh_top, extruder=1, color="#ee1515"))

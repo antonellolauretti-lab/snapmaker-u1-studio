@@ -145,6 +145,7 @@ ICON_ALIASES = {
     "frog": "rana", "rana": "rana",
     "crow": "corvo", "corvo": "corvo",
     # Gaming
+    "pikachu": "pikachu", "pika": "pikachu",
     "pokeball": "pokeball", "pokéball": "pokeball", "poke_ball": "pokeball", "sfera_pokemon": "pokeball",
     "gamepad": "gamepad",
     "ghost": "fantasma", "fantasma": "fantasma",
@@ -493,11 +494,16 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     # 5. Generazione e posizionamento dell'Icona Vettoriale
     is_txt_logo = str(icon_name).lower().strip() in ("txt_ennova_logo", "txt", "ennova", "txt ennova", "txt_ennova")
     is_pokeball = str(icon_name).lower().strip() in ("pokeball", "poke_ball", "pokéball", "poke ball", "sfera_pokemon")
+    is_pikachu = str(icon_name).lower().strip() in ("pikachu", "pika")
     pokeball_top_2d = None
     pokeball_bottom_2d = None
     pokeball_band_2d = None
     pokeball_button_2d = None
-    icon_raw = _get_vector_icon(icon_name) if (not is_txt_logo and not is_pokeball) else None
+    pikachu_yellow_2d = None
+    pikachu_black_2d = None
+    pikachu_red_2d = None
+    pikachu_white_2d = None
+    icon_raw = _get_vector_icon(icon_name) if (not is_txt_logo and not is_pokeball and not is_pikachu) else None
     icon_2d = None
 
     if is_txt_logo:
@@ -580,6 +586,33 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             icon_2d = affinity.translate(p_full, xoff=ix, yoff=iy)
         except Exception as e:
             print(f"Errore gestione Pokeball portachiavi: {e}")
+    elif is_pikachu:
+        try:
+            from generator_u1.assets.pikachu_geometry import (
+                get_pikachu_modular_components,
+                get_pikachu_geometry,
+            )
+            pikachu_h = min(font_size * 0.95, (maxy - miny) * 0.90)
+            if pikachu_h < 14.0:
+                pikachu_h = 17.0
+            p_y, p_b, p_r, p_w, p_full = get_pikachu_modular_components(target_h=pikachu_h)
+            minx_p, miny_p, maxx_p, maxy_p = p_full.bounds
+            iw = maxx_p - minx_p
+            ih = maxy_p - miny_p
+            spacing_icon = 2.5
+            iy = mid_y
+            if str(icon_position).lower() == "right":
+                ix = maxx + spacing_icon + (iw / 2.0)
+            else:
+                ix = minx - spacing_icon - (iw / 2.0)
+
+            pikachu_yellow_2d = affinity.translate(p_y, xoff=ix, yoff=iy)
+            pikachu_black_2d = affinity.translate(p_b, xoff=ix, yoff=iy)
+            pikachu_red_2d = affinity.translate(p_r, xoff=ix, yoff=iy)
+            pikachu_white_2d = affinity.translate(p_w, xoff=ix, yoff=iy)
+            icon_2d = affinity.translate(p_full, xoff=ix, yoff=iy)
+        except Exception as e:
+            print(f"Errore gestione Pikachu portachiavi: {e}")
     elif icon_raw is not None:
         icon_h = min(font_size * 0.95, (maxy - miny) * 0.85)
         spacing_icon = 2.5
@@ -796,6 +829,11 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             pokeball_top_2d = affinity.scale(pokeball_top_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             pokeball_bottom_2d = affinity.scale(pokeball_bottom_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             pokeball_button_2d = affinity.scale(pokeball_button_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+        if is_pikachu and pikachu_yellow_2d is not None:
+            pikachu_yellow_2d = affinity.scale(pikachu_yellow_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pikachu_black_2d = affinity.scale(pikachu_black_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pikachu_red_2d = affinity.scale(pikachu_red_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
+            pikachu_white_2d = affinity.scale(pikachu_white_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
 
         foreground_items = [text1_2d]
         if text2_2d is not None:
@@ -824,6 +862,11 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 pokeball_top_2d = affinity.scale(pokeball_top_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
                 pokeball_bottom_2d = affinity.scale(pokeball_bottom_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
                 pokeball_button_2d = affinity.scale(pokeball_button_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+            if is_pikachu and pikachu_yellow_2d is not None:
+                pikachu_yellow_2d = affinity.scale(pikachu_yellow_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+                pikachu_black_2d = affinity.scale(pikachu_black_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+                pikachu_red_2d = affinity.scale(pikachu_red_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
+                pikachu_white_2d = affinity.scale(pikachu_white_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             foreground_items = [text1_2d]
             if text2_2d is not None:
                 foreground_items.append(text2_2d)
@@ -851,13 +894,18 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         pokeball_top_2d = affinity.translate(pokeball_top_2d, xoff=-cx, yoff=-cy)
         pokeball_bottom_2d = affinity.translate(pokeball_bottom_2d, xoff=-cx, yoff=-cy)
         pokeball_button_2d = affinity.translate(pokeball_button_2d, xoff=-cx, yoff=-cy)
+    if is_pikachu and pikachu_yellow_2d is not None:
+        pikachu_yellow_2d = affinity.translate(pikachu_yellow_2d, xoff=-cx, yoff=-cy)
+        pikachu_black_2d = affinity.translate(pikachu_black_2d, xoff=-cx, yoff=-cy)
+        pikachu_red_2d = affinity.translate(pikachu_red_2d, xoff=-cx, yoff=-cy)
+        pikachu_white_2d = affinity.translate(pikachu_white_2d, xoff=-cx, yoff=-cy)
 
     # 10. Estrusione 3D e Definizione Parti
     parts: List[PartItem] = []
 
     is_pokemon_or_pokeball = (clean_txt in ("POKEMON", "POKÉMON")) or is_pokeball
-    actual_extruder_base = 2 if is_pokemon_or_pokeball else extruder_base
-    color_base = "#ffcb05" if is_pokemon_or_pokeball else None
+    actual_extruder_base = 2 if is_pokemon_or_pokeball else (1 if is_pikachu and extruder_base == 0 else extruder_base)
+    color_base = "#ffcb05" if is_pokemon_or_pokeball else ("#1a1a1a" if is_pikachu and extruder_base == 1 else None)
 
     if text_mode == "embossed":
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
@@ -884,7 +932,23 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_text2.apply_translation([0, 0, base_thickness])
             parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=extruder_line2))
 
-        if is_pokeball and pokeball_top_2d is not None:
+        if is_pikachu and pikachu_yellow_2d is not None:
+            m_yellow = _extrude_geometry(pikachu_yellow_2d, height=text_thickness)
+            m_yellow.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=m_yellow, extruder=0, color="#ffcb05"))
+
+            m_black = _extrude_geometry(pikachu_black_2d, height=text_thickness)
+            m_black.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=m_black, extruder=1, color="#1a1a1a"))
+
+            m_red = _extrude_geometry(pikachu_red_2d, height=text_thickness)
+            m_red.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=m_red, extruder=2, color="#ee1515"))
+
+            m_white = _extrude_geometry(pikachu_white_2d, height=text_thickness)
+            m_white.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_White", mesh=m_white, extruder=3, color="#ffffff"))
+        elif is_pokeball and pokeball_top_2d is not None:
             m_top = _extrude_geometry(pokeball_top_2d, height=text_thickness)
             m_top.apply_translation([0, 0, base_thickness])
             parts.append(PartItem(name="Icon_Pokeball_Top", mesh=m_top, extruder=1, color="#ee1515"))
@@ -932,7 +996,19 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_text2 = _extrude_geometry(text2_2d, height=inlay_depth)
             parts.append(PartItem(name=f"Text_{clean_t2}_Inlay", mesh=mesh_text2, extruder=extruder_line2))
 
-        if is_pokeball and pokeball_top_2d is not None:
+        if is_pikachu and pikachu_yellow_2d is not None:
+            m_yellow = _extrude_geometry(pikachu_yellow_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_Yellow_Inlay", mesh=m_yellow, extruder=0, color="#ffcb05"))
+
+            m_black = _extrude_geometry(pikachu_black_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_Black_Inlay", mesh=m_black, extruder=1, color="#1a1a1a"))
+
+            m_red = _extrude_geometry(pikachu_red_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_Red_Inlay", mesh=m_red, extruder=2, color="#ee1515"))
+
+            m_white = _extrude_geometry(pikachu_white_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_White_Inlay", mesh=m_white, extruder=3, color="#ffffff"))
+        elif is_pokeball and pokeball_top_2d is not None:
             m_top = _extrude_geometry(pokeball_top_2d, height=inlay_depth)
             parts.append(PartItem(name="Icon_Pokeball_Top_Inlay", mesh=m_top, extruder=1, color="#ee1515"))
             m_bot = _extrude_geometry(pokeball_bottom_2d, height=inlay_depth)
