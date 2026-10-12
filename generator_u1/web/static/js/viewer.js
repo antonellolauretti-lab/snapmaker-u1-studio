@@ -335,8 +335,8 @@ class ModelViewer {
       });
     }
 
-    // 3. Icona Pikachu Ufficiale (4 Volumi Separati / 4 Colori FDM)
-    if (name.includes("pikachu_yellow") || name.includes("icon_pikachu_yellow") || name.includes("pikachu_face")) {
+    // 3. Icona Coda a Fulmine Pikachu Ufficiale (2 Volumi FDM: Corpo Giallo #FFCB05 + Base Nera #1A1A1A)
+    if (name.includes("pikachu_tail_body") || name.includes("pikachu_yellow") || name.includes("icon_pikachu_yellow") || name.includes("pikachu_face")) {
       return new THREE.MeshStandardMaterial({
         color: 0xFFCB05,
         roughness: 0.35,
@@ -344,7 +344,7 @@ class ModelViewer {
         wireframe: wireframe
       });
     }
-    if (name.includes("pikachu_black") || name.includes("icon_pikachu_black") || name.includes("pikachu_outline")) {
+    if (name.includes("pikachu_tail_base") || name.includes("pikachu_black") || name.includes("icon_pikachu_black") || name.includes("pikachu_outline")) {
       return new THREE.MeshStandardMaterial({
         color: 0x1A1A1A,
         roughness: 0.4,

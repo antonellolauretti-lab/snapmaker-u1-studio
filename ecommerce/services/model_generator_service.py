@@ -17,7 +17,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from generator_u1.generators.keychain_generator import generate_keychain_parts
+from generator_u1.generators.keychain_generator import generate_keychain_parts, _color_family
 from generator_u1.generators.desk_sign_generator import generate_desk_sign_parts
 from generator_u1.packager.snapmaker_3mf import Snapmaker3MFPackager
 from generator_u1.font_resolver import resolve_font_path
@@ -129,7 +129,28 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
     has_pikachu = any("pikachu" in p.name.lower() for p in parts)
     has_pokemon = any("pokemon" in p.name.lower() or "pokeball" in p.name.lower() for p in parts)
     if has_pikachu:
-        filament_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#1A1A1A"]
+        b_col = params.get("base_color", "#080A0D")
+        t_col = params.get("text_color", "#D9DFE5")
+        slots = ["#FFCB05", "#1A1A1A", None, None]
+        base_fam = _color_family(b_col)
+        text_fam = _color_family(t_col)
+
+        next_slot = 2
+        if base_fam not in ("yellow", "black") and next_slot < 4:
+            slots[next_slot] = b_col
+            next_slot += 1
+        if text_fam not in ("yellow", "black") and text_fam != base_fam and next_slot < 4:
+            slots[next_slot] = t_col
+            next_slot += 1
+
+        fallbacks = ["#FFFFFF", "#003776", "#EE1515"]
+        for i in range(4):
+            if slots[i] is None:
+                for fb in fallbacks:
+                    if fb not in slots:
+                        slots[i] = fb
+                        break
+        filament_colors = slots
     elif has_pokemon:
         filament_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"]
 
