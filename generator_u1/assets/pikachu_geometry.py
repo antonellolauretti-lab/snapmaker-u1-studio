@@ -36,9 +36,9 @@ def _init_geometries():
     cx = (minx + maxx) / 2.0
     cy = (miny + maxy) / 2.0
 
-    # Invert Y per sistema cartesiano 3D (Y positivo in alto) e centra sull'origine (0, 0)
-    _GEOM_BODY = affinity.scale(affinity.translate(y_raw, xoff=-cx, yoff=-cy), yfact=-1.0, origin=(0, 0))
-    _GEOM_BASE = affinity.scale(affinity.translate(b_raw, xoff=-cx, yoff=-cy), yfact=-1.0, origin=(0, 0))
+    # Inverti Y (coordinate 3D con Y in alto) e specchia X (xfact=-1.0: attacco in basso a SX -> fulmine sale in alto a DX)
+    _GEOM_BODY = affinity.scale(affinity.translate(y_raw, xoff=-cx, yoff=-cy), xfact=-1.0, yfact=-1.0, origin=(0, 0))
+    _GEOM_BASE = affinity.scale(affinity.translate(b_raw, xoff=-cx, yoff=-cy), xfact=-1.0, yfact=-1.0, origin=(0, 0))
     _GEOM_FULL = unary_union([_GEOM_BODY, _GEOM_BASE]).buffer(0)
 
 def get_pikachu_tail_components(target_h: float = 16.0) -> Tuple[Any, Any, Any]:
