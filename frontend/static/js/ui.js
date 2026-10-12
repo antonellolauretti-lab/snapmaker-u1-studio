@@ -1209,6 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const PALETTE_PRESETS = {
     snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
     pokemon: ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"],
+    pikachu: ["#FFFFFF", "#EE1515", "#FFCB05", "#1A1A1A"],
     sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
     silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
     contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
@@ -1443,22 +1444,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isPikachu) {
       if (colorT0 && colorT1 && colorT2 && colorT3) {
         if (
-          colorT0.value.toLowerCase() !== "#ffcb05" ||
-          colorT1.value.toLowerCase() !== "#1a1a1a" ||
-          colorT2.value.toLowerCase() !== "#ee1515" ||
-          colorT3.value.toLowerCase() !== "#ffffff"
+          colorT0.value.toLowerCase() !== "#ffffff" ||
+          colorT1.value.toLowerCase() !== "#ee1515" ||
+          colorT2.value.toLowerCase() !== "#ffcb05" ||
+          colorT3.value.toLowerCase() !== "#1a1a1a"
         ) {
-          colorT0.value = "#FFCB05";
-          colorT1.value = "#1A1A1A";
-          colorT2.value = "#EE1515";
-          colorT3.value = "#FFFFFF";
+          colorT0.value = "#FFFFFF";
+          colorT1.value = "#EE1515";
+          colorT2.value = "#FFCB05";
+          colorT3.value = "#1A1A1A";
           syncAllQuickSelects();
           onPaletteChange();
           if (typeof ToastManager !== "undefined" && ToastManager.show) {
             ToastManager.show({
               type: "info",
               title: "Palette U1 4 Colori Pikachu Attivata",
-              message: "Colori U1 impostati: T0 Giallo (#FFCB05), T1 Nero (#1A1A1A), T2 Rosso (#EE1515), T3 Bianco (#FFFFFF).",
+              message: "Colori U1 impostati: T0 Bianco (#FFFFFF), T1 Rosso (#EE1515), T2 Giallo (#FFCB05), T3 Nero (#1A1A1A).",
               duration: 2500
             });
           }

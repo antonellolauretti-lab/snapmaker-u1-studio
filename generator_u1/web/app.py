@@ -734,7 +734,7 @@ def generate_3mf(params: Dict[str, Any]):
     has_pokeball = any("pokeball" in p.name.lower() for p in parts)
 
     if has_pikachu:
-        fil_colors = ["#FFCB05", "#1A1A1A", "#EE1515", "#FFFFFF"]
+        fil_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#1A1A1A"]
     elif has_pokemon_logo:
         fil_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"]
     elif has_pokeball:

@@ -31,15 +31,15 @@ def _color_family(c_str: Any) -> str:
         return "yellow"
     return c
 
-def _map_pikachu_extruder(c_str: Any, default_idx: int = 1) -> int:
+def _map_pikachu_extruder(c_str: Any, default_idx: int = 3) -> int:
     fam = _color_family(c_str)
-    if fam == "yellow":
-        return 0
-    if fam == "black":
-        return 1
-    if fam == "red":
-        return 2
     if fam == "white":
+        return 0
+    if fam == "red":
+        return 1
+    if fam == "yellow":
+        return 2
+    if fam == "black":
         return 3
     return default_idx
 
@@ -652,15 +652,13 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 get_pikachu_modular_components,
                 get_pikachu_geometry,
             )
-            # Scala proporzionata: altezza Pikachu pari a 1.25x - 1.30x rispetto all'altezza del testo adiacente
-            h_text_ref = (maxy - miny) if (text2_2d is None) else h1
-            pikachu_h = round(h_text_ref * 1.28, 2)
-            pikachu_h = max(11.0, min(pikachu_h, round(h_text_ref * 1.30, 2)))
+            # Ingrandimento indipendente a 26.0 mm (svincolato dall'altezza testo per risoluzione FDM nozzle 0.4mm)
+            pikachu_h = 26.0
             p_y, p_b, p_r, p_w, p_full = get_pikachu_modular_components(target_h=pikachu_h)
             minx_p, miny_p, maxx_p, maxy_p = p_full.bounds
             iw = maxx_p - minx_p
             ih = maxy_p - miny_p
-            spacing_icon = 2.5
+            spacing_icon = 3.0
             iy = mid_y
             if str(icon_position).lower() == "right":
                 ix = maxx + spacing_icon + (iw / 2.0)
@@ -792,6 +790,85 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 # Raccordo armonioso ad arco tra la curva della sfera, l'asola dell'anello e il testo
                 close_arc = 3.5
                 b_contour = b_contour.buffer(close_arc, resolution=32).buffer(-close_arc, resolution=32)
+            elif is_pikachu and pikachu_yellow_2d is not None:
+                # =====================================================================
+                # SAGOMA BASE A BADGE / SCUDETTO PER PIKACHU
+                # =====================================================================
+                p_minx, p_miny, p_maxx, p_maxy = icon_2d.bounds
+                cx_p = (p_minx + p_maxx) / 2.0
+                cy_p = (p_miny + p_maxy) / 2.0
+
+                # Chiusura morfologica dell'icona Pikachu per evitare fessure profonde tra orecchie e guance
+                # e offset uniforme (padding_y)
+                p_closed = icon_2d.buffer(3.5, resolution=32).buffer(-1.0, resolution=32)
+                p_badge = p_closed.buffer(padding_y, resolution=32)
+
+                # Contorno sagomato del testo isolato
+                text_items = [text1_2d]
+                if text2_2d is not None:
+                    text_items.append(text2_2d)
+                text_u = unary_union(text_items)
+                t_close_r = max(4.0, current_fs * 0.30)
+                text_closed = text_u.buffer(t_close_r, resolution=16).buffer(-t_close_r, resolution=16)
+                text_contour = text_closed.buffer(padding_y, resolution=16)
+
+                # Spine box strutturale lungo l'asse X tra testo e Pikachu
+                t_minx, t_miny, t_maxx, t_maxy = text_u.bounds
+                t_mid_y = (t_miny + t_maxy) / 2.0
+                spine_y0 = t_mid_y - (min_structural_h / 2.0)
+                spine_y1 = t_mid_y + (min_structural_h / 2.0)
+                spine_box = sg.box(min(t_minx, p_minx), spine_y0, max(t_maxx, p_maxx), spine_y1)
+
+                base_elements = [p_badge, text_contour, spine_box]
+
+                # Raccordo armonioso con asola anello portachiavi
+                if hole_enabled:
+                    pos = str(hole_position).lower().strip()
+                    is_icon_left = (cx_p < t_minx)
+                    if pos == "left":
+                        if is_icon_left:
+                            # Icona a sinistra: asola ancorata all'estremo sinistro del badge di Pikachu
+                            badge_minx = p_badge.bounds[0]
+                            hx = badge_minx - hole_radius - (hole_wall * 0.2)
+                            hy = cy_p
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            hole_bridge = sg.box(hx, hy - outer_radius * 0.75, badge_minx + padding_x, hy + outer_radius * 0.75)
+                            base_elements.extend([hole_ear, hole_bridge])
+                        else:
+                            # Icona a destra: asola ancorata all'estremo sinistro del testo ('P')
+                            hx = t_minx - hole_radius - (hole_wall * 0.2)
+                            hy = t_mid_y
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            bridge = sg.box(hx, hy - outer_radius * 0.75, t_minx + padding_x, hy + outer_radius * 0.75)
+                            base_elements.extend([hole_ear, bridge])
+                    elif pos == "right":
+                        if not is_icon_left:
+                            # Icona a destra: asola ancorata all'estremo destro del badge di Pikachu
+                            badge_maxx = p_badge.bounds[2]
+                            hx = badge_maxx + hole_radius + (hole_wall * 0.2)
+                            hy = cy_p
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            hole_bridge = sg.box(badge_maxx - padding_x, hy - outer_radius * 0.75, hx, hy + outer_radius * 0.75)
+                            base_elements.extend([hole_ear, hole_bridge])
+                        else:
+                            # Icona a sinistra: asola ancorata all'estremo destro del testo
+                            hx = t_maxx + hole_radius + (hole_wall * 0.2)
+                            hy = t_mid_y
+                            hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                            bridge = sg.box(t_maxx - padding_x, hy - outer_radius * 0.75, hx, hy + outer_radius * 0.75)
+                            base_elements.extend([hole_ear, bridge])
+                    else:
+                        # In alto / Top: centrato orizzontalmente sull'intero pezzo unificato
+                        hx = (fg_u_minx + fg_u_maxx) / 2.0
+                        hy = max(fg_u_maxy, p_badge.bounds[3], t_maxy) + hole_radius + (hole_wall * 0.2)
+                        hole_ear = sg.Point(hx, hy).buffer(outer_radius, resolution=64)
+                        bridge = sg.box(hx - outer_radius * 0.75, fg_u_mid_y, hx + outer_radius * 0.75, hy)
+                        base_elements.extend([hole_ear, bridge])
+
+                b_contour = unary_union(base_elements).buffer(0)
+                # Raccordo armonioso ad arco tra il badge, l'asola dell'anello e il testo
+                close_arc = 3.5
+                b_contour = b_contour.buffer(close_arc, resolution=32).buffer(-close_arc, resolution=32)
             else:
                 # Morphological closing per colmare gole profonde tra lettere e righe sovrapposte
                 close_r = max(4.0, current_fs * 0.30)
@@ -865,15 +942,15 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     base_2d = _generate_base_contour_and_hole(foreground_union, font_size)
 
-    # 8. Auto-scaling su lunghezza X (lunghezza massima 80.0 mm / 8,0 cm)
-    MAX_KEYCHAIN_LENGTH = 80.0
+    # 8. Auto-scaling su lunghezza X (lunghezza massima 80.0 mm / 8,0 cm; 95.0 mm per Pikachu badge 26mm)
+    MAX_KEYCHAIN_LENGTH = 95.0 if is_pikachu else 80.0
     bx0, _, bx1, _ = base_2d.bounds
     initial_total_width = bx1 - bx0
 
     if initial_total_width > MAX_KEYCHAIN_LENGTH:
         fg_w0 = fg_maxx - fg_minx
         w_fixed = initial_total_width - fg_w0
-        # Calcolo scala analitica proporzionale lungo X e Y per non eccedere 80.0 mm
+        # Calcolo scala analitica proporzionale lungo X e Y per non eccedere la lunghezza massima
         scale_factor = (MAX_KEYCHAIN_LENGTH - w_fixed) / fg_w0 if fg_w0 > 0 else (MAX_KEYCHAIN_LENGTH / initial_total_width)
         scale_factor = max(0.25, min(scale_factor, 1.0))
 
@@ -884,17 +961,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             text1_outline_2d = affinity.scale(text1_outline_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         if text2_2d is not None:
             text2_2d = affinity.scale(text2_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
-        if icon_2d is not None:
+        if icon_2d is not None and not is_pikachu:
             icon_2d = affinity.scale(icon_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
         if is_pokeball and pokeball_top_2d is not None:
             pokeball_top_2d = affinity.scale(pokeball_top_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             pokeball_bottom_2d = affinity.scale(pokeball_bottom_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
             pokeball_button_2d = affinity.scale(pokeball_button_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
-        if is_pikachu and pikachu_yellow_2d is not None:
-            pikachu_yellow_2d = affinity.scale(pikachu_yellow_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
-            pikachu_black_2d = affinity.scale(pikachu_black_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
-            pikachu_red_2d = affinity.scale(pikachu_red_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
-            pikachu_white_2d = affinity.scale(pikachu_white_2d, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
 
         foreground_items = [text1_2d]
         if text2_2d is not None:
@@ -917,17 +989,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 text1_outline_2d = affinity.scale(text1_outline_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             if text2_2d is not None:
                 text2_2d = affinity.scale(text2_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
-            if icon_2d is not None:
+            if icon_2d is not None and not is_pikachu:
                 icon_2d = affinity.scale(icon_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             if is_pokeball and pokeball_top_2d is not None:
                 pokeball_top_2d = affinity.scale(pokeball_top_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
                 pokeball_bottom_2d = affinity.scale(pokeball_bottom_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
                 pokeball_button_2d = affinity.scale(pokeball_button_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
-            if is_pikachu and pikachu_yellow_2d is not None:
-                pikachu_yellow_2d = affinity.scale(pikachu_yellow_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
-                pikachu_black_2d = affinity.scale(pikachu_black_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
-                pikachu_red_2d = affinity.scale(pikachu_red_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
-                pikachu_white_2d = affinity.scale(pikachu_white_2d, xfact=clamp_scale, yfact=clamp_scale, origin=(0, 0))
             foreground_items = [text1_2d]
             if text2_2d is not None:
                 foreground_items.append(text2_2d)
@@ -967,8 +1034,8 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     is_pokemon_brand_text = (clean_txt in ("POKEMON", "POKÉMON"))
 
     if is_pikachu:
-        actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=1)
-        actual_extruder_text = _map_pikachu_extruder(params.get("text_color"), default_idx=0)
+        actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=3)
+        actual_extruder_text = _map_pikachu_extruder(params.get("text_color"), default_idx=2)
         actual_extruder_line2 = _map_pikachu_extruder(params.get("text_line2_color") or params.get("text_color"), default_idx=actual_extruder_text)
         color_base = params.get("base_color")
     elif is_pokeball and not is_pokemon_brand_text:
@@ -1014,21 +1081,21 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=actual_extruder_line2))
 
         if is_pikachu and pikachu_yellow_2d is not None:
-            m_yellow = _extrude_geometry(pikachu_yellow_2d, height=text_thickness)
-            m_yellow.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=m_yellow, extruder=0, color="#ffcb05"))
-
-            m_black = _extrude_geometry(pikachu_black_2d, height=text_thickness)
-            m_black.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=m_black, extruder=1, color="#1a1a1a"))
+            m_white = _extrude_geometry(pikachu_white_2d, height=text_thickness)
+            m_white.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_White", mesh=m_white, extruder=0, color="#ffffff"))
 
             m_red = _extrude_geometry(pikachu_red_2d, height=text_thickness)
             m_red.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=m_red, extruder=2, color="#ee1515"))
+            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=m_red, extruder=1, color="#ee1515"))
 
-            m_white = _extrude_geometry(pikachu_white_2d, height=text_thickness)
-            m_white.apply_translation([0, 0, base_thickness])
-            parts.append(PartItem(name="Icon_Pikachu_White", mesh=m_white, extruder=3, color="#ffffff"))
+            m_yellow = _extrude_geometry(pikachu_yellow_2d, height=text_thickness)
+            m_yellow.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=m_yellow, extruder=2, color="#ffcb05"))
+
+            m_black = _extrude_geometry(pikachu_black_2d, height=text_thickness)
+            m_black.apply_translation([0, 0, base_thickness])
+            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=m_black, extruder=3, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_2d is not None:
             m_top = _extrude_geometry(pokeball_top_2d, height=text_thickness)
             m_top.apply_translation([0, 0, base_thickness])
@@ -1078,17 +1145,17 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             parts.append(PartItem(name=f"Text_{clean_t2}_Inlay", mesh=mesh_text2, extruder=extruder_line2))
 
         if is_pikachu and pikachu_yellow_2d is not None:
-            m_yellow = _extrude_geometry(pikachu_yellow_2d, height=inlay_depth)
-            parts.append(PartItem(name="Icon_Pikachu_Yellow_Inlay", mesh=m_yellow, extruder=0, color="#ffcb05"))
-
-            m_black = _extrude_geometry(pikachu_black_2d, height=inlay_depth)
-            parts.append(PartItem(name="Icon_Pikachu_Black_Inlay", mesh=m_black, extruder=1, color="#1a1a1a"))
+            m_white = _extrude_geometry(pikachu_white_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_White_Inlay", mesh=m_white, extruder=0, color="#ffffff"))
 
             m_red = _extrude_geometry(pikachu_red_2d, height=inlay_depth)
-            parts.append(PartItem(name="Icon_Pikachu_Red_Inlay", mesh=m_red, extruder=2, color="#ee1515"))
+            parts.append(PartItem(name="Icon_Pikachu_Red_Inlay", mesh=m_red, extruder=1, color="#ee1515"))
 
-            m_white = _extrude_geometry(pikachu_white_2d, height=inlay_depth)
-            parts.append(PartItem(name="Icon_Pikachu_White_Inlay", mesh=m_white, extruder=3, color="#ffffff"))
+            m_yellow = _extrude_geometry(pikachu_yellow_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_Yellow_Inlay", mesh=m_yellow, extruder=2, color="#ffcb05"))
+
+            m_black = _extrude_geometry(pikachu_black_2d, height=inlay_depth)
+            parts.append(PartItem(name="Icon_Pikachu_Black_Inlay", mesh=m_black, extruder=3, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_2d is not None:
             m_top = _extrude_geometry(pokeball_top_2d, height=inlay_depth)
             parts.append(PartItem(name="Icon_Pokeball_Top_Inlay", mesh=m_top, extruder=1, color="#ee1515"))

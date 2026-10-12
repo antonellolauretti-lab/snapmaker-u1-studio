@@ -392,10 +392,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
                 get_pikachu_modular_components,
                 get_pikachu_geometry,
             )
-            # Scala proporzionata: altezza Pikachu pari a 1.25x - 1.30x rispetto all'altezza del testo adiacente
-            h_text_ref = h1 if (t2_norm is None) else h_text_content
-            pikachu_h = round(h_text_ref * 1.28, 2)
-            pikachu_h = max(13.0, min(pikachu_h, round(h_text_ref * 1.30, 2)))
+            # Ingrandimento indipendente a 26.0 mm (svincolato dall'altezza testo per risoluzione FDM nozzle 0.4mm)
+            pikachu_h = 26.0
             p_y, p_b, p_r, p_w, p_full = get_pikachu_modular_components(target_h=pikachu_h)
             minx_p, miny_p, maxx_p, maxy_p = p_full.bounds
             iw = maxx_p - minx_p
@@ -523,6 +521,16 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             y1 = 0.0
             y2 = 0.0
             y_icon = max(0.0, y_center_P - (ih / 2.0))
+    elif is_pikachu:
+        if line2_enabled and t2_norm is not None:
+            y1 = h2 + line_spacing
+            y2 = 0.0
+            mid_y = h_text_content / 2.0
+            y_icon = mid_y - (ih / 2.0)
+        else:
+            y1 = 0.0
+            y2 = 0.0
+            y_icon = (h1 - ih) / 2.0
     elif line2_enabled and t2_norm is not None:
         y1 = h2 + line_spacing
         y2 = 0.0
@@ -574,7 +582,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # Se è presente Pikachu o Pokéball, applica raccordo radiale circolare uniforme per eliminare tagli piatti
         if is_pikachu and icon_local is not None:
-            pika_c_base = icon_local.buffer(contour_pad, resolution=32)
+            pika_closed = icon_local.buffer(3.5, resolution=32).buffer(-1.0, resolution=32)
+            pika_c_base = pika_closed.buffer(contour_pad, resolution=32)
             contour_raw = unary_union([contour_raw, pika_c_base]).buffer(0)
             close_arc = 3.5
             contour_raw = contour_raw.buffer(close_arc, resolution=32).buffer(-close_arc, resolution=32)
@@ -714,8 +723,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
 
         if is_pikachu:
-            actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=1)
-            actual_extruder_line1 = _map_pikachu_extruder(params.get("text_color") or params.get("text_line1_color"), default_idx=0)
+            actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=3)
+            actual_extruder_line1 = _map_pikachu_extruder(params.get("text_color") or params.get("text_line1_color"), default_idx=2)
             actual_extruder_line2 = _map_pikachu_extruder(params.get("text_line2_color") or params.get("text_color"), default_idx=actual_extruder_line1)
             color_base = params.get("base_color")
         elif is_pokeball and not is_pokemon_text:
@@ -769,21 +778,21 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # 6. Estrusione Simbolo 3D (se presente)
         if is_pikachu and pikachu_yellow_aligned is not None:
-            mesh_yellow = _extrude_geometry(pikachu_yellow_aligned, height=thickness_line1)
-            mesh_yellow.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=mesh_yellow, extruder=0, color="#ffcb05"))
-
-            mesh_black = _extrude_geometry(pikachu_black_aligned, height=thickness_line1)
-            mesh_black.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=mesh_black, extruder=1, color="#1a1a1a"))
+            mesh_white = _extrude_geometry(pikachu_white_aligned, height=thickness_line1)
+            mesh_white.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_White", mesh=mesh_white, extruder=0, color="#ffffff"))
 
             mesh_red = _extrude_geometry(pikachu_red_aligned, height=thickness_line1)
             mesh_red.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=mesh_red, extruder=2, color="#ee1515"))
+            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=mesh_red, extruder=1, color="#ee1515"))
 
-            mesh_white = _extrude_geometry(pikachu_white_aligned, height=thickness_line1)
-            mesh_white.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_White", mesh=mesh_white, extruder=3, color="#ffffff"))
+            mesh_yellow = _extrude_geometry(pikachu_yellow_aligned, height=thickness_line1)
+            mesh_yellow.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=mesh_yellow, extruder=2, color="#ffcb05"))
+
+            mesh_black = _extrude_geometry(pikachu_black_aligned, height=thickness_line1)
+            mesh_black.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=mesh_black, extruder=3, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_aligned is not None:
             mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
             mesh_top.apply_transform(M_face_elements)
@@ -879,8 +888,8 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
 
         if is_pikachu:
-            actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=1)
-            actual_extruder_line1 = _map_pikachu_extruder(params.get("text_color") or params.get("text_line1_color"), default_idx=0)
+            actual_extruder_base = _map_pikachu_extruder(params.get("base_color"), default_idx=3)
+            actual_extruder_line1 = _map_pikachu_extruder(params.get("text_color") or params.get("text_line1_color"), default_idx=2)
             actual_extruder_line2 = _map_pikachu_extruder(params.get("text_line2_color") or params.get("text_color"), default_idx=actual_extruder_line1)
             color_base = params.get("base_color")
         elif is_pokeball and not is_pokemon_text:
@@ -934,21 +943,21 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         # 5. Estrusione Simbolo 3D (se presente)
         if is_pikachu and pikachu_yellow_aligned is not None:
-            mesh_yellow = _extrude_geometry(pikachu_yellow_aligned, height=thickness_line1)
-            mesh_yellow.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=mesh_yellow, extruder=0, color="#ffcb05"))
-
-            mesh_black = _extrude_geometry(pikachu_black_aligned, height=thickness_line1)
-            mesh_black.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=mesh_black, extruder=1, color="#1a1a1a"))
+            mesh_white = _extrude_geometry(pikachu_white_aligned, height=thickness_line1)
+            mesh_white.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_White", mesh=mesh_white, extruder=0, color="#ffffff"))
 
             mesh_red = _extrude_geometry(pikachu_red_aligned, height=thickness_line1)
             mesh_red.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=mesh_red, extruder=2, color="#ee1515"))
+            parts.append(PartItem(name="Icon_Pikachu_Red", mesh=mesh_red, extruder=1, color="#ee1515"))
 
-            mesh_white = _extrude_geometry(pikachu_white_aligned, height=thickness_line1)
-            mesh_white.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Icon_Pikachu_White", mesh=mesh_white, extruder=3, color="#ffffff"))
+            mesh_yellow = _extrude_geometry(pikachu_yellow_aligned, height=thickness_line1)
+            mesh_yellow.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Yellow", mesh=mesh_yellow, extruder=2, color="#ffcb05"))
+
+            mesh_black = _extrude_geometry(pikachu_black_aligned, height=thickness_line1)
+            mesh_black.apply_transform(M_face_elements)
+            parts.append(PartItem(name="Icon_Pikachu_Black", mesh=mesh_black, extruder=3, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_aligned is not None:
             mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
             mesh_top.apply_transform(M_face_elements)

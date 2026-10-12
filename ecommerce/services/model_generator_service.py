@@ -126,8 +126,11 @@ def compile_order_item_to_3mf(order_number: str, item_data: Dict[str, Any]) -> T
     if not (out_path == temp_dir or out_path.is_relative_to(temp_dir)):
         raise ValueError("Percorso di salvataggio 3MF non autorizzato.")
 
+    has_pikachu = any("pikachu" in p.name.lower() for p in parts)
     has_pokemon = any("pokemon" in p.name.lower() or "pokeball" in p.name.lower() for p in parts)
-    if has_pokemon:
+    if has_pikachu:
+        filament_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#1A1A1A"]
+    elif has_pokemon:
         filament_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"]
 
     # Packager con preferenze Snapmaker U1

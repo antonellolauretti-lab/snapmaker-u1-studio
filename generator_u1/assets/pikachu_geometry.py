@@ -1,10 +1,10 @@
 """
 Modulo geometrie 2D parametriche FDM per Pikachu 4 Colori (Snapmaker U1).
 Geometrie chiuse, manifold 100%, con vincoli nozzle 0.4mm:
-- Tool 0 (Giallo #FFCB05): Volto e corpo orecchie
-- Tool 1 (Nero #1A1A1A): Punte orecchie, bordo occhi, naso, contorno bocca e profili
-- Tool 2 (Rosso #EE1515): Guance rotonde e interno bocca
-- Tool 3 (Bianco #FFFFFF): Riflesso pupille occhi (diametro >= 1.0 mm)
+- Tool 0 (Bianco #FFFFFF): Riflesso pupille occhi (diametro >= 1.4 mm)
+- Tool 1 (Rosso #EE1515): Guance rotonde e interno bocca
+- Tool 2 (Giallo #FFCB05): Volto e corpo orecchie
+- Tool 3 (Nero #1A1A1A): Punte orecchie, bordo occhi, naso, contorno bocca e profili
 """
 import shapely.geometry as sg
 from shapely.ops import unary_union
@@ -59,7 +59,7 @@ def _init_geometries():
     _GEOM_WHITE = affinity.scale(w_raw, yfact=-1.0, origin=(50.0, 50.0))
     _GEOM_FULL = affinity.scale(full_raw, yfact=-1.0, origin=(50.0, 50.0))
 
-def get_pikachu_modular_components(target_h: float = 17.0) -> Tuple[Any, Any, Any, Any, Any]:
+def get_pikachu_modular_components(target_h: float = 26.0) -> Tuple[Any, Any, Any, Any, Any]:
     """
     Restituisce (yellow, black, red, white, full_silhouette) scalati all'altezza target_h (mm).
     Tutte le parti sono centrate sull'origine (0, 0).
@@ -79,7 +79,7 @@ def get_pikachu_modular_components(target_h: float = 17.0) -> Tuple[Any, Any, An
 
     return y_s, b_s, r_s, w_s, full_s
 
-def get_pikachu_geometry(target_h: float = 17.0) -> Any:
+def get_pikachu_geometry(target_h: float = 26.0) -> Any:
     """Restituisce la sagoma completa di Pikachu centrata all'origine."""
     _, _, _, _, full_s = get_pikachu_modular_components(target_h=target_h)
     return full_s
