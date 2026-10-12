@@ -488,11 +488,12 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             from generator_u1.assets.txt_logo_geometry import get_exact_txt_keyring_geometries
             b2d, t2d, s2d = get_exact_txt_keyring_geometries()
 
+            overlap_z = 0.4
             m_base = _extrude_geometry(b2d, height=base_thickness)
-            m_text = _extrude_geometry(t2d, height=text_thickness)
-            m_text.apply_translation([0, 0, base_thickness])
-            m_sym = _extrude_geometry(s2d, height=text_thickness)
-            m_sym.apply_translation([0, 0, base_thickness])
+            m_text = _extrude_geometry(t2d, height=text_thickness + overlap_z)
+            m_text.apply_translation([0, 0, base_thickness - overlap_z])
+            m_sym = _extrude_geometry(s2d, height=text_thickness + overlap_z)
+            m_sym.apply_translation([0, 0, base_thickness - overlap_z])
 
             return [
                 PartItem(name="Base_Portachiavi", mesh=m_base, extruder=extruder_base),
@@ -1017,50 +1018,51 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         mesh_base = _extrude_geometry(base_2d, height=base_thickness)
         parts.append(PartItem(name="Base", mesh=mesh_base, extruder=actual_extruder_base, color=color_base))
 
+        overlap_z = 0.4  # Penetrazione strutturale di 0.4 mm nella base per perfetta fusione FDM
         if text1_letters_2d is not None and text1_outline_2d is not None:
             # Doppio strato ufficiale Pokémon: Bordo Blu spesso Z=1.0mm (Slot 4 / T3) + Lettere Gialle Z=1.4mm (Slot 3 / T2)
-            mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0)
-            mesh_outline.apply_translation([0, 0, base_thickness])
+            mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0 + overlap_z)
+            mesh_outline.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
-            mesh_letters = _extrude_geometry(text1_letters_2d, height=text_thickness)
-            mesh_letters.apply_translation([0, 0, base_thickness])
+            mesh_letters = _extrude_geometry(text1_letters_2d, height=text_thickness + overlap_z)
+            mesh_letters.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
         else:
             clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
-            mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness)
-            mesh_text1.apply_translation([0, 0, base_thickness])
+            mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness + overlap_z)
+            mesh_text1.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name=f"Text_{clean_t1}", mesh=mesh_text1, extruder=actual_extruder_text, color=params.get("text_color")))
 
         if text2_2d is not None:
             clean_t2 = re.sub(r"[^a-zA-Z0-9_-]", "", text_line2) or "Riga2"
-            mesh_text2 = _extrude_geometry(text2_2d, height=text_thickness)
-            mesh_text2.apply_translation([0, 0, base_thickness])
+            mesh_text2 = _extrude_geometry(text2_2d, height=text_thickness + overlap_z)
+            mesh_text2.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name=f"Text_{clean_t2}", mesh=mesh_text2, extruder=actual_extruder_line2))
 
         if is_pikachu and pikachu_tail_body_2d is not None:
-            m_body = _extrude_geometry(pikachu_tail_body_2d, height=text_thickness)
-            m_body.apply_translation([0, 0, base_thickness])
+            m_body = _extrude_geometry(pikachu_tail_body_2d, height=text_thickness + overlap_z)
+            m_body.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Icon_Pikachu_Tail_Body", mesh=m_body, extruder=0, color="#ffcb05"))
 
-            m_base = _extrude_geometry(pikachu_tail_base_2d, height=text_thickness)
-            m_base.apply_translation([0, 0, base_thickness])
+            m_base = _extrude_geometry(pikachu_tail_base_2d, height=text_thickness + overlap_z)
+            m_base.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Icon_Pikachu_Tail_Base", mesh=m_base, extruder=1, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_2d is not None:
-            m_top = _extrude_geometry(pokeball_top_2d, height=text_thickness)
-            m_top.apply_translation([0, 0, base_thickness])
+            m_top = _extrude_geometry(pokeball_top_2d, height=text_thickness + overlap_z)
+            m_top.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Icon_Pokeball_Top", mesh=m_top, extruder=1, color="#ee1515"))
 
-            m_bot = _extrude_geometry(pokeball_bottom_2d, height=text_thickness)
-            m_bot.apply_translation([0, 0, base_thickness])
+            m_bot = _extrude_geometry(pokeball_bottom_2d, height=text_thickness + overlap_z)
+            m_bot.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Icon_Pokeball_Bottom", mesh=m_bot, extruder=0, color="#ffffff"))
 
-            m_btn = _extrude_geometry(pokeball_button_2d, height=text_thickness)
-            m_btn.apply_translation([0, 0, base_thickness])
+            m_btn = _extrude_geometry(pokeball_button_2d, height=text_thickness + overlap_z)
+            m_btn.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Icon_Pokeball_Button", mesh=m_btn, extruder=0, color="#ffffff"))
         elif icon_2d is not None:
-            mesh_icon = _extrude_geometry(icon_2d, height=text_thickness)
-            mesh_icon.apply_translation([0, 0, base_thickness])
+            mesh_icon = _extrude_geometry(icon_2d, height=text_thickness + overlap_z)
+            mesh_icon.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name=f"Icon_{icon_name}", mesh=mesh_icon, extruder=extruder_icon))
 
     elif text_mode == "flush":

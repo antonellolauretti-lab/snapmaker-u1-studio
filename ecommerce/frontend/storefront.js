@@ -40,7 +40,7 @@ export class SnapmakerStorefront {
       { id: 'Bebas Neue', name: 'Bebas Neue', previewText: 'ALTO IMPATTO' },
       { id: 'Pacifico', name: 'Pacifico Script', previewText: 'Elegante Corsivo' },
       { id: 'Bangers', name: 'Bangers Comic', previewText: 'STILE FUMETTO' },
-      { id: 'Orbitron', name: 'Orbitron Tech', previewText: 'FUTURISTICO' },
+      { id: 'Orbitron', name: 'Orbitron Bold', previewText: 'FUTURISTICO' },
       { id: 'Poppins', name: 'Poppins Clean', previewText: 'Morbido & Pulito' },
       { id: 'Playfair Display', name: 'Playfair Serif', previewText: 'Classico Lusso' },
       { id: 'Bungee', name: 'Bungee 3D', previewText: 'EXTRA SPESSO' }

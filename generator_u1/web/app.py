@@ -167,11 +167,11 @@ CURATED_FONTS = [
     },
     {
         "id": "Orbitron",
-        "name": "Orbitron",
-        "desc": "Futuristico Sci-Fi Mecha",
+        "name": "Orbitron Bold",
+        "desc": "Futuristico Sci-Fi Mecha Bold",
         "category": "display",
         "family": "'Orbitron', sans-serif",
-        "file": "Orbitron.ttf",
+        "file": "Orbitron-Bold.ttf",
     },
     {
         "id": "Minimal Tech",

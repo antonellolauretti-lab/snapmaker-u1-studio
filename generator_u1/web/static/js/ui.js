@@ -20,7 +20,7 @@ const DEFAULT_CURATED_FONTS = [
   { id: "Righteous", name: "Righteous", desc: "Retro Futuristico Techno", category: "display", family: "'Righteous', cursive" },
   { id: "Bangers", name: "Bangers", desc: "Fumetto Comic Bold", category: "display", family: "'Bangers', cursive" },
   { id: "Permanent Marker", name: "Permanent Marker", desc: "Tratto Pennarello Autentico", category: "script", family: "'Permanent Marker', cursive" },
-  { id: "Orbitron", name: "Orbitron", desc: "Futuristico Sci-Fi Mecha", category: "display", family: "'Orbitron', sans-serif" },
+  { id: "Orbitron", name: "Orbitron Bold", desc: "Futuristico Sci-Fi Mecha Bold", category: "display", family: "'Orbitron', sans-serif" },
   { id: "Minimal Tech", name: "Minimal Tech", desc: "Geometrico Arrotondato High-Tech", category: "sans-serif", family: "'Montserrat', sans-serif" },
   { id: "Montserrat", name: "Montserrat Black", desc: "Geometrico Moderno Black 900", category: "sans-serif", family: "'Montserrat', sans-serif" },
   { id: "Poppins", name: "Poppins", desc: "Geometrico Pulito e Morbido", category: "sans-serif", family: "'Poppins', sans-serif" },

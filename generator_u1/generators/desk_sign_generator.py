@@ -726,59 +726,61 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         parts.append(PartItem(name="Base_Contour_Rail", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
-        # Matrice comune per gli elementi in rilievo sulla faccia inclinata
+        # Matrice comune per gli elementi in rilievo sulla faccia inclinata (con compenetrazione di 0.4 mm nella placca per fusione FDM)
+        overlap_face = 0.4
+        eff_plate_t = plate_thickness - overlap_face
         M_face_elements = np.array([
             [1.0, 0.0, 0.0, 0.0],
-            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), y_anchor - plate_thickness * np.sin(tilt_angle)],
-            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), z_anchor + plate_thickness * np.cos(tilt_angle)],
+            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), y_anchor - eff_plate_t * np.sin(tilt_angle)],
+            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), z_anchor + eff_plate_t * np.cos(tilt_angle)],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
 
         # 4. Estrusione Testo Riga 1
         if t1_letters_aligned is not None and t1_outline_aligned is not None:
-            mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0)
+            mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0 + overlap_face)
             mesh_outline.apply_transform(M_face_elements)
             parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
-            mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1)
+            mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1 + overlap_face)
             mesh_letters.apply_transform(M_face_elements)
             parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
         else:
-            mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
+            mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1 + overlap_face)
             mesh_t1.apply_transform(M_face_elements)
             clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
             parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=actual_extruder_line1, color=params.get("text_color")))
 
         # 5. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
-            mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
+            mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2 + overlap_face)
             mesh_t2.apply_transform(M_face_elements)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=actual_extruder_line2))
 
         # 6. Estrusione Simbolo 3D (se presente)
         if is_pikachu and pikachu_tail_body_aligned is not None:
-            mesh_body = _extrude_geometry(pikachu_tail_body_aligned, height=thickness_line1)
+            mesh_body = _extrude_geometry(pikachu_tail_body_aligned, height=thickness_line1 + overlap_face)
             mesh_body.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pikachu_Tail_Body", mesh=mesh_body, extruder=0, color="#ffcb05"))
 
-            mesh_base = _extrude_geometry(pikachu_tail_base_aligned, height=thickness_line1)
+            mesh_base = _extrude_geometry(pikachu_tail_base_aligned, height=thickness_line1 + overlap_face)
             mesh_base.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pikachu_Tail_Base", mesh=mesh_base, extruder=1, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_aligned is not None:
-            mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
+            mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1 + overlap_face)
             mesh_top.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Top", mesh=mesh_top, extruder=1, color="#ee1515"))
 
-            mesh_bot = _extrude_geometry(pokeball_bot_aligned, height=thickness_line1)
+            mesh_bot = _extrude_geometry(pokeball_bot_aligned, height=thickness_line1 + overlap_face)
             mesh_bot.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Bottom", mesh=mesh_bot, extruder=0, color="#ffffff"))
 
-            mesh_btn = _extrude_geometry(pokeball_btn_aligned, height=thickness_line1)
+            mesh_btn = _extrude_geometry(pokeball_btn_aligned, height=thickness_line1 + overlap_face)
             mesh_btn.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Button", mesh=mesh_btn, extruder=0, color="#ffffff"))
         elif icon_2d_aligned is not None:
-            mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1)
+            mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1 + overlap_face)
             mesh_icon.apply_transform(M_face_elements)
             clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
             parts.append(PartItem(name=f"Icon_{clean_icon}", mesh=mesh_icon, extruder=extruder_icon))
@@ -882,59 +884,61 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         parts.append(PartItem(name="Base_Rectangle_Stand", mesh=mesh_base_total, extruder=actual_extruder_base, color=color_base))
 
-        # Matrice comune per elementi in rilievo frontale (poggiano perfettamente a filo della faccia)
+        # Matrice comune per elementi in rilievo frontale (con compenetrazione di 0.4 mm nella placca per fusione FDM)
+        overlap_face = 0.4
+        eff_plate_t = plate_thickness - overlap_face
         M_face_elements = np.array([
             [1.0, 0.0, 0.0, 0.0],
-            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), -plate_thickness * np.sin(tilt_angle)],
-            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), plate_thickness * np.cos(tilt_angle)],
+            [0.0, np.cos(tilt_angle), -np.sin(tilt_angle), -eff_plate_t * np.sin(tilt_angle)],
+            [0.0, np.sin(tilt_angle), np.cos(tilt_angle), eff_plate_t * np.cos(tilt_angle)],
             [0.0, 0.0, 0.0, 1.0]
         ], dtype=float)
 
         # 3. Estrusione Testo Riga 1
         if t1_letters_aligned is not None and t1_outline_aligned is not None:
-            mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0)
+            mesh_outline = _extrude_geometry(t1_outline_aligned, height=1.0 + overlap_face)
             mesh_outline.apply_transform(M_face_elements)
             parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
-            mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1)
+            mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1 + overlap_face)
             mesh_letters.apply_transform(M_face_elements)
             parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
         else:
-            mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1)
+            mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1 + overlap_face)
             mesh_t1.apply_transform(M_face_elements)
             clean_t1 = "".join(c for c in text_line1 if c.isalnum() or c in "_-")[:20] or "Line1"
             parts.append(PartItem(name=f"Text_Line1_{clean_t1}", mesh=mesh_t1, extruder=actual_extruder_line1, color=params.get("text_color")))
 
         # 4. Estrusione Testo Riga 2 (se presente)
         if line2_enabled and t2_2d_aligned is not None:
-            mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2)
+            mesh_t2 = _extrude_geometry(t2_2d_aligned, height=thickness_line2 + overlap_face)
             mesh_t2.apply_transform(M_face_elements)
             clean_t2 = "".join(c for c in text_line2 if c.isalnum() or c in "_-")[:20] or "Line2"
             parts.append(PartItem(name=f"Text_Line2_{clean_t2}", mesh=mesh_t2, extruder=actual_extruder_line2))
 
         # 5. Estrusione Simbolo 3D (se presente)
         if is_pikachu and pikachu_tail_body_aligned is not None:
-            mesh_body = _extrude_geometry(pikachu_tail_body_aligned, height=thickness_line1)
+            mesh_body = _extrude_geometry(pikachu_tail_body_aligned, height=thickness_line1 + overlap_face)
             mesh_body.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pikachu_Tail_Body", mesh=mesh_body, extruder=0, color="#ffcb05"))
 
-            mesh_base = _extrude_geometry(pikachu_tail_base_aligned, height=thickness_line1)
+            mesh_base = _extrude_geometry(pikachu_tail_base_aligned, height=thickness_line1 + overlap_face)
             mesh_base.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pikachu_Tail_Base", mesh=mesh_base, extruder=1, color="#1a1a1a"))
         elif is_pokeball and pokeball_top_aligned is not None:
-            mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1)
+            mesh_top = _extrude_geometry(pokeball_top_aligned, height=thickness_line1 + overlap_face)
             mesh_top.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Top", mesh=mesh_top, extruder=1, color="#ee1515"))
 
-            mesh_bot = _extrude_geometry(pokeball_bot_aligned, height=thickness_line1)
+            mesh_bot = _extrude_geometry(pokeball_bot_aligned, height=thickness_line1 + overlap_face)
             mesh_bot.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Bottom", mesh=mesh_bot, extruder=0, color="#ffffff"))
 
-            mesh_btn = _extrude_geometry(pokeball_btn_aligned, height=thickness_line1)
+            mesh_btn = _extrude_geometry(pokeball_btn_aligned, height=thickness_line1 + overlap_face)
             mesh_btn.apply_transform(M_face_elements)
             parts.append(PartItem(name="Icon_Pokeball_Button", mesh=mesh_btn, extruder=0, color="#ffffff"))
         elif icon_2d_aligned is not None:
-            mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1)
+            mesh_icon = _extrude_geometry(icon_2d_aligned, height=thickness_line1 + overlap_face)
             mesh_icon.apply_transform(M_face_elements)
             clean_icon = "".join(c for c in icon_name if c.isalnum() or c in "_-")[:20] or "Icon"
             parts.append(PartItem(name=f"Icon_{clean_icon}", mesh=mesh_icon, extruder=extruder_icon))

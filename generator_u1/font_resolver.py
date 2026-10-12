@@ -36,7 +36,11 @@ FONT_ALIAS_MAP: Dict[str, str] = {
     "bungee": "Bungee.ttf",
     "righteous": "Righteous.ttf",
     "bangers": "Bangers.ttf",
-    "orbitron": "Orbitron.ttf",
+    "orbitron": "Orbitron-Bold.ttf",
+    "orbitron bold": "Orbitron-Bold.ttf",
+    "orbitron-bold": "Orbitron-Bold.ttf",
+    "orbitron black": "Orbitron-Black.ttf",
+    "orbitron-black": "Orbitron-Black.ttf",
     "oswald": "Oswald.ttf",
     "permanent marker": "Permanent_Marker.ttf",
     "permanentmarker": "Permanent_Marker.ttf",
@@ -113,7 +117,7 @@ def get_font_properties(font_name: Optional[str], explicit_path: Optional[str] =
     """Restituisce un oggetto FontProperties con percorso fisico valido e peso calibrato per Matplotlib."""
     path = resolve_font_path(font_name, explicit_path)
     weight = "bold" if font_name and font_name.lower() in [
-        "montserrat", "segoe ui", "playfair display", "playfairdisplay", "cinzel", "georgia", "arial", "arial black"
+        "montserrat", "segoe ui", "playfair display", "playfairdisplay", "cinzel", "georgia", "arial", "arial black", "orbitron", "orbitron bold", "orbitron black"
     ] else "normal"
 
     if path and os.path.isfile(path):
@@ -130,6 +134,10 @@ def get_font_dilation_offset(font_name: Optional[str]) -> float:
     if not font_name:
         return 0.0
     fn = font_name.strip().lower()
+
+    # Orbitron (tecnologico/sci-fi): 0.25 mm per garantire pareti spesse >= 1.2 mm e massima adesione
+    if "orbitron" in fn:
+        return 0.25
 
     # Script e corsivi (Dancing Script, Caveat, Great Vibes, Segoe Script, Pacifico):
     # Necessitano di buffer solido tra 0.28 e 0.32 mm per saldare tratti sottili e legature
