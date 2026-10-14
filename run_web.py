@@ -19,8 +19,8 @@ except ImportError:
     pass
 
 def start_server():
-    port = int(os.environ.get("PORT", 8000))
-    host = os.environ.get("HOST", "0.0.0.0" if os.environ.get("ENVIRONMENT") == "production" else "127.0.0.1")
+    port = int(os.environ.get("PORT", 10000))
+    host = os.environ.get("HOST", "0.0.0.0")
     reload = os.environ.get("ENVIRONMENT", "development") != "production"
 
     print("=" * 60)

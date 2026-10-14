@@ -8,7 +8,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: PORT
-        value: 8000
+        value: 10000
       - key: ENVIRONMENT
         value: production
       - key: ALLOWED_ORIGINS

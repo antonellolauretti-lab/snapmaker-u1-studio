@@ -9,7 +9,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    PORT=8000
+    PORT=10000
 
 # Dipendenze di sistema minime per compilazione e motori geometrici/font
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -38,11 +38,11 @@ COPY run_web.py /app/run_web.py
 RUN mkdir -p /app/generator_u1/web/uploads/fonts /app/ecommerce/data
 
 # Esponi porta documentata
-EXPOSE 8000
+EXPOSE 10000
 
 # Healthcheck nativo Docker
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-10000}/api/health || exit 1
 
 # Avvio con interpretazione della variabile $PORT fornita da Render o Railway
-CMD ["sh", "-c", "uvicorn generator_u1.web.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn generator_u1.web.app:app --host 0.0.0.0 --port ${PORT:-10000}"]

@@ -363,13 +363,25 @@ STOREFRONT_HTML = ECOMMERCE_DIR / "frontend" / "index.html"
 STUDIO_HTML = TEMPLATES_DIR / "studio_technical.html"
 ADMIN_HTML = ECOMMERCE_DIR / "admin" / "index.html"
 
+def _resolve_template_file(primary: Path, fallbacks: List[Path]) -> Optional[Path]:
+    if primary.is_file():
+        return primary
+    for fb in fallbacks:
+        if fb.is_file():
+            return fb
+    return None
+
 @app.get("/", response_class=FileResponse)
 @app.get("/index.html", response_class=FileResponse)
 async def serve_storefront():
     """Homepage pubblica Storefront E-Commerce (cliente finale)."""
-    if not STOREFRONT_HTML.is_file():
+    target = _resolve_template_file(STOREFRONT_HTML, [
+        PROJECT_ROOT / "ecommerce" / "frontend" / "index.html",
+        PROJECT_ROOT / "index.html"
+    ])
+    if not target:
         raise HTTPException(status_code=404, detail="Storefront index.html non trovato.")
-    return FileResponse(str(STOREFRONT_HTML), media_type="text/html")
+    return FileResponse(str(target), media_type="text/html")
 
 @app.get("/manifest.json", response_class=FileResponse)
 async def serve_manifest():
@@ -411,9 +423,14 @@ async def serve_favicon():
 async def serve_studio():
     """Studio parametrico 3D tecnico avanzato (per uso interno e test geometrici)."""
     logger.info("Serving STUDIO TECHNICAL UI from studio_technical.html")
-    if not STUDIO_HTML.is_file():
+    target = _resolve_template_file(STUDIO_HTML, [
+        TEMPLATES_DIR / "index.html",
+        PROJECT_ROOT / "studio.html",
+        PROJECT_ROOT / "generator_u1" / "web" / "templates" / "studio_technical.html"
+    ])
+    if not target:
         raise HTTPException(status_code=404, detail="Studio 3D template studio_technical.html non trovato.")
-    response = FileResponse(str(STUDIO_HTML), media_type="text/html")
+    response = FileResponse(str(target), media_type="text/html")
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -423,9 +440,12 @@ async def serve_studio():
 @app.get("/admin/", response_class=FileResponse)
 async def serve_admin():
     """Pannello gestionale ordini e inventario filamenti Snapmaker."""
-    if not ADMIN_HTML.is_file():
+    target = _resolve_template_file(ADMIN_HTML, [
+        PROJECT_ROOT / "ecommerce" / "admin" / "index.html"
+    ])
+    if not target:
         raise HTTPException(status_code=404, detail="Pannello admin non trovato.")
-    return FileResponse(str(ADMIN_HTML), media_type="text/html")
+    return FileResponse(str(target), media_type="text/html")
 
 @app.post("/admin/verify-pin")
 @app.get("/admin/verify-pin")
@@ -1067,4 +1087,12 @@ def sync_printer_palette(payload: Dict[str, Any]):
         "materials": materials,
         "message": f"Sincronizzati con successo i 4 estrusori dalla Snapmaker U1 ({clean_ip})"
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 10000))
+    host = os.environ.get("HOST", "0.0.0.0")
+    uvicorn.run("generator_u1.web.app:app", host=host, port=port)
+
 
