@@ -7,8 +7,11 @@ import re
 import ipaddress
 import urllib.request
 import urllib.error
+import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
+
+logger = logging.getLogger("studio")
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Depends, Header, Query
 from fastapi.staticfiles import StaticFiles
@@ -357,7 +360,7 @@ def _resolve_font_path(params: Dict[str, Any], font_key: str = "font_family", pa
     return None
 
 STOREFRONT_HTML = ECOMMERCE_DIR / "frontend" / "index.html"
-STUDIO_HTML = TEMPLATES_DIR / "index.html"
+STUDIO_HTML = TEMPLATES_DIR / "studio_technical.html"
 ADMIN_HTML = ECOMMERCE_DIR / "admin" / "index.html"
 
 @app.get("/", response_class=FileResponse)
@@ -407,9 +410,14 @@ async def serve_favicon():
 @app.get("/studio.html", response_class=FileResponse)
 async def serve_studio():
     """Studio parametrico 3D tecnico avanzato (per uso interno e test geometrici)."""
+    logger.info("Serving STUDIO TECHNICAL UI from studio_technical.html")
     if not STUDIO_HTML.is_file():
-        raise HTTPException(status_code=404, detail="Studio 3D template index.html non trovato.")
-    return FileResponse(str(STUDIO_HTML), media_type="text/html")
+        raise HTTPException(status_code=404, detail="Studio 3D template studio_technical.html non trovato.")
+    response = FileResponse(str(STUDIO_HTML), media_type="text/html")
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.get("/admin", response_class=FileResponse)
 @app.get("/admin/", response_class=FileResponse)
