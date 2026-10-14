@@ -733,7 +733,19 @@ def generate_3mf(params: Dict[str, Any]):
     has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
     has_pokeball = any("pokeball" in p.name.lower() for p in parts)
 
-    if has_pikachu:
+    if has_pikachu and has_pokemon_logo:
+        b_col = params.get("base_color", "#080A0D")
+        base_fam = _color_family(b_col)
+        # T0: Giallo (Coda Pikachu corpo + Testo Pokémon lettere)
+        # T1: Nero (Coda Pikachu base)
+        # T3: Blu (Bordo esterno Pokémon)
+        # T2: Base color (se non yellow/black/blue) o fallback bianco
+        if base_fam not in ("yellow", "black", "blue"):
+            t2 = b_col
+        else:
+            t2 = "#FFFFFF"
+        fil_colors = ["#FFCB05", "#1A1A1A", t2, "#003776"]
+    elif has_pikachu:
         b_col = params.get("base_color", "#080A0D")
         t_col = params.get("text_color", "#D9DFE5")
         slots = ["#FFCB05", "#1A1A1A", None, None]

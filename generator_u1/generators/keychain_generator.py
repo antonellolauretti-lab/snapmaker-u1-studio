@@ -29,6 +29,8 @@ def _color_family(c_str: Any) -> str:
         return "red"
     if any(k in c for k in ("yellow", "giallo", "#ffcb05", "#f8f81c")):
         return "yellow"
+    if any(k in c for k in ("blue", "blu", "#003776", "#2a75bb", "#1e5799", "#2980b9")):
+        return "blue"
     return c
 
 def _map_pikachu_tail_extruders(base_color: Any, text_color: Any, line2_color: Any = None):
@@ -991,7 +993,20 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     is_pokemon_brand_text = (clean_txt in ("POKEMON", "POKÉMON"))
 
-    if is_pikachu:
+    if is_pikachu and is_pokemon_brand_text:
+        base_fam = _color_family(params.get("base_color"))
+        if base_fam == "yellow":
+            actual_extruder_base = 0
+        elif base_fam == "black":
+            actual_extruder_base = 1
+        elif base_fam == "blue":
+            actual_extruder_base = 3
+        else:
+            actual_extruder_base = 2
+        actual_extruder_text = 0
+        actual_extruder_line2 = extruder_line2
+        color_base = params.get("base_color") or "#1a1a1a"
+    elif is_pikachu:
         pika_base, pika_text, pika_l2 = _map_pikachu_tail_extruders(params.get("base_color"), params.get("text_color"), params.get("text_line2_color"))
         actual_extruder_base = pika_base
         actual_extruder_text = pika_text
@@ -1020,14 +1035,15 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
         overlap_z = 0.4  # Penetrazione strutturale di 0.4 mm nella base per perfetta fusione FDM
         if text1_letters_2d is not None and text1_outline_2d is not None:
-            # Doppio strato ufficiale Pokémon: Bordo Blu spesso Z=1.0mm (Slot 4 / T3) + Lettere Gialle Z=1.4mm (Slot 3 / T2)
+            # Doppio strato ufficiale Pokémon: Bordo Blu spesso Z=1.0mm (Slot 4 / T3) + Lettere Gialle Z=1.4mm
             mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0 + overlap_z)
             mesh_outline.apply_translation([0, 0, base_thickness - overlap_z])
             parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
+            ext_pokemon_letters = 0 if is_pikachu else 2
             mesh_letters = _extrude_geometry(text1_letters_2d, height=text_thickness + overlap_z)
             mesh_letters.apply_translation([0, 0, base_thickness - overlap_z])
-            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=ext_pokemon_letters, color="#ffcb05"))
         else:
             clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
             mesh_text1 = _extrude_geometry(text1_2d, height=text_thickness + overlap_z)
@@ -1084,8 +1100,9 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         if text1_letters_2d is not None and text1_outline_2d is not None:
             mesh_outline = _extrude_geometry(text1_outline_2d, height=1.0)
             parts.append(PartItem(name="Text_Pokemon_Outline_Inlay", mesh=mesh_outline, extruder=3, color="#003776"))
+            ext_pokemon_letters = 0 if is_pikachu else 2
             mesh_letters = _extrude_geometry(text1_letters_2d, height=inlay_depth)
-            parts.append(PartItem(name="Text_Pokemon_Letters_Inlay", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+            parts.append(PartItem(name="Text_Pokemon_Letters_Inlay", mesh=mesh_letters, extruder=ext_pokemon_letters, color="#ffcb05"))
         else:
             clean_t1 = re.sub(r"[^a-zA-Z0-9_-]", "", text) or "Riga1"
             mesh_text1 = _extrude_geometry(text1_2d, height=inlay_depth)

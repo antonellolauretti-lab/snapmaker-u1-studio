@@ -701,7 +701,20 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         # Fusione booleana esplicita in unico corpo solido manifold (zero facce interne / gusci separati)
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
 
-        if is_pikachu:
+        if is_pikachu and is_pokemon_text:
+            base_fam = _color_family(params.get("base_color"))
+            if base_fam == "yellow":
+                actual_extruder_base = 0
+            elif base_fam == "black":
+                actual_extruder_base = 1
+            elif base_fam == "blue":
+                actual_extruder_base = 3
+            else:
+                actual_extruder_base = 2
+            actual_extruder_line1 = 0
+            actual_extruder_line2 = extruder_line2
+            color_base = params.get("base_color") or "#1a1a1a"
+        elif is_pikachu:
             pika_base, pika_t1, pika_l2 = _map_pikachu_tail_extruders(params.get("base_color"), params.get("text_color") or params.get("text_line1_color"), params.get("text_line2_color"))
             actual_extruder_base = pika_base
             actual_extruder_line1 = pika_t1
@@ -742,9 +755,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_outline.apply_transform(M_face_elements)
             parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
+            ext_pokemon_letters = 0 if is_pikachu else 2
             mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1 + overlap_face)
             mesh_letters.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=ext_pokemon_letters, color="#ffcb05"))
         else:
             mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1 + overlap_face)
             mesh_t1.apply_transform(M_face_elements)
@@ -859,7 +873,20 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
         # Unione booleana monolitica placca + supporto
         mesh_base_total = _boolean_union_meshes([mesh_plate, mesh_footing])
 
-        if is_pikachu:
+        if is_pikachu and is_pokemon_text:
+            base_fam = _color_family(params.get("base_color"))
+            if base_fam == "yellow":
+                actual_extruder_base = 0
+            elif base_fam == "black":
+                actual_extruder_base = 1
+            elif base_fam == "blue":
+                actual_extruder_base = 3
+            else:
+                actual_extruder_base = 2
+            actual_extruder_line1 = 0
+            actual_extruder_line2 = extruder_line2
+            color_base = params.get("base_color") or "#1a1a1a"
+        elif is_pikachu:
             pika_base, pika_t1, pika_l2 = _map_pikachu_tail_extruders(params.get("base_color"), params.get("text_color") or params.get("text_line1_color"), params.get("text_line2_color"))
             actual_extruder_base = pika_base
             actual_extruder_line1 = pika_t1
@@ -900,9 +927,10 @@ def generate_desk_sign_parts(params: Dict[str, Any]) -> List[PartItem]:
             mesh_outline.apply_transform(M_face_elements)
             parts.append(PartItem(name="Text_Pokemon_Outline", mesh=mesh_outline, extruder=3, color="#003776"))
 
+            ext_pokemon_letters = 0 if is_pikachu else 2
             mesh_letters = _extrude_geometry(t1_letters_aligned, height=thickness_line1 + overlap_face)
             mesh_letters.apply_transform(M_face_elements)
-            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=2, color="#ffcb05"))
+            parts.append(PartItem(name="Text_Pokemon_Letters", mesh=mesh_letters, extruder=ext_pokemon_letters, color="#ffcb05"))
         else:
             mesh_t1 = _extrude_geometry(t1_2d_aligned, height=thickness_line1 + overlap_face)
             mesh_t1.apply_transform(M_face_elements)

@@ -1216,10 +1216,15 @@
       </div>
 
       <!-- 8. Colore del Testo (Scelta dai filamenti disponibili) -->
-      <div class="config-group">
+      <div class="config-group" id="groupTextColor">
         <div class="section-title">8. Colore del Testo</div>
-        <div class="color-swatches-grid" id="textSwatches"></div>
-        <div class="color-label-preview" id="textColorLabel">Caricamento colori disponibili...</div>
+        <div id="noticeTextPokemonLocked" style="display: none; padding: 10px 14px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 8px;">
+          🎨 Colori ufficiali logo Pokémon bloccati (Giallo / Blu)
+        </div>
+        <div id="wrapTextColorControls">
+          <div class="color-swatches-grid" id="textSwatches"></div>
+          <div class="color-label-preview" id="textColorLabel">Caricamento colori disponibili...</div>
+        </div>
       </div>
 
       <!-- 9. Colore del Simbolo / Icona (Uguale al testo oppure Personalizzato a 3 colori) -->
@@ -1587,6 +1592,9 @@
       if (fName.includes('yellow') || fName.includes('giallo') || hex === '#f8f81c' || hex === '#ffcb05') {
         return 'yellow';
       }
+      if (fName.includes('blue') || fName.includes('blu') || hex === '#003776' || hex === '#2a75bb' || hex === '#1e5799' || hex === '#2980b9') {
+        return 'blue';
+      }
       return hex || fName;
     }
 
@@ -1598,62 +1606,112 @@
       return Boolean(ic && (ic.category === 'pokemon' || (ic.category_name && ic.category_name.toLowerCase().includes('pok'))));
     }
 
-    function enforceBrandConstraints() {
+    function isPokemonBrandText(text) {
+      if (!text) return false;
+      const t = text.trim().toLowerCase();
+      return t === 'pokemon' || t === 'pokémon';
+    }
+
+    function getFixedBrandColors() {
+      const fixed = [];
       const isPika = (currentConfig.iconId === 'pikachu');
       const isPoke = (currentConfig.iconId === 'pokeball');
+      const isPokeText = isPokemonBrandText(currentConfig.textLine1);
 
       if (isPika) {
-        const pikaAllowed = ['yellow', 'black', 'red', 'white'];
-        let baseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
-        let textFam = getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
-
-        if (!pikaAllowed.includes(baseFam)) {
-          const blackFil = availableFilaments.find(f => getColorFamily(f) === 'black') || availableFilaments[0];
-          if (blackFil) {
-            currentConfig.baseFilamentId = blackFil.id;
-            currentConfig.baseSku = blackFil.sku;
-            currentConfig.baseColorHex = blackFil.hex_color;
-            currentConfig.baseSecondaryHex = blackFil.secondary_hex_color || null;
-            currentConfig.baseColorName = blackFil.name;
-            currentConfig.baseGroupName = blackFil.group_name;
-            baseFam = 'black';
-          }
-        }
-
-        if (!pikaAllowed.includes(textFam) || textFam === baseFam) {
-          const targetFam = (baseFam === 'yellow') ? 'black' : 'yellow';
-          const textFil = availableFilaments.find(f => getColorFamily(f) === targetFam) ||
-                          availableFilaments.find(f => pikaAllowed.includes(getColorFamily(f)) && getColorFamily(f) !== baseFam) ||
-                          availableFilaments[1];
-          if (textFil) {
-            currentConfig.textFilamentId = textFil.id;
-            currentConfig.textSku = textFil.sku;
-            currentConfig.textColorHex = textFil.hex_color;
-            currentConfig.textSecondaryHex = textFil.secondary_hex_color || null;
-            currentConfig.textColorName = textFil.name;
-            currentConfig.textGroupName = textFil.group_name;
-          }
-        }
-        currentConfig.hasCustomIconColor = false;
+        fixed.push('yellow', 'black');
       } else if (isPoke) {
-        let baseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
-        let textFam = getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
-        const set = new Set(['white', 'red', baseFam, textFam]);
-        if (set.size > 4) {
-          const whiteFil = availableFilaments.find(f => getColorFamily(f) === 'white') || availableFilaments[0];
-          if (whiteFil) {
-            currentConfig.textFilamentId = whiteFil.id;
-            currentConfig.textSku = whiteFil.sku;
-            currentConfig.textColorHex = whiteFil.hex_color;
-            currentConfig.textSecondaryHex = whiteFil.secondary_hex_color || null;
-            currentConfig.textColorName = whiteFil.name;
-            currentConfig.textGroupName = whiteFil.group_name;
-          }
-        }
+        fixed.push('white', 'red');
+      }
+
+      if (isPokeText) {
+        fixed.push('yellow', 'blue');
+      }
+
+      return Array.from(new Set(fixed));
+    }
+
+    function enforceBrandConstraints() {
+      const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+      const fixedColors = getFixedBrandColors();
+
+      if (isBrandIcon(currentConfig.iconId)) {
         currentConfig.hasCustomIconColor = false;
       }
 
+      // Se il testo è Pokémon, forziamo il colore del testo su giallo ufficiale
+      if (isPokeText) {
+        const yellowFil = availableFilaments.find(f => getColorFamily(f) === 'yellow') || availableFilaments[0];
+        if (yellowFil) {
+          currentConfig.textFilamentId = yellowFil.id;
+          currentConfig.textSku = yellowFil.sku;
+          currentConfig.textColorHex = '#FFCB05';
+          currentConfig.textSecondaryHex = null;
+          currentConfig.textColorName = 'Giallo Pokémon Ufficiale';
+          currentConfig.textGroupName = yellowFil.group_name || 'Brand';
+        }
+      }
+
+      let baseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
+      let textFam = isPokeText ? 'yellow' : getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
+
+      const activeSet = new Set([...fixedColors]);
+      if (!isPokeText) {
+        activeSet.add(textFam);
+      }
+      activeSet.add(baseFam);
+
+      if (activeSet.size > 4) {
+        // Se supera i 4 colori totali consentiti dalla Snapmaker U1, imposta la base su uno dei colori brand esistenti
+        const fallbackFam = fixedColors[0] || 'black';
+        const fallbackFil = availableFilaments.find(f => getColorFamily(f) === fallbackFam) || availableFilaments[0];
+        if (fallbackFil) {
+          currentConfig.baseFilamentId = fallbackFil.id;
+          currentConfig.baseSku = fallbackFil.sku;
+          currentConfig.baseColorHex = fallbackFil.hex_color;
+          currentConfig.baseSecondaryHex = fallbackFil.secondary_hex_color || null;
+          currentConfig.baseColorName = fallbackFil.name;
+          currentConfig.baseGroupName = fallbackFil.group_name;
+          baseFam = fallbackFam;
+        }
+
+        if (!isPokeText) {
+          const testSet = new Set([...fixedColors, baseFam, textFam]);
+          if (testSet.size > 4) {
+            const textFallbackFam = fixedColors.find(c => c !== baseFam) || (baseFam === 'yellow' ? 'black' : 'yellow');
+            const textFil = availableFilaments.find(f => getColorFamily(f) === textFallbackFam) || availableFilaments[0];
+            if (textFil) {
+              currentConfig.textFilamentId = textFil.id;
+              currentConfig.textSku = textFil.sku;
+              currentConfig.textColorHex = textFil.hex_color;
+              currentConfig.textSecondaryHex = textFil.secondary_hex_color || null;
+              currentConfig.textColorName = textFil.name;
+              currentConfig.textGroupName = textFil.group_name;
+            }
+          }
+        }
+      }
+
+      updateBrandSection8UI();
       updateBrandSection9UI();
+    }
+
+    function updateBrandSection8UI() {
+      const noticeTextPokemonLocked = document.getElementById('noticeTextPokemonLocked');
+      const wrapTextColorControls = document.getElementById('wrapTextColorControls');
+      const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+
+      if (noticeTextPokemonLocked && wrapTextColorControls) {
+        if (isPokeText) {
+          noticeTextPokemonLocked.style.display = 'block';
+          wrapTextColorControls.style.opacity = '0.45';
+          wrapTextColorControls.style.pointerEvents = 'none';
+        } else {
+          noticeTextPokemonLocked.style.display = 'none';
+          wrapTextColorControls.style.opacity = '1';
+          wrapTextColorControls.style.pointerEvents = 'auto';
+        }
+      }
     }
 
     function updateBrandSection9UI() {
@@ -1869,9 +1927,8 @@
       const textGrid = document.getElementById('textSwatches');
       const iconGrid = document.getElementById('iconSwatches');
 
-      const isPika = (currentConfig.iconId === 'pikachu');
-      const isPoke = (currentConfig.iconId === 'pokeball');
-      const pikaAllowed = ['yellow', 'black', 'red', 'white'];
+      const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+      const fixedColors = getFixedBrandColors();
 
       const currentBaseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
       const currentTextFam = getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
@@ -1890,18 +1947,19 @@
 
           const filFam = getColorFamily(fil);
 
-          if (isPika && (type === 'base' || type === 'text')) {
-            if (!pikaAllowed.includes(filFam)) {
-              isDisabled = true;
-              tooltip = "Disponibile solo con la palette di Pikachu per vincoli di stampa a 4 colori";
+          if (type === 'base' || type === 'text') {
+            const hypBase = (type === 'base') ? filFam : currentBaseFam;
+            const hypText = (type === 'text') ? filFam : (isPokeText ? 'yellow' : currentTextFam);
+
+            const testSet = new Set([...fixedColors]);
+            testSet.add(hypBase);
+            if (!isPokeText) {
+              testSet.add(hypText);
             }
-          } else if (isPoke && (type === 'base' || type === 'text')) {
-            const hypotheticalFamBase = (type === 'base') ? filFam : currentBaseFam;
-            const hypotheticalFamText = (type === 'text') ? filFam : currentTextFam;
-            const testSet = new Set(['white', 'red', hypotheticalFamBase, hypotheticalFamText]);
+
             if (testSet.size > 4) {
               isDisabled = true;
-              tooltip = "Limite massimo di 4 colori per Snapmaker U1 raggiunto (Pokéball usa già Bianco e Rosso)";
+              tooltip = "Limite massimo di 4 colori per Snapmaker U1 raggiunto con i colori ufficiali del brand";
             }
           }
 
@@ -2163,6 +2221,8 @@
       document.getElementById('textLine1')?.addEventListener('input', (e) => {
         currentConfig.textLine1 = e.target.value.toUpperCase();
         updateFontPreviews();
+        enforceBrandConstraints();
+        renderSwatches();
         request3DPreview();
       });
 

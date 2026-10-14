@@ -1441,7 +1441,52 @@ document.addEventListener("DOMContentLoaded", () => {
     const isPokeball = (ic === "pokeball" || ic === "pokéball" || ic === "poke_ball" || ic === "sfera_pokemon");
     const isPikachu = (ic === "pikachu" || ic === "pika");
 
-    if (isPikachu) {
+    // Gestione blocco selettore estrusore testo per logo Pokémon
+    if (extruderTextSelect) {
+      const parentWrap = extruderTextSelect.closest(".form-group") || extruderTextSelect.parentElement;
+      if (isPokemonText) {
+        extruderTextSelect.disabled = true;
+        if (parentWrap) {
+          parentWrap.style.opacity = "0.5";
+          parentWrap.style.pointerEvents = "none";
+          parentWrap.title = "Colori ufficiali logo Pokémon bloccati (Giallo / Blu)";
+        }
+      } else {
+        extruderTextSelect.disabled = false;
+        if (parentWrap) {
+          parentWrap.style.opacity = "1";
+          parentWrap.style.pointerEvents = "auto";
+          parentWrap.removeAttribute("title");
+        }
+      }
+    }
+
+    if (isPikachu && isPokemonText) {
+      if (colorT0 && colorT1 && colorT3) {
+        if (
+          colorT0.value.toLowerCase() !== "#ffcb05" ||
+          colorT1.value.toLowerCase() !== "#1a1a1a" ||
+          colorT3.value.toLowerCase() !== "#003776"
+        ) {
+          colorT0.value = "#FFCB05";
+          colorT1.value = "#1A1A1A";
+          if (colorT2 && (!colorT2.value || colorT2.value.toLowerCase() === "#ffcb05" || colorT2.value.toLowerCase() === "#1a1a1a")) {
+            colorT2.value = "#FFFFFF";
+          }
+          colorT3.value = "#003776";
+          syncAllQuickSelects();
+          onPaletteChange();
+          if (typeof ToastManager !== "undefined" && ToastManager.show) {
+            ToastManager.show({
+              type: "info",
+              title: "Palette Pokémon + Coda Pikachu Attivata",
+              message: "Tool U1 impostati: T0 Giallo (#FFCB05), T1 Nero (#1A1A1A), T3 Blu (#003776). T2 libero per qualsiasi colore della Base!",
+              duration: 2500
+            });
+          }
+        }
+      }
+    } else if (isPikachu) {
       if (colorT0 && colorT1) {
         if (
           colorT0.value.toLowerCase() !== "#ffcb05" ||
