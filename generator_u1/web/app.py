@@ -404,6 +404,7 @@ async def serve_favicon():
 
 @app.get("/studio", response_class=FileResponse)
 @app.get("/studio/", response_class=FileResponse)
+@app.get("/studio.html", response_class=FileResponse)
 async def serve_studio():
     """Studio parametrico 3D tecnico avanzato (per uso interno e test geometrici)."""
     if not STUDIO_HTML.is_file():
@@ -666,6 +667,8 @@ def preview_model(params: Dict[str, Any]):
     }
 
 @app.post("/api/generate")
+@app.post("/generate_3mf")
+@app.post("/api/download_3mf")
 def generate_3mf(params: Dict[str, Any]):
     """
     Compila il pacchetto .3MF nativo multi-volume per Snapmaker U1

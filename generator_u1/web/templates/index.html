@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>GadgetPoint.it | Portachiavi e Gadget 3D Personalizzati</title>
-  <meta name="description" content="Configura e acquista online portachiavi e targhette personalizzate stampate in 3D multicolore con GadgetPoint.it.">
+  <title>Snapmaker U1 - Studio Parametrico 3D</title>
+  <meta name="description" content="Studio Parametrico 3D per Snapmaker U1 - Portachiavi e Targhette Multicolore 4 Ugelli">
 
   <!-- PWA & Mobile Web App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="GadgetPoint">
-  <meta name="application-name" content="GadgetPoint">
+  <meta name="apple-mobile-web-app-title" content="U1 Studio">
+  <meta name="application-name" content="U1 Studio">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png?v=printer">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png?v=printer">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon.png?v=printer">
@@ -95,31 +95,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; overflow-x: hidden; padding-top: 0 !important; }
 
-    /* Supporto per Notch e Dynamic Island - Solo sul banner più in alto */
-    .promo-banner,
-    .top-bar-container,
-    .top-banner,
-    .promo-top-bar {
-      padding-top: max(8px, env(safe-area-inset-top, 0px)) !important;
-      padding-bottom: 8px !important;
-    }
 
-    /* Top Banner Promozionale */
-    .promo-top-bar {
-      background: linear-gradient(90deg, #0284c7, #2563eb, #7c3aed);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      padding-left: 16px;
-      padding-right: 16px;
-      text-align: center;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 16px;
-      letter-spacing: 0.3px;
-    }
-    .promo-top-bar span { display: inline-flex; align-items: center; gap: 6px; }
 
     /* Header */
     header {
@@ -696,30 +672,15 @@
       font-style: italic !important;
     }
 
-    #paypal-button-container { margin-top: 14px; }
-
-    /* Pulsante Sviluppatore / Test Checkout */
-    .btn-test-checkout {
-      width: 100%;
-      background: rgba(245, 158, 11, 0.12);
-      color: #f59e0b;
-      border: 1px dashed #f59e0b;
-      padding: 11px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 10px;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-    .btn-test-checkout:hover {
-      background: rgba(245, 158, 11, 0.22);
-      border-color: #fbbf24;
-      color: #fbbf24;
+    .btn-primary.loading,
+    #btn-download-3mf.loading {
+      opacity: 0.85;
+      pointer-events: none;
+      cursor: wait;
     }
 
     /* Schermata Ordine Confermato */
@@ -868,12 +829,7 @@
         height: auto !important;
       }
 
-      /* Header e Barra promo: compatti su schermi piccoli */
-      .top-banner, .promo-top-bar {
-        font-size: 11px !important;
-        padding: calc(6px + env(safe-area-inset-top, 0px)) 8px 6px 8px !important;
-        text-align: center;
-      }
+
       header {
         padding: 10px 12px !important;
       }
@@ -1074,36 +1030,27 @@
 </head>
 <body>
 
-  <!-- Top Banner Promozionale -->
-  <div class="promo-top-bar">
-    <span class="top-banner-text">
-      🚚 Spedizione Fissa Corriere Espresso (BRT / SDA): <strong id="bannerShippingPrice">5,00 €</strong> per l'intero ordine
-      <span id="bannerPromoSeparator"> • </span>
-      <span id="bannerPromoText">🎉 <strong>PROMO 3x2:</strong> Ogni 3 pezzi personalizzati, il 3° è <strong>100% IN OMAGGIO!</strong></span>
-    </span>
-  </div>
-
-  <!-- Header -->
+  <!-- Header Tecnico Studio -->
   <header>
     <div class="brand-group">
-      <div class="brand-logo">GP</div>
+      <div class="brand-logo" style="background: linear-gradient(135deg, #0284c7, #2563eb); font-weight: 800;">U1</div>
       <div>
-        <div class="brand-title">GadgetPoint.it</div>
-        <div class="brand-subtitle">Portachiavi & Targhette Personalizzate 3D Multicolore</div>
+        <div class="brand-title">Snapmaker U1 Studio</div>
+        <div class="brand-subtitle">Generatore Parametrico 3D Multicolore 4 Ugelli</div>
       </div>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="btn-cart" id="btnHeaderCart">
-        🛒 Carrello <span class="cart-badge" id="cartHeaderBadge">0</span>
-      </button>
+      <span class="feature-pill" style="font-size: 11px; padding: 5px 10px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; color: #38bdf8; font-weight: 600;">⚡ 4 Tool Dock</span>
+      <span class="feature-pill" style="font-size: 11px; padding: 5px 10px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; color: #22c55e; font-weight: 600;">🛡️ Zero Prime Tower</span>
+      <a href="/" style="font-size: 11px; padding: 5px 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle); border-radius: 6px; color: #94a3b8; text-decoration: none; font-weight: 500;" title="Vai alla vetrina e-commerce">🏪 Storefront</a>
     </div>
   </header>
 
   <!-- Layout Principale -->
   <main class="main-grid">
 
-    <!-- Colonna 1: Configuratore Cliente -->
+    <!-- Colonna 1: Configuratore Studio -->
     <section class="config-panel">
 
       <!-- Selezione Modello -->
@@ -1111,11 +1058,9 @@
         <div class="tab-grid-2">
           <button type="button" class="btn-choice btn-product-type active" data-product="keychain" data-type="keychain" id="tabKeychain">
             <span class="btn-prod-title">🏷️ Portachiavi</span>
-            <span class="btn-prod-price">(da <span id="labelPriceKeychain">2,90 €</span>)</span>
           </button>
           <button type="button" class="btn-choice btn-product-type" data-product="desk_sign" data-type="desksign" id="tabDeskSign">
             <span class="btn-prod-title">🏛️ Targhetta da Tavolo</span>
-            <span class="btn-prod-price">(da <span id="labelPriceDesksign">6,90 €</span>)</span>
           </button>
         </div>
       </div>
@@ -1127,7 +1072,7 @@
         
         <label class="checkbox-row checkbox-label" id="wrapLine2Toggle" for="line2Toggle">
           <input type="checkbox" id="line2Toggle">
-          <span>Aggiungi una seconda riga (+<span id="labelPriceExtraLine">2,00 €</span>)</span>
+          <span>Aggiungi una seconda riga</span>
         </label>
         
         <div id="wrapLine2Input" style="margin-top: 8px; display: none;">
@@ -1249,14 +1194,11 @@
         </div>
       </div>
 
-      <!-- Barra Prezzo e Aggiungi -->
-      <div class="cta-box mobile-bottom-bar">
-        <div>
-          <div class="price-type" id="priceTypeDesc">Portachiavi Personalizzato</div>
-          <div class="price-tag" id="livePriceTag">4,90 €</div>
-        </div>
-        <button type="button" class="btn-add" id="btnAddToCart">
-          🛒 Aggiungi al Carrello
+      <!-- Barra Azione Download 3MF -->
+      <div class="cta-box mobile-bottom-bar" style="padding: 14px 16px; background: var(--bg-card); border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" id="btn-download-3mf" class="btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; font-weight: 700; padding: 14px; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; border-radius: var(--radius-md); color: #fff; cursor: pointer; transition: all 0.2s;">
+          <span style="font-size: 18px;">⬇</span>
+          <span id="btn-download-text">Scarica File 3MF</span>
         </button>
       </div>
 
@@ -1278,232 +1220,16 @@
 
   </main>
 
-  <!-- Drawer Carrello & Checkout -->
-  <div class="cart-drawer-overlay" id="cartOverlay">
-    <div class="cart-drawer">
-      <div class="drawer-header">
-        <div class="drawer-title">🛒 Il Tuo Carrello (<span id="cartCountTitle">0</span>)</div>
-        <button type="button" class="btn-close-drawer" id="btnCloseCart">&times;</button>
-      </div>
-
-      <div class="drawer-body">
-        
-        <!-- Lista Articoli -->
-        <div id="cartItemsContainer"></div>
-
-        <!-- Box Codice Coupon Sconto -->
-        <div class="coupon-box" id="couponBox" style="margin: 14px 0; background: var(--bg-card); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: 12px;">
-          <div style="font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;">
-            <span>🎟️ Hai un Codice Coupon?</span>
-            <span id="couponActiveBadge" style="display: none; font-size: 11px; background: rgba(34, 197, 94, 0.15); color: var(--success); padding: 2px 6px; border-radius: 4px; font-weight: 800;">ATTIVO</span>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="inputCouponCode" placeholder="Inserisci codice sconto" style="flex: 1; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; text-transform: uppercase; font-family: monospace; font-size: 14px; letter-spacing: 0.5px;">
-            <button type="button" id="btnApplyCoupon" class="btn-choice" style="padding: 9px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; border-color: var(--primary);">Applica</button>
-          </div>
-          <div id="couponFeedback" style="font-size: 12px; margin-top: 6px; display: none;"></div>
-        </div>
-
-        <!-- Box Calcoli & Promo 3x2 / Coupon -->
-        <div class="summary-card" id="cartSummaryCard" style="display: none;">
-          <div class="summary-row">
-            <span>Subtotale articoli:</span>
-            <span id="sumSubtotal">0,00 €</span>
-          </div>
-
-          <div class="summary-row promo" id="sumPromoRow" style="display: none;">
-            <span id="sumPromoLabel">🎉 Promo 3x2:</span>
-            <span id="sumPromoVal">-0,00 €</span>
-          </div>
-
-          <div class="summary-row promo" id="sumCouponRow" style="display: none; color: var(--primary);">
-            <span>
-              🎟️ Sconto Coupon (<span id="sumCouponCode"></span>)
-              <button type="button" id="btnRemoveCoupon" style="background: none; border: none; color: var(--danger); font-size: 11px; cursor: pointer; text-decoration: underline; margin-left: 4px;" title="Rimuovi coupon">Rimuovi</button>:
-            </span>
-            <span id="sumCouponVal">-0,00 €</span>
-          </div>
-
-          <div class="summary-row">
-            <span id="sumShippingLabel">Corriere espresso (BRT / SDA):</span>
-            <span id="sumShipping">4,90 €</span>
-          </div>
-
-          <div class="summary-row total">
-            <span>Totale Ordine:</span>
-            <span id="sumTotal" style="color: var(--success);">4,90 €</span>
-          </div>
-        </div>
-
-        <!-- Form Dati Spedizione & Modalità di Consegna -->
-        <form id="checkoutForm" class="checkout-form" style="display: none;" onsubmit="return false;">
-          <!-- Selezione Consegna -->
-          <div class="section-title" style="margin-top: 14px;">1. Modalità di Ricezione</div>
-          <div class="delivery-options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-            <label class="delivery-card active" id="cardDeliveryShipping" style="cursor: pointer; border: 1.5px solid var(--primary); background: rgba(56, 189, 248, 0.08); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;">
-              <input type="radio" name="deliveryMethod" id="radioDeliveryShipping" value="shipping" checked style="margin-top: 3px;">
-              <div>
-                <div style="font-weight: 700; font-size: 13px; color: #fff;">🚚 Spedizione BRT/SDA</div>
-                <div style="font-size: 11px; color: var(--text-muted);" id="labelShippingCost">Consegna tracciata (<span id="labelShippingVal">4,90 €</span>)</div>
-              </div>
-            </label>
-            <label class="delivery-card" id="cardDeliveryPickup" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;">
-              <input type="radio" name="deliveryMethod" id="radioDeliveryPickup" value="pickup" style="margin-top: 3px;">
-              <div>
-                <div style="font-weight: 700; font-size: 13px; color: #fff;">🤝 Ritiro a Mano</div>
-                <div style="font-size: 11px; color: var(--success); font-weight: 700;">Gratuito (0,00 €)</div>
-              </div>
-            </label>
-          </div>
-
-          <div class="section-title" id="secTitleDatiCliente">2. Dati Cliente</div>
-
-          <div class="form-group">
-            <label class="form-label">Nome e Cognome *</label>
-            <input type="text" id="custName" class="form-input" required placeholder="Mario Rossi">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Email (per conferma) *</label>
-              <input type="email" id="custEmail" class="form-input" required placeholder="mario.rossi@email.it">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Cellulare (per avviso) *</label>
-              <input type="tel" id="custPhone" class="form-input" required placeholder="340 1234567">
-            </div>
-          </div>
-
-          <!-- Campi Indirizzo solo per Consegna con Corriere -->
-          <div id="shippingAddressFields">
-            <div class="form-group">
-              <label class="form-label">Indirizzo Completo (Via e Numero Civico) *</label>
-              <input type="text" id="custAddress" class="form-input" required placeholder="Via Roma 12">
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">CAP *</label>
-                <input type="text" id="custZip" class="form-input" required maxlength="5" placeholder="00100">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Città *</label>
-                <input type="text" id="custCity" class="form-input" required placeholder="Roma">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Provincia (Sigla) *</label>
-                <input type="text" id="custProvince" class="form-input" required maxlength="2" placeholder="RM" style="text-transform: uppercase;">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Note Spedizione (opzionali)</label>
-                <input type="text" id="custNotes" class="form-input" placeholder="Es. Citofono Rossi, Scala B">
-              </div>
-            </div>
-          </div>
-
-          <!-- Box Informativo per Ritiro in Sede -->
-          <div id="pickupNoticeBox" style="display: none; background: rgba(56, 189, 248, 0.08); border: 1px solid var(--primary); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.4;">
-            <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">📍 Ritiro a mano di persona (0,00 €)</div>
-            I tuoi pezzi personalizzati verranno realizzati nel nostro laboratorio di stampa 3D. Ti avviseremo via email e cellulare non appena l'ordine sarà pronto per il ritiro!
-          </div>
-
-          <!-- Scelta Pagamento per Ritiro a Mano (Contanti vs PayPal) -->
-          <div id="pickupPaymentSelector" style="display: none; margin-bottom: 16px;">
-            <div class="section-title">3. Metodo di Pagamento</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <label class="delivery-card active" id="cardPayCash" style="cursor: pointer; border: 1.5px solid var(--success); background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 8px;">
-                <input type="radio" name="paymentChoice" id="radioPayCash" value="cash" checked>
-                <div>
-                  <div style="font-weight: 700; font-size: 13px; color: #fff;">💵 Contanti</div>
-                  <div style="font-size: 11px; color: var(--text-muted);">Al momento del ritiro</div>
-                </div>
-              </label>
-              <label class="delivery-card" id="cardPayPaypal" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 8px;">
-                <input type="radio" name="paymentChoice" id="radioPayPaypal" value="paypal">
-                <div>
-                  <div style="font-weight: 700; font-size: 13px; color: #fff;">💳 PayPal / Carta</div>
-                  <div style="font-size: 11px; color: var(--text-muted);">Pagamento online</div>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Pulsante Ordine Contanti al Ritiro -->
-          <button type="button" id="btnConfirmCashOrder" class="btn-add" style="display: none; width: 100%; padding: 14px; font-size: 15px; font-weight: 800; background: #22c55e; color: #000; border-radius: 8px; margin-top: 10px; cursor: pointer;">
-            🤝 Conferma Ordine (Paga al Ritiro)
-          </button>
-
-          <!-- Pulsanti Ufficiali PayPal Smart Buttons -->
-          <div id="paypal-button-container"></div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Schermata Ordine Confermato -->
-  <div class="order-success-screen" id="orderSuccessScreen">
-    <div class="success-card">
-      <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
-      <h2 style="font-size: 24px; margin-bottom: 8px;" id="succHeaderTitle">Grazie per il tuo acquisto!</h2>
-      <p style="color: var(--text-muted); font-size: 14px;" id="succSubtext">Il tuo ordine è stato registrato ed è pronto per la produzione con GadgetPoint.it.</p>
-      
-      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin: 20px 0; text-align: left;">
-        <div>Codice Ordine: <strong id="succOrderNum" style="color: var(--primary);">#GP-202610-0001</strong></div>
-        <div style="margin-top: 8px;" id="succBadgeTest"></div>
-      </div>
-
-      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-        <button type="button" class="btn-add" onclick="window.location.reload()">
-          Crea un altro modello
-        </button>
-        <a href="/admin" id="btnAdminSuccessLink" class="btn-choice" style="display: none; text-decoration:none; padding: 12px 20px;">
-          Apri Gestionale Admin 🔐
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Informativo Dual-Color -->
-  <div id="dualColorNoticeModal" class="custom-modal-backdrop" style="display: none;">
-    <div class="custom-modal-box">
-      <div class="modal-icon">✨</div>
-      <h3 class="modal-title">Nota sulla finitura Silk Dual-Color</h3>
-      <p class="modal-text">
-        Hai selezionato un filamento <strong>bicolore co-estruso</strong>. 
-        La sfumatura e la transizione cromatica sul pezzo reale variano in base all'orientamento dei layer sul piatto di stampa e all'angolatura della luce, rendendo ogni pezzo unico e leggermente diverso dall'anteprima 3D.
-      </p>
-      <div class="modal-actions">
-        <button type="button" id="btnConfirmDualColor" class="btn-primary">Ho capito, aggiungi al carrello</button>
-        <button type="button" id="btnCancelDualColor" class="btn-secondary">Torna alla modifica</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Script Logica Storefront Reattiva -->
+  <!-- Script Logica Studio Reattiva -->
   <script type="module">
-    import { determineItemPrice, calculateCartSummary, updatePricingSettings, CATALOG_PRICING, PROMO_3X2_ENABLED } from '/ecommerce/cart_engine.js';
+    // Helper studio
+    function updateLivePrice() {}
 
-    // Helper formattazione valuta italiana standard (virgola e 2 decimali)
-    function formatEur(val) {
-      const num = typeof val === 'number' ? val : (parseFloat(val) || 0);
-      return `${num.toFixed(2).replace('.', ',')} €`;
-    }
-
-    // 1. STATO CONFIGURATORE
+    // 1. STATO CONFIGURATORE STUDIO
     let availableFilaments = [];
     let iconsCatalog = [];
     let fontsCatalog = [];
-    let cart = [];
     let viewer = null;
-    let paypalClientId = 'sb';
-    let lastCheckoutError = null;
-    let appliedCoupon = null;
-    let selectedDeliveryMethod = 'shipping'; // 'shipping' | 'pickup'
-    let selectedPaymentChoice = 'cash'; // 'cash' | 'paypal' (per ritiro)
 
     const currentConfig = {
       productType: 'keychain',
@@ -1859,59 +1585,6 @@
         ];
       }
 
-      // D) Listino Prezzi & Promozioni Dinamiche
-      try {
-        const respP = await fetch('/api/store/pricing');
-        if (respP.ok) {
-          const pricingData = await respP.json();
-          updatePricingSettings(pricingData);
-          if (pricingData.paypal_client_id) {
-            paypalClientId = pricingData.paypal_client_id;
-          }
-
-          // Sincronizza dinamicamente spedizione nel banner superiore e nel carrello
-          const bannerShip = document.getElementById('bannerShippingPrice');
-          if (bannerShip && pricingData.shipping_fixed !== undefined) {
-            bannerShip.textContent = formatEur(pricingData.shipping_fixed);
-          }
-          const lblShipVal = document.getElementById('labelShippingVal');
-          if (lblShipVal && pricingData.shipping_fixed !== undefined) {
-            lblShipVal.textContent = formatEur(pricingData.shipping_fixed);
-          }
-
-          // Sincronizza stato promo 3x2 nel banner superiore
-          const promoSep = document.getElementById('bannerPromoSeparator');
-          const promoTxt = document.getElementById('bannerPromoText');
-          if (promoTxt && promoSep) {
-            const isPromoActive = Boolean(pricingData.promo_3x2_enabled);
-            promoSep.style.display = isPromoActive ? 'inline' : 'none';
-            promoTxt.style.display = isPromoActive ? 'inline' : 'none';
-          }
-
-          // Sincronizza etichette di prezzo sui pulsanti del prodotto e riga 2
-          const lblKeychain = document.getElementById('labelPriceKeychain');
-          if (lblKeychain && pricingData.keychain_standard !== undefined) {
-            lblKeychain.textContent = formatEur(pricingData.keychain_standard);
-          }
-          const lblDeskSign = document.getElementById('labelPriceDesksign');
-          if (lblDeskSign && pricingData.desk_sign !== undefined) {
-            lblDeskSign.textContent = formatEur(pricingData.desk_sign);
-          }
-          const lblExtra = document.getElementById('labelPriceExtraLine');
-          if (lblExtra) {
-            const extraVal = pricingData.extra_line2 !== undefined 
-              ? pricingData.extra_line2 
-              : ((pricingData.keychain_complex && pricingData.keychain_standard) 
-                  ? (pricingData.keychain_complex - pricingData.keychain_standard) 
-                  : 2.00);
-            lblExtra.textContent = formatEur(extraVal);
-          }
-
-          updateLivePrice();
-        }
-      } catch (e) {
-        console.warn("Caricamento listino dinamico:", e);
-      }
 
       enforceBrandConstraints();
       renderSwatches();
@@ -2382,770 +2055,116 @@
         }
       });
 
-      function isDualColorConfigured() {
-        const isDualBase = Boolean(currentConfig.baseSecondaryHex || (currentConfig.baseGroupName && currentConfig.baseGroupName.toLowerCase().includes('silk')));
-        const isDualText = Boolean(currentConfig.textSecondaryHex || (currentConfig.textGroupName && currentConfig.textGroupName.toLowerCase().includes('silk')));
-        const isDualIcon = currentConfig.hasCustomIconColor && Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')));
-        return isDualBase || isDualText || isDualIcon;
-      }
+      // ==========================================
+      // DOWNLOAD ASINCRONO 3MF NATIVO SNAPMAKER U1
+      // ==========================================
+      document.getElementById('btn-download-3mf')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btn-download-3mf');
+        if (!btn || btn.disabled) return;
 
-      function openDualColorModal() {
-        const modal = document.getElementById('dualColorNoticeModal');
-        if (modal) modal.style.display = 'flex';
-      }
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = `
+          <span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span>
+          <span>Generazione 3MF in corso...</span>
+        `;
 
-      function closeDualColorModal() {
-        const modal = document.getElementById('dualColorNoticeModal');
-        if (modal) modal.style.display = 'none';
-      }
-
-      function executeAddToCart() {
-        const price = determineItemPrice(currentConfig);
-        cart.push({
-          cartId: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-          productType: currentConfig.productType,
-          productTitle: currentConfig.productType === 'desk_sign' ? 'Targhetta da Tavolo' : 'Portachiavi Personalizzato',
-          unitPrice: price,
-          customTextLine1: currentConfig.textLine1,
-          customTextLine2: currentConfig.line2Enabled ? currentConfig.textLine2 : '',
-          baseStyle: currentConfig.baseStyle,
-          holePosition: currentConfig.holePosition,
-          fontId: currentConfig.fontId,
-          iconId: currentConfig.iconId,
-          iconPosition: currentConfig.iconPosition,
-          hasCustomIconColor: currentConfig.hasCustomIconColor,
-          baseColorName: currentConfig.baseColorName,
-          baseColorHex: currentConfig.baseColorHex,
-          baseGroupName: currentConfig.baseGroupName,
-          textColorName: currentConfig.textColorName,
-          textColorHex: currentConfig.textColorHex,
-          textGroupName: currentConfig.textGroupName,
-          iconColorName: currentConfig.hasCustomIconColor ? currentConfig.iconColorName : currentConfig.textColorName,
-          iconColorHex: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
-          symbolColor: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
-          generatorParams: {
-            generator: currentConfig.productType,
-            text: currentConfig.textLine1,
-            text_line1: currentConfig.textLine1,
-            line2_enabled: currentConfig.line2Enabled,
-            text_line2: currentConfig.textLine2,
-            base_style: currentConfig.baseStyle,
-            base_thickness: currentConfig.productType === 'desk_sign' ? 3.0 : 3.2,
-            text_thickness: 1.4,
-            hole_position: currentConfig.holePosition,
-            font_family: currentConfig.fontId,
-            padding_y: 2.0,
-            icon_name: currentConfig.iconId,
-            icon_id: currentConfig.iconId,
-            icon_position: currentConfig.iconPosition,
-            custom_icon_color: currentConfig.hasCustomIconColor,
-            has_custom_icon_color: currentConfig.hasCustomIconColor,
-            extruder_icon: currentConfig.hasCustomIconColor ? 2 : 1,
-            base_color: currentConfig.baseColorHex,
-            text_color: currentConfig.textColorHex,
-            icon_color: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex,
-            symbolColor: currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex
-          }
-        });
-
-        renderCartDrawer();
-        openCart();
-      }
-
-      document.getElementById('btnConfirmDualColor')?.addEventListener('click', () => {
-        closeDualColorModal();
-        executeAddToCart();
-      });
-
-      document.getElementById('btnCancelDualColor')?.addEventListener('click', () => {
-        closeDualColorModal();
-      });
-
-      document.getElementById('dualColorNoticeModal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'dualColorNoticeModal') {
-          closeDualColorModal();
-        }
-      });
-
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          closeDualColorModal();
-          closeCart();
-        }
-      });
-
-      // Aggiungi al Carrello
-      document.getElementById('btnAddToCart')?.addEventListener('click', () => {
-        if (!currentConfig.textLine1.trim()) {
-          alert("Inserisci un nome o testo per personalizzare il pezzo!");
-          return;
-        }
-
-        if (isDualColorConfigured()) {
-          openDualColorModal();
-        } else {
-          executeAddToCart();
-        }
-      });
-
-      // Apri/Chiudi Carrello
-      document.getElementById('btnHeaderCart')?.addEventListener('click', openCart);
-      const btnCloseCartEl = document.getElementById('btnCloseCart');
-      if (btnCloseCartEl) {
-        btnCloseCartEl.addEventListener('click', closeCart);
-        btnCloseCartEl.addEventListener('touchend', (e) => {
-          e.preventDefault();
-          closeCart();
-        });
-      }
-      document.getElementById('cartOverlay')?.addEventListener('click', (e) => {
-        if (e.target.id === 'cartOverlay') closeCart();
-      });
-
-      // Pulizia e validazione numerica stringa CAP (mantenendo zeri iniziali come '00040')
-      document.getElementById('custZip')?.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 5);
-      });
-
-      // Gestione Codice Coupon Sconto
-      const btnApplyCoupon = document.getElementById('btnApplyCoupon');
-      const inputCoupon = document.getElementById('inputCouponCode');
-      const couponFeedback = document.getElementById('couponFeedback');
-      const btnRemoveCoupon = document.getElementById('btnRemoveCoupon');
-
-      btnApplyCoupon?.addEventListener('click', async () => {
-        const code = (inputCoupon?.value || '').trim().toUpperCase();
-        if (!code) {
-          if (couponFeedback) {
-            couponFeedback.style.display = 'block';
-            couponFeedback.style.color = 'var(--danger)';
-            couponFeedback.textContent = "Inserisci un codice coupon prima di cliccare su Applica.";
-          }
-          return;
-        }
-
-        const rawSummary = calculateCartSummary(cart, { deliveryMethod: selectedDeliveryMethod });
-        const netSubtotal = Math.max(0, rawSummary.subtotal - rawSummary.promoDiscount);
-
+        // 1. Cattura miniatura Three.js per Windows Explorer e OrcaSlicer
+        let thumbnailBase64 = null;
         try {
-          btnApplyCoupon.disabled = true;
-          btnApplyCoupon.textContent = "...";
-          const resp = await fetch('/api/store/validate-coupon', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, subtotal: netSubtotal })
-          });
-          const data = await resp.json();
-          if (resp.ok && data.valid) {
-            appliedCoupon = data;
-            if (couponFeedback) {
-              couponFeedback.style.display = 'block';
-              couponFeedback.style.color = 'var(--success)';
-              couponFeedback.textContent = `✅ ${data.message} (-${formatEur(data.discount_amount)})`;
-            }
-            renderCartDrawer();
-          } else {
-            appliedCoupon = null;
-            if (couponFeedback) {
-              couponFeedback.style.display = 'block';
-              couponFeedback.style.color = 'var(--danger)';
-              couponFeedback.textContent = `❌ ${data.message || "Codice coupon non valido."}`;
-            }
-            renderCartDrawer();
+          if (viewer && typeof viewer.captureThumbnail === 'function') {
+            thumbnailBase64 = viewer.captureThumbnail();
+          } else if (viewer && viewer.renderer && viewer.renderer.domElement) {
+            thumbnailBase64 = viewer.renderer.domElement.toDataURL('image/png');
           }
         } catch (err) {
-          if (couponFeedback) {
-            couponFeedback.style.display = 'block';
-            couponFeedback.style.color = 'var(--danger)';
-            couponFeedback.textContent = "Errore di connessione durante la verifica del coupon.";
-          }
-        } finally {
-          btnApplyCoupon.disabled = false;
-          btnApplyCoupon.textContent = "Applica";
-        }
-      });
-
-      inputCoupon?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          btnApplyCoupon?.click();
-        }
-      });
-
-      btnRemoveCoupon?.addEventListener('click', (e) => {
-        e.preventDefault();
-        appliedCoupon = null;
-        if (inputCoupon) inputCoupon.value = '';
-        if (couponFeedback) {
-          couponFeedback.style.display = 'none';
-          couponFeedback.textContent = '';
-        }
-        renderCartDrawer();
-      });
-
-      // Selezione Consegna (Spedizione vs Ritiro a Mano)
-      const radioShipping = document.getElementById('radioDeliveryShipping');
-      const radioPickup = document.getElementById('radioDeliveryPickup');
-      const cardShipping = document.getElementById('cardDeliveryShipping');
-      const cardPickup = document.getElementById('cardDeliveryPickup');
-      const shippingFields = document.getElementById('shippingAddressFields');
-      const pickupNotice = document.getElementById('pickupNoticeBox');
-      const pickupPaymentSelector = document.getElementById('pickupPaymentSelector');
-      const btnConfirmCash = document.getElementById('btnConfirmCashOrder');
-      const paypalContainer = document.getElementById('paypal-button-container');
-
-      function updateDeliveryUI() {
-        const addrInputs = ['custAddress', 'custZip', 'custCity', 'custProvince'];
-        if (selectedDeliveryMethod === 'pickup') {
-          cardPickup?.classList.add('active');
-          if (cardPickup) { cardPickup.style.borderColor = 'var(--primary)'; cardPickup.style.background = 'rgba(56, 189, 248, 0.08)'; }
-          cardShipping?.classList.remove('active');
-          if (cardShipping) { cardShipping.style.borderColor = 'var(--border-subtle)'; cardShipping.style.background = 'var(--bg-card)'; }
-
-          if (shippingFields) shippingFields.style.display = 'none';
-          if (pickupNotice) pickupNotice.style.display = 'block';
-          if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'block';
-
-          addrInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.required = false;
-          });
-
-          if (selectedPaymentChoice === 'cash') {
-            if (btnConfirmCash) btnConfirmCash.style.display = 'block';
-            if (paypalContainer) paypalContainer.style.display = 'none';
-          } else {
-            if (btnConfirmCash) btnConfirmCash.style.display = 'none';
-            if (paypalContainer) paypalContainer.style.display = 'block';
-          }
-        } else {
-          cardShipping?.classList.add('active');
-          if (cardShipping) { cardShipping.style.borderColor = 'var(--primary)'; cardShipping.style.background = 'rgba(56, 189, 248, 0.08)'; }
-          cardPickup?.classList.remove('active');
-          if (cardPickup) { cardPickup.style.borderColor = 'var(--border-subtle)'; cardPickup.style.background = 'var(--bg-card)'; }
-
-          if (shippingFields) shippingFields.style.display = 'block';
-          if (pickupNotice) pickupNotice.style.display = 'none';
-          if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'none';
-          if (btnConfirmCash) btnConfirmCash.style.display = 'none';
-          if (paypalContainer) paypalContainer.style.display = 'block';
-
-          addrInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.required = true;
-          });
-        }
-      }
-
-      radioShipping?.addEventListener('change', () => {
-        if (radioShipping.checked) {
-          selectedDeliveryMethod = 'shipping';
-          updateDeliveryUI();
-          renderCartDrawer();
-        }
-      });
-
-      radioPickup?.addEventListener('change', () => {
-        if (radioPickup.checked) {
-          selectedDeliveryMethod = 'pickup';
-          updateDeliveryUI();
-          renderCartDrawer();
-        }
-      });
-
-      // Selezione Pagamento per Ritiro (Contanti vs PayPal)
-      const radioCash = document.getElementById('radioPayCash');
-      const radioPaypal = document.getElementById('radioPayPaypal');
-      const cardCash = document.getElementById('cardPayCash');
-      const cardPaypal = document.getElementById('cardPayPaypal');
-
-      radioCash?.addEventListener('change', () => {
-        if (radioCash.checked) {
-          selectedPaymentChoice = 'cash';
-          cardCash?.classList.add('active');
-          if (cardCash) { cardCash.style.borderColor = 'var(--success)'; cardCash.style.background = 'rgba(34, 197, 94, 0.1)'; }
-          cardPaypal?.classList.remove('active');
-          if (cardPaypal) { cardPaypal.style.borderColor = 'var(--border-subtle)'; cardPaypal.style.background = 'var(--bg-card)'; }
-          updateDeliveryUI();
-        }
-      });
-
-      radioPaypal?.addEventListener('change', () => {
-        if (radioPaypal.checked) {
-          selectedPaymentChoice = 'paypal';
-          cardPaypal?.classList.add('active');
-          if (cardPaypal) { cardPaypal.style.borderColor = 'var(--primary)'; cardPaypal.style.background = 'rgba(56, 189, 248, 0.08)'; }
-          cardCash?.classList.remove('active');
-          if (cardCash) { cardCash.style.borderColor = 'var(--border-subtle)'; cardCash.style.background = 'var(--bg-card)'; }
-          updateDeliveryUI();
-          renderCartDrawer();
-        }
-      });
-
-      // Conferma Ordine Contanti al Ritiro
-      btnConfirmCash?.addEventListener('click', async () => {
-        const form = document.getElementById('checkoutForm');
-        const nameEl = document.getElementById('custName');
-        const emailEl = document.getElementById('custEmail');
-        const phoneEl = document.getElementById('custPhone');
-
-        if (!nameEl.value.trim() || !emailEl.value.trim() || !phoneEl.value.trim()) {
-          alert("Per favore compila Nome, Email e Cellulare per poter registrare l'ordine con ritiro a mano.");
-          if (!nameEl.value.trim()) nameEl.focus();
-          else if (!emailEl.value.trim()) emailEl.focus();
-          else phoneEl.focus();
-          return;
+          console.warn("Errore cattura thumbnail Three.js:", err);
         }
 
-        if (!form.checkValidity()) {
-          form.reportValidity();
-          return;
-        }
-
-        const customerInfo = {
-          customer_name: nameEl.value.trim(),
-          customer_email: emailEl.value.trim(),
-          customer_phone: phoneEl.value.trim(),
-          shipping_address: "Ritiro a mano di persona",
-          shipping_city: "Laboratorio",
-          shipping_zip: "00000",
-          shipping_province: "RM",
-          order_notes: (document.getElementById('custNotes')?.value || '').trim()
-        };
+        const isDeskSign = currentConfig.productType === 'desk_sign';
+        const extruderIcon = currentConfig.hasCustomIconColor ? 2 : 1;
+        const iconColor = currentConfig.hasCustomIconColor ? currentConfig.iconColorHex : currentConfig.textColorHex;
 
         const payload = {
-          items: cart,
-          customerInfo,
-          delivery_method: 'pickup',
-          payment_method: 'cash_on_pickup',
-          coupon_code: appliedCoupon ? appliedCoupon.code : null
+          generator: currentConfig.productType,
+          text: currentConfig.textLine1,
+          text_line1: currentConfig.textLine1,
+          line2_enabled: currentConfig.line2Enabled,
+          text_line2: currentConfig.textLine2,
+          base_style: currentConfig.baseStyle,
+          base_thickness: isDeskSign ? 3.0 : 3.2,
+          text_thickness: 1.4,
+          hole_position: currentConfig.holePosition,
+          font_family: currentConfig.fontId,
+          font_family_line1: currentConfig.fontId,
+          font_family_line2: currentConfig.fontId,
+          icon_name: currentConfig.iconId,
+          icon_id: currentConfig.iconId,
+          icon_position: currentConfig.iconPosition || 'right',
+          has_custom_icon_color: currentConfig.hasCustomIconColor,
+          extruder_base: 0,
+          extruder_text: 1,
+          extruder_line1: 1,
+          extruder_icon: extruderIcon,
+          base_color: currentConfig.baseColorHex,
+          text_color: currentConfig.textColorHex,
+          icon_color: iconColor,
+          symbolColor: iconColor,
+          thumbnail_base64: thumbnailBase64
         };
 
-        btnConfirmCash.disabled = true;
-        btnConfirmCash.textContent = "Registrazione ordine in corso...";
-
         try {
-          const resp = await fetch('/api/store/orders/create-pickup-cash', {
+          const response = await fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
 
-          if (!resp.ok) {
-            const err = await resp.json();
-            throw new Error(err.detail || "Errore durante la registrazione dell'ordine.");
+          if (!response.ok) {
+            const errText = await response.text();
+            let msg = 'Errore durante la compilazione del pacchetto 3MF.';
+            try {
+              const j = JSON.parse(errText);
+              if (j.detail) msg = j.detail;
+            } catch (e) {
+              if (errText) msg = errText;
+            }
+            alert('Errore generazione 3MF: ' + msg);
+            return;
           }
 
-          const result = await resp.json();
-          cart = [];
-          appliedCoupon = null;
-          closeCart();
-
-          document.getElementById('succHeaderTitle').textContent = "🎉 Ordine Registrato con Successo!";
-          document.getElementById('succSubtext').textContent = "I tuoi pezzi personalizzati sono in produzione con Snapmaker U1. Ti contatteremo via email e cellulare appena saranno pronti per il ritiro di persona!";
-          document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
-          if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
-          document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--warning);">💵 Contanti al Ritiro</strong> (Totale: <strong>${formatEur(result.total)}</strong>)`;
-          
-          const adminLink = document.getElementById('btnAdminSuccessLink');
-          if (adminLink) {
-            adminLink.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
+          const blob = await response.blob();
+          let filename = (currentConfig.textLine1.trim() || 'Modello') + '_' + (isDeskSign ? 'Targhetta' : 'Portachiavi') + '_Snapmaker_U1.3mf';
+          const disposition = response.headers.get('content-disposition');
+          if (disposition && disposition.includes('filename=')) {
+            const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+              filename = match[1].replace(/['"]/g, '');
+            }
           }
-          document.getElementById('orderSuccessScreen').style.display = 'block';
-        } catch (e) {
-          alert("Errore registrazione ordine con ritiro a mano: " + e.message);
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error("Errore download 3MF:", err);
+          alert("Errore di rete durante il download del file 3MF: " + err.message);
         } finally {
-          btnConfirmCash.disabled = false;
-          btnConfirmCash.textContent = "🤝 Conferma Ordine (Paga al Ritiro)";
-        }
-      });
-
-      // TASTO DI TEST CHECKOUT SENZA PAGAMENTO
-      document.getElementById('btnTestCheckout')?.addEventListener('click', async () => {
-        const form = document.getElementById('checkoutForm');
-        if (form && !form.checkValidity()) {
-          form.reportValidity();
-          return;
-        }
-
-        const customerInfo = {
-          customer_name: document.getElementById('custName').value.trim() || 'Tester Sviluppatore',
-          customer_email: document.getElementById('custEmail').value.trim() || 'test@snapmaker-studio.it',
-          customer_phone: document.getElementById('custPhone').value.trim() || '340 0000000',
-          shipping_address: selectedDeliveryMethod === 'pickup' ? 'Ritiro a mano' : (document.getElementById('custAddress').value.trim() || 'Via Laboratorio 3D, 1'),
-          shipping_zip: selectedDeliveryMethod === 'pickup' ? '00000' : (document.getElementById('custZip').value.trim() || '00100'),
-          shipping_city: selectedDeliveryMethod === 'pickup' ? 'Laboratorio' : (document.getElementById('custCity').value.trim() || 'Roma'),
-          shipping_province: selectedDeliveryMethod === 'pickup' ? 'RM' : (document.getElementById('custProvince').value.trim().toUpperCase() || 'RM'),
-          order_notes: (document.getElementById('custNotes').value.trim() || '') + ' [TEST SENZA PAGAMENTO]',
-          delivery_method: selectedDeliveryMethod,
-          coupon_code: appliedCoupon ? appliedCoupon.code : null
-        };
-
-        try {
-          const resp = await fetch('/api/store/orders/create-test', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              items: cart,
-              customerInfo,
-              delivery_method: selectedDeliveryMethod,
-              coupon_code: appliedCoupon ? appliedCoupon.code : null
-            })
-          });
-
-          if (!resp.ok) {
-            const err = await resp.json();
-            throw new Error(err.detail || "Errore ordine di test");
-          }
-
-          const result = await resp.json();
-          cart = [];
-          appliedCoupon = null;
-          closeCart();
-
-          document.getElementById('succHeaderTitle').textContent = "🧪 Ordine di Prova Registrato!";
-          document.getElementById('succSubtext').textContent = "L'ordine è stato salvato nel database ed è immediatamente visibile nel gestionale /admin per testare la stampa e il download del 3MF.";
-          document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
-          if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
-          document.getElementById('succBadgeTest').innerHTML = `Stato: <span style="background:#f59e0b;color:#000;font-weight:900;padding:2px 6px;border-radius:4px;font-size:11px;">TEST SENZA TRANSAZIONE</span>`;
-          const adminLinkTest = document.getElementById('btnAdminSuccessLink');
-          if (adminLinkTest) {
-            adminLinkTest.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
-          }
-          document.getElementById('orderSuccessScreen').style.display = 'block';
-        } catch (e) {
-          alert("Errore Test Checkout: " + e.message);
+          btn.disabled = false;
+          btn.classList.remove('loading');
+          btn.innerHTML = originalHtml;
         }
       });
     }
 
-    function openCart() {
-      document.getElementById('cartOverlay')?.classList.add('open');
-    }
-    function closeCart() {
-      document.getElementById('cartOverlay')?.classList.remove('open');
-    }
 
-    // 10. RENDERING CARRELLO CON PROMO 3x2, COUPON & RITIRO A MANO
-    function renderCartDrawer() {
-      const summary = calculateCartSummary(cart, {
-        coupon: appliedCoupon,
-        deliveryMethod: selectedDeliveryMethod
-      });
-
-      document.getElementById('cartHeaderBadge').textContent = summary.itemCount;
-      document.getElementById('cartCountTitle').textContent = summary.itemCount;
-
-      const itemsBox = document.getElementById('cartItemsContainer');
-      const sumCard = document.getElementById('cartSummaryCard');
-      const formCard = document.getElementById('checkoutForm');
-      const couponBox = document.getElementById('couponBox');
-
-      if (summary.itemCount === 0) {
-        itemsBox.innerHTML = `
-          <div style="text-align: center; color: var(--text-muted); padding: 40px 10px;">
-            <div style="font-size: 40px; margin-bottom: 8px;">🛒</div>
-            <p>Il tuo carrello è vuoto.</p>
-            <small>Configura un portachiavi o una targhetta e aggiungila qui!</small>
-          </div>
-        `;
-        sumCard.style.display = 'none';
-        formCard.style.display = 'none';
-        if (couponBox) couponBox.style.display = 'none';
-        return;
-      }
-
-      if (couponBox) couponBox.style.display = 'block';
-      sumCard.style.display = 'block';
-      formCard.style.display = 'block';
-
-      itemsBox.innerHTML = summary.itemsWithPromo.map((it, idx) => {
-        const iconPosLabel = it.iconPosition === 'left' ? '⬅️ Sinistra' : '➡️ Destra';
-        const iconDesc = it.iconId && it.iconId !== 'none' ? ` - Icona: <em>${it.iconId}</em> (${iconPosLabel})` : '';
-        const iconColDesc = it.hasCustomIconColor ? ` | Icona (T2): <span style="display:inline-block;width:7px;height:7px;background:${it.iconColorHex};border-radius:50%;"></span> ${it.iconColorName}` : '';
-        const shapeDesc = `Forma: ${it.baseStyle === 'contour' ? 'Sagomata' : 'Rettangolare'}`;
-        const holeDesc = it.productType === 'keychain' ? ` | Foro: ${it.holePosition === 'left' ? 'Sinistra' : (it.holePosition === 'right' ? 'Destra' : 'Alto')}` : '';
-
-        return `
-          <div class="cart-item-card ${it.isFreePromo ? 'is-omaggio' : ''}">
-            <div style="flex: 1;">
-              <div class="cart-item-title">
-                ${it.productTitle}
-                ${it.isFreePromo ? '<span class="omaggio-badge">100% OMAGGIO 3x2</span>' : ''}
-              </div>
-              <div class="cart-item-meta">
-                Testo: <strong>${it.customTextLine1}</strong> (Font: ${it.fontId})${iconDesc}
-                ${it.customTextLine2 ? `<br>Riga 2: <em>${it.customTextLine2}</em>` : ''}<br>
-                Base: <span style="display:inline-block;width:7px;height:7px;background:${it.baseColorHex};border-radius:50%;"></span> ${it.baseColorName} | 
-                Scritta: <span style="display:inline-block;width:7px;height:7px;background:${it.textColorHex};border-radius:50%;"></span> ${it.textColorName}${iconColDesc}<br>
-                <small style="color:#71717a;">${shapeDesc}${holeDesc}</small>
-              </div>
-            </div>
-            <div style="text-align: right;">
-              <div class="cart-item-price">
-                ${it.isFreePromo ? `<s>${formatEur(it.unitPrice)}</s> <span style="color:var(--success);">0,00 €</span>` : formatEur(it.unitPrice)}
-              </div>
-              <button type="button" class="btn-remove-item" data-index="${idx}" title="Elimina">&times;</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      itemsBox.querySelectorAll('.btn-remove-item').forEach(b => {
-        b.addEventListener('click', (e) => {
-          const index = parseInt(e.target.dataset.index, 10);
-          cart.splice(index, 1);
-          renderCartDrawer();
-        });
-      });
-
-      document.getElementById('sumSubtotal').textContent = formatEur(summary.subtotal);
-      
-      const promoRow = document.getElementById('sumPromoRow');
-      if (summary.promoApplied) {
-        promoRow.style.display = 'flex';
-        document.getElementById('sumPromoLabel').textContent = `🎉 ${summary.promoLabel}`;
-        document.getElementById('sumPromoVal').textContent = `-${formatEur(summary.promoDiscount)}`;
-      } else {
-        promoRow.style.display = 'none';
-      }
-
-      const couponRow = document.getElementById('sumCouponRow');
-      const couponBadge = document.getElementById('couponActiveBadge');
-      if (summary.couponApplied) {
-        couponRow.style.display = 'flex';
-        document.getElementById('sumCouponCode').textContent = summary.couponCode;
-        document.getElementById('sumCouponVal').textContent = `-${formatEur(summary.couponDiscount)}`;
-        if (couponBadge) couponBadge.style.display = 'inline-block';
-      } else {
-        couponRow.style.display = 'none';
-        if (couponBadge) couponBadge.style.display = 'none';
-        if (appliedCoupon && summary.couponDiscount === 0) {
-          appliedCoupon = null;
-          const fb = document.getElementById('couponFeedback');
-          if (fb) {
-            fb.style.display = 'block';
-            fb.style.color = 'var(--warning)';
-            fb.textContent = "Coupon rimosso: il carrello non soddisfa più i requisiti minimi di spesa.";
-          }
-        }
-      }
-
-      const shippingLabelEl = document.getElementById('sumShippingLabel');
-      if (shippingLabelEl) shippingLabelEl.textContent = summary.shippingLabel;
-      document.getElementById('sumShipping').textContent = selectedDeliveryMethod === 'pickup' ? '0,00 €' : formatEur(summary.shippingCost);
-      document.getElementById('sumTotal').textContent = formatEur(summary.total);
-
-      // Aggiorna UI campi di consegna
-      const addrInputs = ['custAddress', 'custZip', 'custCity', 'custProvince'];
-      const shippingFields = document.getElementById('shippingAddressFields');
-      const pickupNotice = document.getElementById('pickupNoticeBox');
-      const pickupPaymentSelector = document.getElementById('pickupPaymentSelector');
-      const btnConfirmCash = document.getElementById('btnConfirmCashOrder');
-      const paypalContainer = document.getElementById('paypal-button-container');
-
-      if (selectedDeliveryMethod === 'pickup') {
-        if (shippingFields) shippingFields.style.display = 'none';
-        if (pickupNotice) pickupNotice.style.display = 'block';
-        if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'block';
-        addrInputs.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.required = false;
-        });
-
-        if (selectedPaymentChoice === 'cash') {
-          if (btnConfirmCash) btnConfirmCash.style.display = 'block';
-          if (paypalContainer) paypalContainer.style.display = 'none';
-        } else {
-          if (btnConfirmCash) btnConfirmCash.style.display = 'none';
-          if (paypalContainer) paypalContainer.style.display = 'block';
-          initPayPalButtons(summary);
-        }
-      } else {
-        if (shippingFields) shippingFields.style.display = 'block';
-        if (pickupNotice) pickupNotice.style.display = 'none';
-        if (pickupPaymentSelector) pickupPaymentSelector.style.display = 'none';
-        if (btnConfirmCash) btnConfirmCash.style.display = 'none';
-        if (paypalContainer) paypalContainer.style.display = 'block';
-        addrInputs.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.required = true;
-        });
-
-        initPayPalButtons(summary);
-      }
-    }
-
-    // 11. PAYPAL BUTTONS
-    function initPayPalButtons(summary) {
-      const container = document.getElementById('paypal-button-container');
-      if (!container) return;
-      container.innerHTML = '';
-
-      const render = () => {
-        if (!window.paypal) return;
-        window.paypal.Buttons({
-          style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
-          onClick: (data, actions) => {
-            lastCheckoutError = null;
-            const form = document.getElementById('checkoutForm');
-            if (form && !form.checkValidity()) {
-              form.reportValidity();
-              lastCheckoutError = "Compila tutti i campi obbligatori contrassegnati con *.";
-              return actions.reject();
-            }
-            return actions.resolve();
-          },
-          createOrder: async () => {
-            lastCheckoutError = null;
-            const isPickup = selectedDeliveryMethod === 'pickup';
-            const zipValue = isPickup ? '00000' : String(document.getElementById('custZip')?.value || '').trim();
-            const customerInfo = {
-              customer_name: (document.getElementById('custName')?.value || '').trim(),
-              customer_email: (document.getElementById('custEmail')?.value || '').trim(),
-              customer_phone: (document.getElementById('custPhone')?.value || '').trim(),
-              shipping_address: isPickup ? 'Ritiro a mano di persona' : (document.getElementById('custAddress')?.value || '').trim(),
-              shipping_zip: zipValue,
-              shipping_city: isPickup ? 'Laboratorio' : (document.getElementById('custCity')?.value || '').trim(),
-              shipping_province: isPickup ? 'RM' : (document.getElementById('custProvince')?.value || '').trim().toUpperCase(),
-              order_notes: (document.getElementById('custNotes')?.value || '').trim(),
-              delivery_method: selectedDeliveryMethod,
-              coupon_code: appliedCoupon ? appliedCoupon.code : null
-            };
-
-            const currentSummary = calculateCartSummary(cart, {
-              coupon: appliedCoupon,
-              deliveryMethod: selectedDeliveryMethod
-            });
-
-            const payload = {
-              items: cart,
-              customerInfo,
-              delivery_method: selectedDeliveryMethod,
-              coupon_code: appliedCoupon ? appliedCoupon.code : null,
-              subtotal: currentSummary.subtotal,
-              shipping_amount: currentSummary.shippingCost,
-              total_amount: currentSummary.total
-            };
-
-            let resp;
-            try {
-              resp = await fetch('/api/orders/create-paypal-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              });
-            } catch (netErr) {
-              console.error("Dettaglio errore checkout:", netErr);
-              lastCheckoutError = "Errore di connessione al server: " + netErr.message;
-              throw netErr;
-            }
-
-            if (!resp.ok) {
-              let errorDetail = `Errore server (HTTP ${resp.status})`;
-              try {
-                const errJson = await resp.json();
-                errorDetail = errJson.detail || JSON.stringify(errJson);
-              } catch (_) {
-                errorDetail = (await resp.text()) || resp.statusText;
-              }
-              console.error("Dettaglio errore checkout:", errorDetail);
-              lastCheckoutError = errorDetail;
-              throw new Error(errorDetail);
-            }
-
-            const data = await resp.json();
-            if (!data.id) {
-              const errorDetail = "Risposta del server non valida: ID ordine PayPal mancante.";
-              console.error("Dettaglio errore checkout:", errorDetail, data);
-              lastCheckoutError = errorDetail;
-              throw new Error(errorDetail);
-            }
-            return data.id;
-          },
-          onApprove: async (data) => {
-            lastCheckoutError = null;
-            const isPickup = selectedDeliveryMethod === 'pickup';
-            const zipValue = isPickup ? '00000' : String(document.getElementById('custZip')?.value || '').trim();
-            const customerInfo = {
-              customer_name: (document.getElementById('custName')?.value || '').trim(),
-              customer_email: (document.getElementById('custEmail')?.value || '').trim(),
-              customer_phone: (document.getElementById('custPhone')?.value || '').trim(),
-              shipping_address: isPickup ? 'Ritiro a mano di persona' : (document.getElementById('custAddress')?.value || '').trim(),
-              shipping_zip: zipValue,
-              shipping_city: isPickup ? 'Laboratorio' : (document.getElementById('custCity')?.value || '').trim(),
-              shipping_province: isPickup ? 'RM' : (document.getElementById('custProvince')?.value || '').trim().toUpperCase(),
-              order_notes: (document.getElementById('custNotes')?.value || '').trim(),
-              delivery_method: selectedDeliveryMethod,
-              coupon_code: appliedCoupon ? appliedCoupon.code : null
-            };
-
-            let resp;
-            try {
-              resp = await fetch('/api/orders/capture-paypal-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  paypalOrderId: data.orderID,
-                  items: cart,
-                  customerInfo,
-                  delivery_method: selectedDeliveryMethod,
-                  coupon_code: appliedCoupon ? appliedCoupon.code : null
-                })
-              });
-            } catch (netErr) {
-              console.error("Dettaglio errore checkout:", netErr);
-              lastCheckoutError = "Errore di connessione durante la cattura del pagamento: " + netErr.message;
-              throw netErr;
-            }
-
-            if (!resp.ok) {
-              let errorDetail = `Errore cattura pagamento (HTTP ${resp.status})`;
-              try {
-                const errJson = await resp.json();
-                errorDetail = errJson.detail || JSON.stringify(errJson);
-              } catch (_) {
-                errorDetail = (await resp.text()) || resp.statusText;
-              }
-              console.error("Dettaglio errore checkout:", errorDetail);
-              lastCheckoutError = errorDetail;
-              throw new Error(errorDetail);
-            }
-
-            const result = await resp.json();
-            cart = [];
-            appliedCoupon = null;
-            closeCart();
-            document.getElementById('succHeaderTitle').textContent = "Grazie per il tuo acquisto!";
-            document.getElementById('succOrderNum').textContent = `#${result.order_number}`;
-            if (document.getElementById('succEmail')) document.getElementById('succEmail').textContent = result.customer_email;
-            document.getElementById('succBadgeTest').innerHTML = `Metodo di Pagamento: <strong style="color:var(--success);">PayPal</strong>`;
-            const adminLinkPaypal = document.getElementById('btnAdminSuccessLink');
-            if (adminLinkPaypal) {
-              adminLinkPaypal.style.display = sessionStorage.getItem('admin_pin') ? 'inline-block' : 'none';
-            }
-            document.getElementById('orderSuccessScreen').style.display = 'block';
-          },
-          onError: (err) => {
-            console.error("Dettaglio errore checkout:", err);
-            const detailMsg = lastCheckoutError || (err && err.message) || String(err);
-            alert(`Errore checkout PayPal: ${detailMsg}\n\nVerifica i campi inseriti o usa la modalità di test.`);
-          }
-        }).render('#paypal-button-container');
-      };
-
-      if (!window.paypal) {
-        const script = document.createElement('script');
-        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=EUR&locale=it_IT&components=buttons`;
-        script.async = true;
-        script.onload = render;
-        document.body.appendChild(script);
-      } else {
-        render();
-      }
-    }
-
-    // 12. PWA SMART INSTALL BANNER (Android & iOS) & SERVICE WORKER
+        // 12. PWA SMART INSTALL BANNER (Android & iOS) & SERVICE WORKER
     (function initPwaBanner() {
       // Registra Service Worker se supportato
       if ('serviceWorker' in navigator) {
