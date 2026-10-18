@@ -505,6 +505,40 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Avviso generatore TXT ENNOVA dedicato: {e}")
 
+    # Controllo speciale ONE PIECE: logo ufficiale parametrico 4 colori U1 FDM
+    is_onepiece_model = (clean_txt in ("ONE PIECE", "ONEPIECE"))
+    if is_onepiece_model:
+        try:
+            from generator_u1.assets.onepiece_geometry import get_onepiece_geometries
+            target_w = float(params.get("onepiece_width", 85.0))
+            ring_pos = str(params.get("ring_position") or hole_position or "left").lower().strip()
+            geoms = get_onepiece_geometries(target_width=target_w, ring_position=ring_pos)
+
+            overlap_z = 0.40
+            m_base = _extrude_geometry(geoms["base"], height=base_thickness)
+
+            m_blue = _extrude_geometry(geoms["blue"], height=text_thickness + overlap_z)
+            m_blue.apply_translation([0, 0, base_thickness - overlap_z])
+
+            m_red = _extrude_geometry(geoms["red"], height=text_thickness + overlap_z)
+            m_red.apply_translation([0, 0, base_thickness - overlap_z])
+
+            m_yellow = _extrude_geometry(geoms["yellow"], height=text_thickness + overlap_z)
+            m_yellow.apply_translation([0, 0, base_thickness - overlap_z])
+
+            m_black = _extrude_geometry(geoms["black"], height=text_thickness + overlap_z)
+            m_black.apply_translation([0, 0, base_thickness - overlap_z])
+
+            return [
+                PartItem(name="Base_Contour", mesh=m_base, extruder=0, color="#1A1A1A"),
+                PartItem(name="Mesh_OnePiece_Blue", mesh=m_blue, extruder=1, color="#0080FF"),
+                PartItem(name="Mesh_OnePiece_Red", mesh=m_red, extruder=2, color="#EE1515"),
+                PartItem(name="Mesh_OnePiece_Yellow", mesh=m_yellow, extruder=3, color="#FFCB05"),
+                PartItem(name="Mesh_OnePiece_Black", mesh=m_black, extruder=0, color="#1A1A1A"),
+            ]
+        except Exception as e:
+            print(f"Avviso generatore ONE PIECE dedicato: {e}")
+
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
     fp1 = get_font_properties(font_family, font_path)
     fp2 = get_font_properties(font_family_line2, font_path_line2)

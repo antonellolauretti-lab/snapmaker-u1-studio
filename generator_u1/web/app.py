@@ -760,11 +760,15 @@ def generate_3mf(params: Dict[str, Any]):
     out_path = temp_dir / filename
 
     fil_colors = params.get("filament_colors")
+    has_onepiece = any("onepiece" in p.name.lower() for p in parts)
     has_pikachu = any("pikachu" in p.name.lower() for p in parts)
     has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
     has_pokeball = any("pokeball" in p.name.lower() for p in parts)
 
-    if has_pikachu and has_pokemon_logo:
+    if has_onepiece:
+        # Palette ufficiale One Piece U1 4 Colori: T0 Nero, T1 Blu, T2 Rosso, T3 Giallo
+        fil_colors = ["#1A1A1A", "#0080FF", "#EE1515", "#FFCB05"]
+    elif has_pikachu and has_pokemon_logo:
         b_col = params.get("base_color", "#080A0D")
         base_fam = _color_family(b_col)
         # T0: Giallo (Coda Pikachu corpo + Testo Pokémon lettere)

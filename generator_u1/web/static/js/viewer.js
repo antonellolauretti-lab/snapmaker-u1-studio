@@ -369,6 +369,40 @@ class ModelViewer {
       });
     }
 
+    // 4. Logo One Piece Ufficiale (4 Colori U1)
+    if (name.includes("onepiece_blue") || name.includes("one_piece_blue")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x0080FF,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("onepiece_red") || name.includes("one_piece_red")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xEE1515,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("onepiece_yellow") || name.includes("one_piece_yellow")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFCB05,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("onepiece_black") || name.includes("one_piece_black")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x1A1A1A,
+        roughness: 0.45,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+
     return null;
   }
 

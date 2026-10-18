@@ -1166,6 +1166,9 @@
         <div id="noticeTextPokemonLocked" style="display: none; padding: 10px 14px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 8px;">
           🎨 Colori ufficiali logo Pokémon bloccati (Giallo / Blu)
         </div>
+        <div id="noticeTextOnePieceLocked" style="display: none; padding: 10px 14px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 8px;">
+          🎨 Colori ufficiali logo One Piece bloccati (Nero / Blu / Rosso / Giallo)
+        </div>
         <div id="wrapTextColorControls">
           <div class="color-swatches-grid" id="textSwatches"></div>
           <div class="color-label-preview" id="textColorLabel">Caricamento colori disponibili...</div>
@@ -1338,11 +1341,22 @@
       return t === 'pokemon' || t === 'pokémon';
     }
 
+    function isOnePieceBrandText(text) {
+      if (!text) return false;
+      const t = text.trim().toLowerCase().replace(/\s+/g, '');
+      return t === 'onepiece';
+    }
+
     function getFixedBrandColors() {
       const fixed = [];
       const isPika = (currentConfig.iconId === 'pikachu');
       const isPoke = (currentConfig.iconId === 'pokeball');
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+      const isOPText = isOnePieceBrandText(currentConfig.textLine1);
+
+      if (isOPText) {
+        return ['black', 'blue', 'red', 'yellow'];
+      }
 
       if (isPika) {
         fixed.push('yellow', 'black');
@@ -1359,14 +1373,35 @@
 
     function enforceBrandConstraints() {
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+      const isOPText = isOnePieceBrandText(currentConfig.textLine1);
       const fixedColors = getFixedBrandColors();
 
       if (isBrandIcon(currentConfig.iconId)) {
         currentConfig.hasCustomIconColor = false;
       }
 
-      // Se il testo è Pokémon, forziamo il colore del testo su giallo ufficiale
-      if (isPokeText) {
+      // Se il testo è One Piece, forziamo base su nero e testo su blu ufficiale
+      if (isOPText) {
+        const blackFil = availableFilaments.find(f => getColorFamily(f) === 'black') || availableFilaments[0];
+        if (blackFil) {
+          currentConfig.baseFilamentId = blackFil.id;
+          currentConfig.baseSku = blackFil.sku;
+          currentConfig.baseColorHex = '#1A1A1A';
+          currentConfig.baseSecondaryHex = null;
+          currentConfig.baseColorName = 'Nero One Piece Ufficiale';
+          currentConfig.baseGroupName = blackFil.group_name || 'Brand';
+        }
+        const blueFil = availableFilaments.find(f => getColorFamily(f) === 'blue') || availableFilaments[0];
+        if (blueFil) {
+          currentConfig.textFilamentId = blueFil.id;
+          currentConfig.textSku = blueFil.sku;
+          currentConfig.textColorHex = '#0080FF';
+          currentConfig.textSecondaryHex = null;
+          currentConfig.textColorName = 'Blu One Piece Ufficiale';
+          currentConfig.textGroupName = blueFil.group_name || 'Brand';
+        }
+      } else if (isPokeText) {
+        // Se il testo è Pokémon, forziamo il colore del testo su giallo ufficiale
         const yellowFil = availableFilaments.find(f => getColorFamily(f) === 'yellow') || availableFilaments[0];
         if (yellowFil) {
           currentConfig.textFilamentId = yellowFil.id;
@@ -1379,10 +1414,10 @@
       }
 
       let baseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
-      let textFam = isPokeText ? 'yellow' : getColorFamily(currentConfig.textColorHex, currentConfig.textColorName);
+      let textFam = isOPText ? 'blue' : (isPokeText ? 'yellow' : getColorFamily(currentConfig.textColorHex, currentConfig.textColorName));
 
       const activeSet = new Set([...fixedColors]);
-      if (!isPokeText) {
+      if (!isPokeText && !isOPText) {
         activeSet.add(textFam);
       }
       activeSet.add(baseFam);
@@ -1401,7 +1436,7 @@
           baseFam = fallbackFam;
         }
 
-        if (!isPokeText) {
+        if (!isPokeText && !isOPText) {
           const testSet = new Set([...fixedColors, baseFam, textFam]);
           if (testSet.size > 4) {
             const textFallbackFam = fixedColors.find(c => c !== baseFam) || (baseFam === 'yellow' ? 'black' : 'yellow');
@@ -1424,16 +1459,25 @@
 
     function updateBrandSection8UI() {
       const noticeTextPokemonLocked = document.getElementById('noticeTextPokemonLocked');
+      const noticeTextOnePieceLocked = document.getElementById('noticeTextOnePieceLocked');
       const wrapTextColorControls = document.getElementById('wrapTextColorControls');
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+      const isOPText = isOnePieceBrandText(currentConfig.textLine1);
 
-      if (noticeTextPokemonLocked && wrapTextColorControls) {
-        if (isPokeText) {
-          noticeTextPokemonLocked.style.display = 'block';
+      if (wrapTextColorControls) {
+        if (isOPText) {
+          if (noticeTextOnePieceLocked) noticeTextOnePieceLocked.style.display = 'block';
+          if (noticeTextPokemonLocked) noticeTextPokemonLocked.style.display = 'none';
+          wrapTextColorControls.style.opacity = '0.45';
+          wrapTextColorControls.style.pointerEvents = 'none';
+        } else if (isPokeText) {
+          if (noticeTextPokemonLocked) noticeTextPokemonLocked.style.display = 'block';
+          if (noticeTextOnePieceLocked) noticeTextOnePieceLocked.style.display = 'none';
           wrapTextColorControls.style.opacity = '0.45';
           wrapTextColorControls.style.pointerEvents = 'none';
         } else {
-          noticeTextPokemonLocked.style.display = 'none';
+          if (noticeTextPokemonLocked) noticeTextPokemonLocked.style.display = 'none';
+          if (noticeTextOnePieceLocked) noticeTextOnePieceLocked.style.display = 'none';
           wrapTextColorControls.style.opacity = '1';
           wrapTextColorControls.style.pointerEvents = 'auto';
         }
@@ -1601,6 +1645,7 @@
       const iconGrid = document.getElementById('iconSwatches');
 
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
+      const isOPText = isOnePieceBrandText(currentConfig.textLine1);
       const fixedColors = getFixedBrandColors();
 
       const currentBaseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
@@ -1621,18 +1666,28 @@
           const filFam = getColorFamily(fil);
 
           if (type === 'base' || type === 'text') {
-            const hypBase = (type === 'base') ? filFam : currentBaseFam;
-            const hypText = (type === 'text') ? filFam : (isPokeText ? 'yellow' : currentTextFam);
+            if (isOPText) {
+              if (type === 'base' && filFam !== 'black') {
+                isDisabled = true;
+                tooltip = "Base One Piece bloccata su Nero ufficiale";
+              } else if (type === 'text' && filFam !== 'blue') {
+                isDisabled = true;
+                tooltip = "Testo One Piece bloccato su Blu ufficiale";
+              }
+            } else {
+              const hypBase = (type === 'base') ? filFam : currentBaseFam;
+              const hypText = (type === 'text') ? filFam : (isPokeText ? 'yellow' : currentTextFam);
 
-            const testSet = new Set([...fixedColors]);
-            testSet.add(hypBase);
-            if (!isPokeText) {
-              testSet.add(hypText);
-            }
+              const testSet = new Set([...fixedColors]);
+              testSet.add(hypBase);
+              if (!isPokeText) {
+                testSet.add(hypText);
+              }
 
-            if (testSet.size > 4) {
-              isDisabled = true;
-              tooltip = "Limite massimo di 4 colori per Snapmaker U1 raggiunto con i colori ufficiali del brand";
+              if (testSet.size > 4) {
+                isDisabled = true;
+                tooltip = "Limite massimo di 4 colori per Snapmaker U1 raggiunto con i colori ufficiali del brand";
+              }
             }
           }
 
