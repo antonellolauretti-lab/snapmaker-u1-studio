@@ -1210,7 +1210,7 @@ document.addEventListener("DOMContentLoaded", () => {
     snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
     pokemon: ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"],
     pikachu: ["#FFCB05", "#1A1A1A", "#FFFFFF", "#003776"],
-    onepiece: ["#1A1A1A", "#0080FF", "#EE1515", "#FFCB05"],
+    onepiece: ["#1A1A1A", "#0080FF", "#FFFFFF", "#FFCB05"],
     sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
     silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
     contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
@@ -1452,7 +1452,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (parentWrap) {
           parentWrap.style.opacity = "0.5";
           parentWrap.style.pointerEvents = "none";
-          parentWrap.title = "Colori ufficiali logo One Piece bloccati (Nero / Blu / Rosso / Giallo)";
+          parentWrap.title = "Colori ufficiali One Piece: Nero / Blu / Bianco / Giallo";
         }
       } else if (isPokemonText) {
         extruderTextSelect.disabled = true;
@@ -1476,12 +1476,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (
           colorT0.value.toLowerCase() !== "#1a1a1a" ||
           colorT1.value.toLowerCase() !== "#0080ff" ||
-          colorT2.value.toLowerCase() !== "#ee1515" ||
+          colorT2.value.toLowerCase() !== "#ffffff" ||
           colorT3.value.toLowerCase() !== "#ffcb05"
         ) {
           colorT0.value = "#1A1A1A";
           colorT1.value = "#0080FF";
-          colorT2.value = "#EE1515";
+          colorT2.value = "#FFFFFF";
           colorT3.value = "#FFCB05";
           syncAllQuickSelects();
           onPaletteChange();
@@ -1489,7 +1489,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ToastManager.show({
               type: "info",
               title: "Palette One Piece Attivata",
-              message: "Tool U1 impostati: T0 Nero (#1A1A1A), T1 Blu (#0080FF), T2 Rosso (#EE1515), T3 Giallo (#FFCB05).",
+              message: "Tool U1 impostati: T0 Nero (#1A1A1A), T1 Blu (#0080FF), T2 Bianco (#FFFFFF), T3 Giallo (#FFCB05).",
               duration: 2500
             });
           }

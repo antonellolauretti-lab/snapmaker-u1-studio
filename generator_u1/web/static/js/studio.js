@@ -378,6 +378,14 @@ class ModelViewer {
         wireframe: wireframe
       });
     }
+    if (name.includes("onepiece_white") || name.includes("one_piece_white")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xFFFFFF,
+        roughness: 0.35,
+        metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
     if (name.includes("onepiece_red") || name.includes("one_piece_red")) {
       return new THREE.MeshStandardMaterial({
         color: 0xEE1515,

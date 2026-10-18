@@ -520,8 +520,8 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             m_blue = _extrude_geometry(geoms["blue"], height=text_thickness + overlap_z)
             m_blue.apply_translation([0, 0, base_thickness - overlap_z])
 
-            m_red = _extrude_geometry(geoms["red"], height=text_thickness + overlap_z)
-            m_red.apply_translation([0, 0, base_thickness - overlap_z])
+            m_white = _extrude_geometry(geoms["white"], height=text_thickness + overlap_z)
+            m_white.apply_translation([0, 0, base_thickness - overlap_z])
 
             m_yellow = _extrude_geometry(geoms["yellow"], height=text_thickness + overlap_z)
             m_yellow.apply_translation([0, 0, base_thickness - overlap_z])
@@ -532,7 +532,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             return [
                 PartItem(name="Base_Contour", mesh=m_base, extruder=0, color="#1A1A1A"),
                 PartItem(name="Mesh_OnePiece_Blue", mesh=m_blue, extruder=1, color="#0080FF"),
-                PartItem(name="Mesh_OnePiece_Red", mesh=m_red, extruder=2, color="#EE1515"),
+                PartItem(name="Mesh_OnePiece_White", mesh=m_white, extruder=2, color="#FFFFFF"),
                 PartItem(name="Mesh_OnePiece_Yellow", mesh=m_yellow, extruder=3, color="#FFCB05"),
                 PartItem(name="Mesh_OnePiece_Black", mesh=m_black, extruder=0, color="#1A1A1A"),
             ]
