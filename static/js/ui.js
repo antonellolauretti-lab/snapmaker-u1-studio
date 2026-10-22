@@ -1210,6 +1210,8 @@ document.addEventListener("DOMContentLoaded", () => {
     snapmaker: ["#080A0D", "#D9DFE5", "#E72F1D", "#F8F81C"],
     pokemon: ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"],
     pikachu: ["#FFCB05", "#1A1A1A", "#FFFFFF", "#003776"],
+    onepiece: ["#1A1A1A", "#0080FF", "#FFFFFF", "#FFCB05"],
+    kpop: ["#1A1A1A", "#C4C7D9", "#44ADE5", "#1A1A1A"],
     sunset: ["#080A0D", "#D9A63A", "#F97429", "#E72F1D"],
     silk_trio: ["#080A0D", "#D9A63A", "#44ADE5", "#C4C7D9"],
     contrast: ["#080A0D", "#D9DFE5", "#003776", "#2D9E59"],
@@ -1435,16 +1437,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = isDeskSign 
       ? (dsText1Input ? dsText1Input.value.trim().toLowerCase() : "")
       : (textInput ? textInput.value.trim().toLowerCase() : "");
+    const cleanT = t.replace(/\s+/g, "");
     const ic = iconSelect ? iconSelect.value.trim().toLowerCase() : "";
 
     const isPokemonText = (t === "pokemon" || t === "pokémon");
+    const isOnePieceText = (t === "one piece" || cleanT === "onepiece");
+    const isKpopText = (t === "kpop" || cleanT === "kpop" || cleanT === "demonhunters" || cleanT === "kpopdemonhunters");
     const isPokeball = (ic === "pokeball" || ic === "pokéball" || ic === "poke_ball" || ic === "sfera_pokemon");
     const isPikachu = (ic === "pikachu" || ic === "pika");
 
-    // Gestione blocco selettore estrusore testo per logo Pokémon
+    // Gestione blocco selettore estrusore testo per loghi speciali (Pokémon, One Piece)
     if (extruderTextSelect) {
       const parentWrap = extruderTextSelect.closest(".form-group") || extruderTextSelect.parentElement;
-      if (isPokemonText) {
+      if (isOnePieceText || isKpopText) {
+        extruderTextSelect.disabled = true;
+        if (parentWrap) {
+          parentWrap.style.opacity = "0.5";
+          parentWrap.style.pointerEvents = "none";
+          parentWrap.title = isKpopText ? "Colori KPOP Demon Hunters: T0 Nero, T1 Silk IceLake, T2 Azzurro" : "Colori ufficiali One Piece: Nero / Blu / Bianco / Giallo";
+        }
+      } else if (false) {
+        extruderTextSelect.disabled = true;
+        if (parentWrap) {
+          parentWrap.style.opacity = "0.5";
+          parentWrap.style.pointerEvents = "none";
+          parentWrap.title = "Colori ufficiali One Piece: Nero / Blu / Bianco / Giallo";
+        }
+      } else if (isPokemonText) {
         extruderTextSelect.disabled = true;
         if (parentWrap) {
           parentWrap.style.opacity = "0.5";
@@ -1461,7 +1480,55 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    if (isPikachu && isPokemonText) {
+    if (isKpopText) {
+      if (colorT0 && colorT1 && colorT2 && colorT3) {
+        if (
+          colorT0.value.toLowerCase() !== "#1a1a1a" ||
+          colorT1.value.toLowerCase() !== "#c4c7d9" ||
+          colorT2.value.toLowerCase() !== "#44ade5" ||
+          colorT3.value.toLowerCase() !== "#1a1a1a"
+        ) {
+          colorT0.value = "#1A1A1A";
+          colorT1.value = "#C4C7D9";
+          colorT2.value = "#44ADE5";
+          colorT3.value = "#1A1A1A";
+          syncAllQuickSelects();
+          onPaletteChange();
+          if (typeof ToastManager !== "undefined" && ToastManager.show) {
+            ToastManager.show({
+              type: "info",
+              title: "Palette KPOP Demon Hunters Attivata",
+              message: "Tool U1 impostati: T0 Nero (#1A1A1A), T1 Silk Dual-Color IceLake (#C4C7D9), T2 Azzurro (#44ADE5).",
+              duration: 2500
+            });
+          }
+        }
+      }
+    } else if (isOnePieceText) {
+      if (colorT0 && colorT1 && colorT2 && colorT3) {
+        if (
+          colorT0.value.toLowerCase() !== "#1a1a1a" ||
+          colorT1.value.toLowerCase() !== "#0080ff" ||
+          colorT2.value.toLowerCase() !== "#ffffff" ||
+          colorT3.value.toLowerCase() !== "#ffcb05"
+        ) {
+          colorT0.value = "#1A1A1A";
+          colorT1.value = "#0080FF";
+          colorT2.value = "#FFFFFF";
+          colorT3.value = "#FFCB05";
+          syncAllQuickSelects();
+          onPaletteChange();
+          if (typeof ToastManager !== "undefined" && ToastManager.show) {
+            ToastManager.show({
+              type: "info",
+              title: "Palette One Piece Attivata",
+              message: "Tool U1 impostati: T0 Nero (#1A1A1A), T1 Blu (#0080FF), T2 Bianco (#FFFFFF), T3 Giallo (#FFCB05).",
+              duration: 2500
+            });
+          }
+        }
+      }
+    } else if (isPikachu && isPokemonText) {
       if (colorT0 && colorT1 && colorT3) {
         if (
           colorT0.value.toLowerCase() !== "#ffcb05" ||

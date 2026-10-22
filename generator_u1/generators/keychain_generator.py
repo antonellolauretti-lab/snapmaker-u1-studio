@@ -539,6 +539,36 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Avviso generatore ONE PIECE dedicato: {e}")
 
+    # Controllo speciale KPOP DEMON HUNTERS: logo ufficiale Silk Dual-Color IceLake & Azzurro
+    is_kpop_model = (clean_txt in ("KPOP", "DEMON HUNTERS", "KPOP DEMON HUNTERS", "DEMONHUNTERS"))
+    if is_kpop_model:
+        try:
+            from generator_u1.assets.kpop_demon_hunters_geometry import get_kpop_geometries
+            target_w = float(params.get("kpop_width", 85.0))
+            ring_pos = str(params.get("ring_position") or hole_position or "left").lower().strip()
+            geoms = get_kpop_geometries(target_width=target_w, ring_position=ring_pos)
+
+            # Altezza base: 3.20 mm, rilievo testo: 1.40 mm, compenetrazione Z: 0.40 mm
+            base_h = float(params.get("base_thickness", 3.20))
+            text_h = float(params.get("text_thickness", 1.40))
+            overlap_z = 0.40
+
+            m_base = _extrude_geometry(geoms["base"], height=base_h)
+
+            m_text = _extrude_geometry(geoms["text"], height=text_h + overlap_z)
+            m_text.apply_translation([0, 0, base_h - overlap_z])
+
+            m_star = _extrude_geometry(geoms["star"], height=text_h + overlap_z)
+            m_star.apply_translation([0, 0, base_h - overlap_z])
+
+            return [
+                PartItem(name="Base_Contour", mesh=m_base, extruder=0, color="#1A1A1A"),
+                PartItem(name="Mesh_Kpop_Text", mesh=m_text, extruder=1, color="#C4C7D9"),
+                PartItem(name="Mesh_Kpop_Star", mesh=m_star, extruder=2, color="#44ADE5"),
+            ]
+        except Exception as e:
+            print(f"Avviso generatore KPOP DEMON HUNTERS dedicato: {e}")
+
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
     fp1 = get_font_properties(font_family, font_path)
     fp2 = get_font_properties(font_family_line2, font_path_line2)

@@ -211,6 +211,24 @@ class ModelViewer {
         if (clean.includes(k)) return v;
       }
     }
+    // 5. Logo KPOP Demon Hunters (Silk Dual-Color IceLake & Azzurro)
+    if (name.includes("kpop_text") || name.includes("kpop_demon_hunters_text")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xC4C7D9,
+        roughness: 0.25,
+        metalness: 0.65,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("kpop_star") || name.includes("kpop_accent") || name.includes("kpop_demon_hunters_accent")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x44ADE5,
+        roughness: 0.20,
+        metalness: 0.40,
+        wireframe: wireframe
+      });
+    }
+
     return null;
   }
 
@@ -365,6 +383,24 @@ class ModelViewer {
         color: 0xFFFFFF,
         roughness: 0.25,
         metalness: 0.05,
+        wireframe: wireframe
+      });
+    }
+
+    // 5. Logo KPOP Demon Hunters (Silk Dual-Color IceLake & Azzurro)
+    if (name.includes("kpop_text") || name.includes("kpop_demon_hunters_text")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0xC4C7D9,
+        roughness: 0.25,
+        metalness: 0.65,
+        wireframe: wireframe
+      });
+    }
+    if (name.includes("kpop_star") || name.includes("kpop_accent") || name.includes("kpop_demon_hunters_accent")) {
+      return new THREE.MeshStandardMaterial({
+        color: 0x44ADE5,
+        roughness: 0.20,
+        metalness: 0.40,
         wireframe: wireframe
       });
     }
