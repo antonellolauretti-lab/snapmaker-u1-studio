@@ -572,8 +572,8 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             except Exception as ex_man:
                 m_base = trimesh.util.concatenate([m_base_slab, m_star])
 
-            base_col = params.get("base_color") or "#1A1A1A"
-            text_col = params.get("text_color") or "#C4C7D9"
+            base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+            text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
             ext_base = int(params.get("extruder_base", 0))
             ext_text = int(params.get("extruder_text", 1))
 

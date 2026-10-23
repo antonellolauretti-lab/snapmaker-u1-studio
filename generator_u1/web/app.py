@@ -769,6 +769,7 @@ def generate_3mf(params: Dict[str, Any]):
 
     fil_colors = params.get("filament_colors")
     has_onepiece = any("onepiece" in p.name.lower() for p in parts)
+    has_kpop = any("kpop" in p.name.lower() for p in parts)
     has_pikachu = any("pikachu" in p.name.lower() for p in parts)
     has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
     has_pokeball = any("pokeball" in p.name.lower() for p in parts)
@@ -776,6 +777,11 @@ def generate_3mf(params: Dict[str, Any]):
     if has_onepiece:
         # Palette ufficiale One Piece U1 4 Colori: T0 Nero, T1 Blu, T2 Bianco, T3 Giallo
         fil_colors = ["#1A1A1A", "#0080FF", "#FFFFFF", "#FFCB05"]
+    elif has_kpop:
+        # Preset KPOP Demon Hunters: T0 Base (#1A1A1A), T1 Testo a colore dinamico scelto dall'utente
+        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+        t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
+        fil_colors = [b_col, t_col, "#FFFFFF", "#FFCB05"]
     elif has_pikachu and has_pokemon_logo:
         b_col = params.get("base_color", "#080A0D")
         base_fam = _color_family(b_col)

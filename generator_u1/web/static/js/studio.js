@@ -233,23 +233,7 @@ class ModelViewer {
         if (clean.includes(k)) return v;
       }
     }
-    // 5. Logo KPOP Demon Hunters (Silk Dual-Color IceLake & Azzurro)
-    if (name.includes("kpop_text") || name.includes("kpop_demon_hunters_text")) {
-      return new THREE.MeshStandardMaterial({
-        color: 0xC4C7D9,
-        roughness: 0.25,
-        metalness: 0.65,
-        wireframe: wireframe
-      });
-    }
-    if (name.includes("kpop_star") || name.includes("kpop_accent") || name.includes("kpop_demon_hunters_accent")) {
-      return new THREE.MeshStandardMaterial({
-        color: 0x44ADE5,
-        roughness: 0.20,
-        metalness: 0.40,
-        wireframe: wireframe
-      });
-    }
+
 
     return null;
   }
@@ -451,23 +435,7 @@ class ModelViewer {
       });
     }
 
-    // 5. Logo KPOP Demon Hunters (Silk Dual-Color IceLake & Azzurro)
-    if (name.includes("kpop_text") || name.includes("kpop_demon_hunters_text")) {
-      return new THREE.MeshStandardMaterial({
-        color: 0xC4C7D9,
-        roughness: 0.25,
-        metalness: 0.65,
-        wireframe: wireframe
-      });
-    }
-    if (name.includes("kpop_star") || name.includes("kpop_accent") || name.includes("kpop_demon_hunters_accent")) {
-      return new THREE.MeshStandardMaterial({
-        color: 0x44ADE5,
-        roughness: 0.20,
-        metalness: 0.40,
-        wireframe: wireframe
-      });
-    }
+
 
     return null;
   }
@@ -534,13 +502,18 @@ class ModelViewer {
         pNameLower.startsWith("text") ||
         pNameLower.includes("letters") ||
         pNameLower.includes("riga1") ||
-        pNameLower.includes("riga2")
+        pNameLower.includes("riga2") ||
+        pNameLower.includes("kpop_text")
       ) {
-        // Testo standard (lettere):
+        // Testo standard (lettere) o Testo KPOP:
         // Riceve ESCLUSIVAMENTE il colore del Testo (Slot 8)
         role = "text";
         const textColorDef = palette[this.extruderText] || palette[1] || "#D9DFE5";
         mat = this.createMaterial(textColorDef, this.wireframeMode);
+        if (pNameLower.includes("kpop_text")) {
+          mat.roughness = 0.25;
+          mat.metalness = 0.45;
+        }
       } else if (
         pNameLower.startsWith("icon_") ||
         pNameLower.startsWith("icon") ||
@@ -621,7 +594,7 @@ class ModelViewer {
         return;
       }
 
-      // 3. Testo standard (lettere e testi):
+      // 3. Testo standard (lettere e testi) o Testo KPOP:
       // Riceve ESCLUSIVAMENTE il colore selezionato in "8. COLORE DEL TESTO"
       if (
         mesh.userData.role === "text" ||
@@ -629,11 +602,16 @@ class ModelViewer {
         name.startsWith("text") ||
         name.includes("letters") ||
         name.includes("riga1") ||
-        name.includes("riga2")
+        name.includes("riga2") ||
+        name.includes("kpop_text")
       ) {
         if (textColorDef) {
           const oldMat = mesh.material;
           mesh.material = this.createMaterial(textColorDef, this.wireframeMode);
+          if (name.includes("kpop_text")) {
+            mesh.material.roughness = 0.25;
+            mesh.material.metalness = 0.45;
+          }
           if (oldMat && oldMat !== mesh.material) oldMat.dispose();
         }
         return;
