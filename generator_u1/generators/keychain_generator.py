@@ -456,7 +456,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
     hole_enabled = bool(params.get("hole_enabled", True))
     hole_position = params.get("hole_position", "left")
     hole_diameter = float(params.get("hole_diameter", 5.0))
-    icon_name = params.get("icon_name") or params.get("icon_id") or "none"
+    icon_name = params.get("icon_name") or params.get("icon_id") or params.get("icon") or "none"
     icon_position = params.get("icon_position", "left")
     extruder_base = int(params.get("extruder_base", 0))
     extruder_text = int(params.get("extruder_text", 1))
@@ -607,7 +607,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             except Exception as e:
                 print(f"Avviso generatore HUNTRIX CUORE (Preset B) dedicato: {e}")
 
-        elif clean_icon_val in ("none", "", "nessuna", "null", "undefined") or icon_name is None:
+        else:
             try:
                 from generator_u1.assets.huntrix_geometry import get_huntrix_preset_a_geometries
                 target_w = float(params.get("keychain_width", 55.0))

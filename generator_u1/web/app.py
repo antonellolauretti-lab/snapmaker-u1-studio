@@ -8,6 +8,7 @@ import ipaddress
 import urllib.request
 import urllib.error
 import logging
+import traceback
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -718,178 +719,195 @@ def generate_3mf(params: Dict[str, Any]):
     Compila il pacchetto .3MF nativo multi-volume per Snapmaker U1
     e lo invia direttamente come allegato scaricabile per Snapmaker Orca.
     """
-    generator_type = params.get("generator", "keychain").lower()
+    try:
+        clean_txt = str(params.get("text") or params.get("text_line1") or "").strip().upper()
+        clean_icon_val = str(params.get("icon_name") or params.get("icon_id") or params.get("icon") or "").strip().lower()
 
-    if generator_type == "desk_sign":
-        if not params.get("font_family_line1") and params.get("font_family"):
-            params["font_family_line1"] = params.get("font_family")
-        if not params.get("text_line1") and params.get("text"):
-            params["text_line1"] = params.get("text")
-        if not params.get("font_path_line1") and params.get("font_path"):
-            params["font_path_line1"] = params.get("font_path")
+        generator_type = params.get("generator", "keychain").lower()
 
-        fp1 = _resolve_font_path(params, font_key="font_family_line1", path_key="font_path_line1")
-        if fp1:
-            params["font_path_line1"] = fp1
-        fp2 = _resolve_font_path(params, font_key="font_family_line2", path_key="font_path_line2")
-        if fp2:
-            params["font_path_line2"] = fp2
+        if generator_type == "desk_sign":
+            if not params.get("font_family_line1") and params.get("font_family"):
+                params["font_family_line1"] = params.get("font_family")
+            if not params.get("text_line1") and params.get("text"):
+                params["text_line1"] = params.get("text")
+            if not params.get("font_path_line1") and params.get("font_path"):
+                params["font_path_line1"] = params.get("font_path")
 
-        try:
-            parts = generate_desk_sign_parts(params)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Errore geometrico: {str(e)}")
-
-        text = params.get("text_line1", "DeskSign").strip()
-        clean_name = "".join(c for c in text if c.isalnum() or c in " _-").strip() or "DeskSign"
-        filename = f"{clean_name}_DeskSign_Snapmaker_U1.3mf"
-        proj_name = f"{clean_name}_DeskSign"
-    else:
-        font_path = _resolve_font_path(params, font_key="font_family", path_key="font_path")
-        if font_path:
-            params["font_path"] = font_path
-        if params.get("line2_enabled"):
+            fp1 = _resolve_font_path(params, font_key="font_family_line1", path_key="font_path_line1")
+            if fp1:
+                params["font_path_line1"] = fp1
             fp2 = _resolve_font_path(params, font_key="font_family_line2", path_key="font_path_line2")
             if fp2:
                 params["font_path_line2"] = fp2
 
-        if not params.get("base_thickness") or float(params.get("base_thickness", 0)) < 3.0:
-            params["base_thickness"] = 3.2
-        if not params.get("text_thickness"):
-            params["text_thickness"] = 1.4
+            try:
+                parts = generate_desk_sign_parts(params)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Errore geometrico: {str(e)}")
 
-        try:
-            parts = generate_keychain_parts(params)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Errore geometrico: {str(e)}")
-
-        text = params.get("text", "Model").strip()
-        clean_name = "".join(c for c in text if c.isalnum() or c in " _-").strip() or "Keychain"
-        if params.get("line2_enabled") and params.get("text_line2"):
-            clean_t2 = "".join(c for c in params.get("text_line2") if c.isalnum() or c in " _-").strip()
-            if clean_t2:
-                clean_name = f"{clean_name}_{clean_t2}"
-        filename = f"{clean_name}_Keychain_Snapmaker_U1.3mf"
-        proj_name = f"{clean_name}_Keychain"
-
-    temp_dir = Path(tempfile.gettempdir())
-    out_path = temp_dir / filename
-
-    fil_colors = params.get("filament_colors")
-    has_onepiece = any("onepiece" in p.name.lower() for p in parts)
-    has_kpop = any("kpop" in p.name.lower() for p in parts)
-    has_huntrix_heart = any("heart" in p.name.lower() for p in parts)
-    has_huntrix_keychain = (clean_txt in ("HUNTRIX", "HUNTIX")) and not has_huntrix_heart
-    has_pikachu = any("pikachu" in p.name.lower() for p in parts)
-    has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
-    has_pokeball = any("pokeball" in p.name.lower() for p in parts)
-
-    if has_onepiece:
-        # Palette ufficiale One Piece U1 4 Colori: T0 Nero, T1 Blu, T2 Bianco, T3 Giallo
-        fil_colors = ["#1A1A1A", "#0080FF", "#FFFFFF", "#FFCB05"]
-    elif has_kpop:
-        # Preset KPOP Demon Hunters: T0 Base (#1A1A1A), T1 Testo a colore dinamico scelto dall'utente
-        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
-        t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
-        fil_colors = [b_col, t_col, "#FFFFFF", "#FFCB05"]
-    elif has_huntrix_heart:
-        # Preset B Portachiavi a Cuore Huntrix 3 Colori: T0 Base, T1 Cuore, T2 Testo
-        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
-        h_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
-        t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
-        fil_colors = [b_col, h_col, t_col, "#FFCB05"]
-    elif has_huntrix_keychain:
-        # Preset A Portachiavi Sagomato Ufficiale: T0 Base, T1 Testo
-        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
-        t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
-        fil_colors = [b_col, t_col, "#1A1A1A", "#FFCB05"]
-    elif has_pikachu and has_pokemon_logo:
-        b_col = params.get("base_color", "#080A0D")
-        base_fam = _color_family(b_col)
-        # T0: Giallo (Coda Pikachu corpo + Testo Pokémon lettere)
-        # T1: Nero (Coda Pikachu base)
-        # T3: Blu (Bordo esterno Pokémon)
-        # T2: Base color (se non yellow/black/blue) o fallback bianco
-        if base_fam not in ("yellow", "black", "blue"):
-            t2 = b_col
+            text = params.get("text_line1", "DeskSign").strip()
+            clean_name = "".join(c for c in text if c.isalnum() or c in " _-").strip() or "DeskSign"
+            filename = f"{clean_name}_DeskSign_Snapmaker_U1.3mf"
+            proj_name = f"{clean_name}_DeskSign"
         else:
-            t2 = "#FFFFFF"
-        fil_colors = ["#FFCB05", "#1A1A1A", t2, "#003776"]
-    elif has_pikachu:
-        b_col = params.get("base_color", "#080A0D")
-        t_col = params.get("text_color", "#D9DFE5")
-        slots = ["#FFCB05", "#1A1A1A", None, None]
-        base_fam = _color_family(b_col)
-        text_fam = _color_family(t_col)
+            font_path = _resolve_font_path(params, font_key="font_family", path_key="font_path")
+            if font_path:
+                params["font_path"] = font_path
+            if params.get("line2_enabled"):
+                fp2 = _resolve_font_path(params, font_key="font_family_line2", path_key="font_path_line2")
+                if fp2:
+                    params["font_path_line2"] = fp2
 
-        next_slot = 2
-        if base_fam not in ("yellow", "black") and next_slot < 4:
-            slots[next_slot] = b_col
-            next_slot += 1
-        if text_fam not in ("yellow", "black") and text_fam != base_fam and next_slot < 4:
-            slots[next_slot] = t_col
-            next_slot += 1
+            if not params.get("base_thickness") or float(params.get("base_thickness", 0)) < 3.0:
+                params["base_thickness"] = 3.2
+            if not params.get("text_thickness"):
+                params["text_thickness"] = 1.4
 
-        fallbacks = ["#FFFFFF", "#003776", "#EE1515"]
-        for i in range(4):
-            if slots[i] is None:
-                for fb in fallbacks:
-                    if fb not in slots:
-                        slots[i] = fb
-                        break
-        fil_colors = slots
-    elif has_pokemon_logo:
-        fil_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"]
-    elif has_pokeball:
-        b_col = params.get("base_color", "#080A0D")
-        t_col = params.get("text_color", "#D9DFE5")
-        slots = ["#FFFFFF", "#EE1515", None, None]
-        base_fam = _color_family(b_col)
-        text_fam = _color_family(t_col)
+            try:
+                parts = generate_keychain_parts(params)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Errore geometrico: {str(e)}")
 
-        next_slot = 2
-        if base_fam not in ("white", "red") and next_slot < 4:
-            slots[next_slot] = b_col
-            next_slot += 1
-        if text_fam not in ("white", "red") and text_fam != base_fam and next_slot < 4:
-            slots[next_slot] = t_col
-            next_slot += 1
+            text = params.get("text", "Model").strip()
+            clean_name = "".join(c for c in text if c.isalnum() or c in " _-").strip() or "Keychain"
+            if params.get("line2_enabled") and params.get("text_line2"):
+                clean_t2 = "".join(c for c in params.get("text_line2") if c.isalnum() or c in " _-").strip()
+                if clean_t2:
+                    clean_name = f"{clean_name}_{clean_t2}"
+            filename = f"{clean_name}_Keychain_Snapmaker_U1.3mf"
+            proj_name = f"{clean_name}_Keychain"
 
-        fallbacks = ["#080A0D", "#003776", "#FFCB05"]
-        for i in range(4):
-            if slots[i] is None:
-                for fb in fallbacks:
-                    if fb not in slots:
-                        slots[i] = fb
-                        break
-        fil_colors = slots
-    elif not fil_colors:
-        b_col = params.get("base_color", "#080A0D")
-        t_col = params.get("text_color", "#D9DFE5")
-        i_col = params.get("symbolColor") or params.get("icon_color") or "#E72F1D"
-        fil_colors = [b_col, t_col, i_col, "#F8F81C"]
+        temp_dir = Path(tempfile.gettempdir())
+        out_path = temp_dir / filename
 
-    packager = Snapmaker3MFPackager(
-        project_name=proj_name,
-        filament_colors=fil_colors,
-        enable_prime_tower=False,
-        enable_support=False,
-        enable_brim=False
-    )
+        fil_colors = params.get("filament_colors")
+        has_onepiece = any("onepiece" in p.name.lower() for p in parts)
+        has_kpop = any("kpop" in p.name.lower() for p in parts)
+        has_huntrix_heart = any("heart" in p.name.lower() for p in parts)
+        has_huntrix_keychain = (clean_txt in ("HUNTRIX", "HUNTIX")) and not has_huntrix_heart
+        has_pikachu = any("pikachu" in p.name.lower() for p in parts)
+        has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
+        has_pokeball = any("pokeball" in p.name.lower() for p in parts)
 
-    ref_3mf = PROJECT_ROOT / "PROGETTI DEFINITIVI" / "67_mechanism_complete_bicolor_V2" / "67_mechanism_U1_P2_ROSSO.3mf"
-    default_profile = PROJECT_ROOT / "generator_u1" / "packager" / "profiles" / "snapmaker_u1_default_project.json"
-    ref_path = str(ref_3mf) if ref_3mf.exists() else (str(default_profile) if default_profile.exists() else None)
-    
-    thumbnail_b64 = params.get("thumbnail_base64")
-    packager.export(parts, str(out_path), reference_config_path=ref_path, thumbnail_base64=thumbnail_b64)
+        if has_onepiece:
+            # Palette ufficiale One Piece U1 4 Colori: T0 Nero, T1 Blu, T2 Bianco, T3 Giallo
+            fil_colors = ["#1A1A1A", "#0080FF", "#FFFFFF", "#FFCB05"]
+        elif has_kpop:
+            # Preset KPOP Demon Hunters: T0 Base (#1A1A1A), T1 Testo a colore dinamico scelto dall'utente
+            b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+            t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
+            fil_colors = [b_col, t_col, "#FFFFFF", "#FFCB05"]
+        elif has_huntrix_heart:
+            # Preset B Portachiavi a Cuore Huntrix 3 Colori: T0 Base, T1 Cuore, T2 Testo
+            b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+            h_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
+            t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+            fil_colors = [b_col, h_col, t_col, "#FFCB05"]
+        elif has_huntrix_keychain:
+            # Preset A Portachiavi Sagomato Ufficiale: T0 Base, T1 Testo
+            b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+            t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+            fil_colors = [b_col, t_col, "#1A1A1A", "#FFCB05"]
+        elif has_pikachu and has_pokemon_logo:
+            b_col = params.get("base_color", "#080A0D")
+            base_fam = _color_family(b_col)
+            # T0: Giallo (Coda Pikachu corpo + Testo Pokémon lettere)
+            # T1: Nero (Coda Pikachu base)
+            # T3: Blu (Bordo esterno Pokémon)
+            # T2: Base color (se non yellow/black/blue) o fallback bianco
+            if base_fam not in ("yellow", "black", "blue"):
+                t2 = b_col
+            else:
+                t2 = "#FFFFFF"
+            fil_colors = ["#FFCB05", "#1A1A1A", t2, "#003776"]
+        elif has_pikachu:
+            b_col = params.get("base_color", "#080A0D")
+            t_col = params.get("text_color", "#D9DFE5")
+            slots = ["#FFCB05", "#1A1A1A", None, None]
+            base_fam = _color_family(b_col)
+            text_fam = _color_family(t_col)
 
-    return FileResponse(
-        path=str(out_path),
-        filename=filename,
-        media_type="application/vnd.ms-package.3dmanufacturing-3dmodel+xml",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-    )
+            next_slot = 2
+            if base_fam not in ("yellow", "black") and next_slot < 4:
+                slots[next_slot] = b_col
+                next_slot += 1
+            if text_fam not in ("yellow", "black") and text_fam != base_fam and next_slot < 4:
+                slots[next_slot] = t_col
+                next_slot += 1
+
+            fallbacks = ["#FFFFFF", "#003776", "#EE1515"]
+            for i in range(4):
+                if slots[i] is None:
+                    for fb in fallbacks:
+                        if fb not in slots:
+                            slots[i] = fb
+                            break
+            fil_colors = slots
+        elif has_pokemon_logo:
+            fil_colors = ["#FFFFFF", "#EE1515", "#FFCB05", "#003776"]
+        elif has_pokeball:
+            b_col = params.get("base_color", "#080A0D")
+            t_col = params.get("text_color", "#D9DFE5")
+            slots = ["#FFFFFF", "#EE1515", None, None]
+            base_fam = _color_family(b_col)
+            text_fam = _color_family(t_col)
+
+            next_slot = 2
+            if base_fam not in ("white", "red") and next_slot < 4:
+                slots[next_slot] = b_col
+                next_slot += 1
+            if text_fam not in ("white", "red") and text_fam != base_fam and next_slot < 4:
+                slots[next_slot] = t_col
+                next_slot += 1
+
+            fallbacks = ["#080A0D", "#003776", "#FFCB05"]
+            for i in range(4):
+                if slots[i] is None:
+                    for fb in fallbacks:
+                        if fb not in slots:
+                            slots[i] = fb
+                            break
+            fil_colors = slots
+        elif not fil_colors:
+            b_col = params.get("base_color", "#080A0D")
+            t_col = params.get("text_color", "#D9DFE5")
+            i_col = params.get("symbolColor") or params.get("icon_color") or "#E72F1D"
+            fil_colors = [b_col, t_col, i_col, "#F8F81C"]
+
+        packager = Snapmaker3MFPackager(
+            project_name=proj_name,
+            filament_colors=fil_colors,
+            enable_prime_tower=False,
+            enable_support=False,
+            enable_brim=False
+        )
+
+        ref_3mf = PROJECT_ROOT / "PROGETTI DEFINITIVI" / "67_mechanism_complete_bicolor_V2" / "67_mechanism_U1_P2_ROSSO.3mf"
+        default_profile = PROJECT_ROOT / "generator_u1" / "packager" / "profiles" / "snapmaker_u1_default_project.json"
+        ref_path = str(ref_3mf) if ref_3mf.exists() else (str(default_profile) if default_profile.exists() else None)
+        
+        thumbnail_b64 = params.get("thumbnail_base64")
+        packager.export(parts, str(out_path), reference_config_path=ref_path, thumbnail_base64=thumbnail_b64)
+
+        return FileResponse(
+            path=str(out_path),
+            filename=filename,
+            media_type="application/vnd.ms-package.3dmanufacturing-3dmodel+xml",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Errore generazione 3MF: {e}", exc_info=True)
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "error": str(e),
+                "trace": traceback.format_exc()
+            }
+        )
 
 
 # ==============================================================================
