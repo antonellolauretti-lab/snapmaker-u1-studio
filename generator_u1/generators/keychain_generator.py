@@ -539,21 +539,21 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Avviso generatore ONE PIECE dedicato: {e}")
 
-    # Controllo speciale KPOP DEMON HUNTERS: logo ufficiale Silk Dual-Color IceLake & Azzurro
+    # Controllo speciale KPOP DEMON HUNTERS: logo ottimizzato a max 60 mm (2 corpi: Base con stella + Testo a colore libero)
     is_kpop_model = (clean_txt in ("KPOP", "DEMON HUNTERS", "KPOP DEMON HUNTERS", "DEMONHUNTERS"))
     if is_kpop_model:
         try:
             from generator_u1.assets.kpop_demon_hunters_geometry import get_kpop_geometries
-            target_w = float(params.get("kpop_width", 85.0))
+            target_w = float(params.get("kpop_width", 60.0))
             ring_pos = str(params.get("ring_position") or hole_position or "left").lower().strip()
             geoms = get_kpop_geometries(target_width=target_w, ring_position=ring_pos)
 
-            # Altezza base: 3.20 mm, rilievo testo: 1.40 mm, compenetrazione Z: 0.40 mm
-            base_h = float(params.get("base_thickness", 3.20))
-            text_h = float(params.get("text_thickness", 1.40))
+            # Quota Z: Base 3.00 mm, Rilievo testo +1.20 mm, compenetrazione Z: 0.40 mm
+            base_h = float(params.get("base_thickness", 3.00))
+            text_h = float(params.get("text_thickness", 1.20))
             overlap_z = 0.40
 
-            m_base = _extrude_geometry(geoms["base"], height=base_h)
+            m_base_slab = _extrude_geometry(geoms["base"], height=base_h)
 
             m_text = _extrude_geometry(geoms["text"], height=text_h + overlap_z)
             m_text.apply_translation([0, 0, base_h - overlap_z])
@@ -561,10 +561,25 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             m_star = _extrude_geometry(geoms["star"], height=text_h + overlap_z)
             m_star.apply_translation([0, 0, base_h - overlap_z])
 
+            # Unione booleana della stella centrale direttamente dentro Base_Contour (Tool 0)
+            try:
+                import manifold3d as m3d
+                m1 = m3d.Manifold(m3d.Mesh(vert_properties=np.asarray(m_base_slab.vertices, dtype=np.float32), tri_verts=np.asarray(m_base_slab.faces, dtype=np.int32)))
+                m2 = m3d.Manifold(m3d.Mesh(vert_properties=np.asarray(m_star.vertices, dtype=np.float32), tri_verts=np.asarray(m_star.faces, dtype=np.int32)))
+                m_res = m1 + m2
+                out_m = m_res.to_mesh()
+                m_base = trimesh.Trimesh(vertices=out_m.vert_properties, faces=out_m.tri_verts)
+            except Exception as ex_man:
+                m_base = trimesh.util.concatenate([m_base_slab, m_star])
+
+            base_col = params.get("base_color") or "#1A1A1A"
+            text_col = params.get("text_color") or "#C4C7D9"
+            ext_base = int(params.get("extruder_base", 0))
+            ext_text = int(params.get("extruder_text", 1))
+
             return [
-                PartItem(name="Base_Contour", mesh=m_base, extruder=0, color="#1A1A1A"),
-                PartItem(name="Mesh_Kpop_Text", mesh=m_text, extruder=1, color="#C4C7D9"),
-                PartItem(name="Mesh_Kpop_Star", mesh=m_star, extruder=2, color="#44ADE5"),
+                PartItem(name="Base_Contour", mesh=m_base, extruder=ext_base, color=base_col),
+                PartItem(name="Mesh_Kpop_Text", mesh=m_text, extruder=ext_text, color=text_col),
             ]
         except Exception as e:
             print(f"Avviso generatore KPOP DEMON HUNTERS dedicato: {e}")

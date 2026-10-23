@@ -1376,7 +1376,7 @@
       const isKpopText = isKpopBrandText(currentConfig.textLine1);
 
       if (isKpopText) {
-        return ['black', '#c4c7d9', '#44ade5'];
+        return ['black'];
       }
 
       if (isOPText) {
@@ -1401,17 +1401,39 @@
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
       const isKpopText = isKpopBrandText(currentConfig.textLine1);
 
-      if (isKpopText) {
-        return ['black', '#c4c7d9', '#44ade5'];
-      }
       const fixedColors = getFixedBrandColors();
 
       if (isBrandIcon(currentConfig.iconId)) {
         currentConfig.hasCustomIconColor = false;
       }
 
-      // Se il testo è One Piece, forziamo base su nero e testo su blu ufficiale
-      if (isOPText) {
+      if (isKpopText) {
+        // Preset KPOP Demon Hunters: Base nera con stella unificata (Tool 0), Testo libero (Tool 1)
+        currentConfig.hasCustomIconColor = false;
+        if (!currentConfig.baseColorHex) {
+          const blackFil = availableFilaments.find(f => getColorFamily(f) === 'black') || availableFilaments[0];
+          if (blackFil) {
+            currentConfig.baseFilamentId = blackFil.id;
+            currentConfig.baseSku = blackFil.sku;
+            currentConfig.baseColorHex = '#1A1A1A';
+            currentConfig.baseSecondaryHex = null;
+            currentConfig.baseColorName = 'SnapSpeed PLA Black';
+            currentConfig.baseGroupName = blackFil.group_name || 'SnapSpeed PLA';
+          }
+        }
+        // Preserva il colore scelto dall'utente per il testo; default iniziale su Silk Ice Lake se non impostato
+        if (!currentConfig.textColorHex) {
+          const silkFil = availableFilaments.find(f => (f.name && f.name.toLowerCase().includes('ice lake')) || (f.hex_color && f.hex_color.toLowerCase() === '#c4c7d9')) || availableFilaments[1] || availableFilaments[0];
+          if (silkFil) {
+            currentConfig.textFilamentId = silkFil.id;
+            currentConfig.textSku = silkFil.sku;
+            currentConfig.textColorHex = silkFil.hex_color;
+            currentConfig.textSecondaryHex = silkFil.secondary_hex_color || null;
+            currentConfig.textColorName = silkFil.name;
+            currentConfig.textGroupName = silkFil.group_name || 'Silk Dual-Color';
+          }
+        }
+      } else if (isOPText) {
         const blackFil = availableFilaments.find(f => getColorFamily(f) === 'black') || availableFilaments[0];
         if (blackFil) {
           currentConfig.baseFilamentId = blackFil.id;
@@ -1494,10 +1516,6 @@
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
       const isKpopText = isKpopBrandText(currentConfig.textLine1);
-
-      if (isKpopText) {
-        return ['black', '#c4c7d9', '#44ade5'];
-      }
 
       if (wrapTextColorControls) {
         if (isOPText) {
@@ -1700,9 +1718,6 @@
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
       const isKpopText = isKpopBrandText(currentConfig.textLine1);
 
-      if (isKpopText) {
-        return ['black', '#c4c7d9', '#44ade5'];
-      }
       const fixedColors = getFixedBrandColors();
 
       const currentBaseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
@@ -1939,13 +1954,16 @@
             viewer.updateGeometry(data, getViewerPalette(), 0, 1);
             
             if (data.dimensions) {
-              const maxW = isDeskSign ? Math.min(data.dimensions.width, 130.0) : Math.min(data.dimensions.width, 80.0);
+              const isKpop = isKpopBrandText(currentConfig.textLine1);
+              const maxW = isDeskSign ? Math.min(data.dimensions.width, 130.0) : (isKpop ? Math.min(data.dimensions.width, 60.0) : Math.min(data.dimensions.width, 80.0));
               const wCm = (maxW / 10).toFixed(1).replace('.', ',');
               const hCm = (data.dimensions.height / 10).toFixed(1).replace('.', ',');
-              const defaultDepth = isDeskSign ? 24.0 : 4.6;
+              const defaultDepth = isDeskSign ? 24.0 : 4.2;
               const dMm = Number(data.dimensions.depth || defaultDepth).toFixed(1).replace('.', ',');
-              document.getElementById('viewerBadgeDimensions').textContent = 
-                `Dimensioni: ${wCm} × ${hCm} cm • Spessore: ${dMm} mm`;
+              const dimEl = document.getElementById('viewerBadgeDimensions');
+              if (dimEl) {
+                dimEl.textContent = `Dimensioni: ${wCm} × ${hCm} cm • Spessore: ${dMm} mm`;
+              }
             }
           }
         } catch (e) {
