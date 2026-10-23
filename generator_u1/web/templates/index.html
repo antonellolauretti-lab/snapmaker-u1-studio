@@ -1306,11 +1306,14 @@
         isDual: Boolean(currentConfig.textSecondaryHex || (currentConfig.textGroupName && currentConfig.textGroupName.toLowerCase().includes('silk')))
       };
 
-      const iconDef = currentConfig.hasCustomIconColor ? {
+      const txtUpper = (currentConfig.textLine1 || '').trim().toUpperCase();
+      const isHuntrixHeart = (txtUpper === 'HUNTRIX' || txtUpper === 'HUNTIX') && currentConfig.iconId === 'cuore';
+
+      const iconDef = (currentConfig.hasCustomIconColor || isHuntrixHeart) ? {
         id: currentConfig.iconFilamentId,
         sku: currentConfig.iconSku,
         name: currentConfig.iconColorName,
-        color: currentConfig.iconColorHex || currentConfig.symbolColor || '#E72F1D',
+        color: currentConfig.iconColorHex || currentConfig.symbolColor || '#EE1515',
         secondaryColor: currentConfig.iconSecondaryHex,
         isDual: Boolean(currentConfig.iconSecondaryHex || (currentConfig.iconGroupName && currentConfig.iconGroupName.toLowerCase().includes('silk')))
       } : textDef;
@@ -1549,6 +1552,23 @@
       const wrapIconColorControls = document.getElementById('wrapIconColorControls');
 
       if (!groupIconColor) return;
+
+      const txt = (currentConfig.textLine1 || '').trim().toUpperCase();
+      const isHuntrixHeart = (txt === 'HUNTRIX' || txt === 'HUNTIX') && currentConfig.iconId === 'cuore';
+
+      if (isHuntrixHeart) {
+        groupIconColor.style.display = 'block';
+        if (noticeBrandLocked) noticeBrandLocked.style.display = 'none';
+        if (wrapIconColorControls) wrapIconColorControls.style.display = 'block';
+        currentConfig.hasCustomIconColor = true;
+        const btnCustom = document.getElementById('btnIconColorCustom');
+        const btnSame = document.getElementById('btnIconColorSame');
+        if (btnCustom && btnSame) {
+          btnCustom.classList.add('active');
+          btnSame.classList.remove('active');
+        }
+        return;
+      }
 
       if (currentConfig.iconId === 'none') {
         groupIconColor.style.display = 'none';
@@ -2060,6 +2080,7 @@
         currentConfig.textLine1 = e.target.value.toUpperCase();
         updateFontPreviews();
         enforceBrandConstraints();
+        updateBrandSection9UI();
         renderSwatches();
         request3DPreview();
       });

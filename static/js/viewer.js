@@ -517,11 +517,13 @@ class ModelViewer {
       } else if (
         pNameLower.startsWith("icon_") ||
         pNameLower.startsWith("icon") ||
-        pNameLower.includes("simbolo")
+        pNameLower.includes("simbolo") ||
+        pNameLower.includes("heart") ||
+        pNameLower.includes("cuore")
       ) {
-        // Icona / Simbolo monocromatico
+        // Icona / Simbolo monocromatico / Cuore Huntrix
         role = "icon";
-        const iconColorDef = p.color || palette[2] || palette[this.extruderText] || palette[1] || "#E72F1D";
+        const iconColorDef = palette[2] || p.color || palette[this.extruderText] || palette[1] || "#E72F1D";
         mat = this.createMaterial(iconColorDef, this.wireframeMode);
       } else {
         const colorDef = p.color || palette[p.extruder] || palette[0] || "#ffffff";
@@ -535,7 +537,7 @@ class ModelViewer {
         partName: p.name, 
         role: role,
         extruder: (role === "base") ? this.extruderBase : ((role === "text") ? this.extruderText : p.extruder), 
-        customColor: p.color || null,
+        customColor: (role === "icon" || role === "text" || role === "base") ? null : (p.color || null),
         isBrandLocked: isBrandLocked
       };
 
@@ -617,12 +619,14 @@ class ModelViewer {
         return;
       }
 
-      // 4. Icona / Simbolo generico monocromatico (se non brand-locked):
+      // 4. Icona / Simbolo generico monocromatico o Cuore Huntrix (se non brand-locked):
       if (
         mesh.userData.role === "icon" ||
         name.startsWith("icon_") ||
         name.startsWith("icon") ||
-        name.includes("simbolo")
+        name.includes("simbolo") ||
+        name.includes("heart") ||
+        name.includes("cuore")
       ) {
         if (iconColorDef) {
           const oldMat = mesh.material;

@@ -584,11 +584,11 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Avviso generatore KPOP DEMON HUNTERS dedicato: {e}")
 
-    # Controllo speciale HUNTRIX / CUORE HUNTRIX: portachiavi a cuore con scritta centrale HUNTRIX
+    # Controllo speciale HUNTRIX CUORE: portachiavi a cuore con trigger combinato (Testo HUNTRIX/HUNTIX + Simbolo Cuore)
+    clean_icon_val = str(icon_name).lower().strip()
     is_huntrix_model = (
-        clean_txt in ("HUNTRIX", "CUORE HUNTRIX", "HUNTRIX CUORE", "HEART HUNTRIX", "HUNTRIX HEART")
-        or (base_style in ("heart", "cuore") and "huntrix" in clean_txt.lower())
-        or params.get("preset") == "huntrix_heart"
+        (clean_txt in ("HUNTRIX", "HUNTIX"))
+        and (clean_icon_val in ("cuore", "heart") or params.get("preset") == "huntrix_heart")
     )
     if is_huntrix_model:
         try:
@@ -596,23 +596,29 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             target_w = float(params.get("heart_width", 52.0))
             geoms = get_heart_huntrix_geometries(target_width=target_w, text="HUNTRIX")
 
-            # Quote Z: Base 3.00 mm, Rilievo testo +1.20 mm, compenetrazione Z: 0.40 mm (Z tot = 4.20 mm)
-            base_h = float(params.get("base_thickness", 3.00))
-            text_h = float(params.get("text_thickness", 1.20))
+            # Architettura a 3 volumi e quote Z calibrate (Z totale = 4.60 mm):
+            # Base_Slab: Z 0.0 - 2.40 mm (spessore 2.40 mm)
+            # Heart_Body: Z 2.00 - 3.60 mm (spessore 1.60 mm, compenetrazione Z 0.40 mm nella base)
+            # Mesh_Text: Z 3.20 - 4.60 mm (spessore 1.40 mm, compenetrazione Z 0.40 mm nel cuore)
+            base_h = 2.40
+            heart_h = 1.60
+            text_h = 1.40
             overlap_z = 0.40
 
             m_base = _extrude_geometry(geoms["base"], height=base_h)
-            m_text = _extrude_geometry(geoms["text"], height=text_h + overlap_z)
-            m_text.apply_translation([0, 0, base_h - overlap_z])
+            m_heart = _extrude_geometry(geoms["heart"], height=heart_h)
+            m_heart.apply_translation([0, 0, base_h - overlap_z])
+            m_text = _extrude_geometry(geoms["text"], height=text_h)
+            m_text.apply_translation([0, 0, (base_h - overlap_z) + (heart_h - overlap_z)])
 
-            base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#EE1515"
+            base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+            icon_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
             text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
-            ext_base = int(params.get("extruder_base", 0))
-            ext_text = int(params.get("extruder_text", 1))
 
             return [
-                PartItem(name="Base_Heart", mesh=m_base, extruder=ext_base, color=base_col),
-                PartItem(name="Mesh_Text", mesh=m_text, extruder=ext_text, color=text_col),
+                PartItem(name="Base_Slab", mesh=m_base, extruder=0, color=base_col),
+                PartItem(name="Heart_Body", mesh=m_heart, extruder=1, color=icon_col),
+                PartItem(name="Mesh_Text", mesh=m_text, extruder=2, color=text_col),
             ]
         except Exception as e:
             print(f"Avviso generatore HUNTRIX CUORE dedicato: {e}")
