@@ -447,6 +447,14 @@ async def serve_admin():
         raise HTTPException(status_code=404, detail="Pannello admin non trovato.")
     return FileResponse(str(target), media_type="text/html")
 
+@app.get("/api/store/filaments")
+@app.get("/store/filaments")
+@app.get("/api/filaments")
+def handle_filaments_direct():
+    """Catalogo filamenti disponibili accessibile da Studio e Storefront."""
+    from ecommerce.api_router import get_available_filaments
+    return get_available_filaments()
+
 @app.post("/admin/verify-pin")
 @app.get("/admin/verify-pin")
 async def handle_verify_pin_direct(

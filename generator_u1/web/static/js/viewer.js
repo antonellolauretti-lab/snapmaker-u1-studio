@@ -2,8 +2,10 @@
  * Snapmaker U1 3D Viewer (Three.js)
  * Gestisce il rendering WebGL, l'illuminazione, il piatto PEI e i materiali.
  */
+if (typeof window !== "undefined" && typeof window.ModelViewer === "undefined") {
 class ModelViewer {
   constructor(canvasContainerId) {
+    this.containerId = canvasContainerId;
     this.container = document.getElementById(canvasContainerId);
     this.scene = null;
     this.camera = null;
@@ -13,17 +15,27 @@ class ModelViewer {
     this.partMeshes = [];
     this.wireframeMode = false;
 
-    this.init();
+    if (this.container) {
+      this.init();
+    } else {
+      console.warn("ModelViewer: Container non trovato per id '" + canvasContainerId + "'");
+    }
   }
 
   init() {
+    if (!this.container) return;
+    if (typeof THREE === "undefined") {
+      console.error("ModelViewer: Three.js non disponibile.");
+      return;
+    }
+
     // 1. Scena
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0e1014);
 
     // 2. Camera
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+    const width = Math.max(this.container.clientWidth || 0, 100);
+    const height = Math.max(this.container.clientHeight || 0, 100);
     this.camera = new THREE.PerspectiveCamera(40, width / height, 0.5, 2000);
     this.camera.position.set(0, -110, 95);
 
@@ -57,7 +69,11 @@ class ModelViewer {
     this.container.appendChild(this.renderer.domElement);
 
     // 4. OrbitControls Touch-friendly con rotazione libera 360°
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    if (THREE && typeof THREE.OrbitControls === "function") {
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    } else {
+      this.controls = { update: () => {}, target: new THREE.Vector3(0, 0, 2), reset: () => {} };
+    }
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.minPolarAngle = 0;
@@ -146,8 +162,10 @@ class ModelViewer {
   }
 
   onWindowResize() {
+    if (!this.container || !this.camera || !this.renderer) return;
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
+    if (!height) return;
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
@@ -158,8 +176,12 @@ class ModelViewer {
 
   animate() {
     requestAnimationFrame(() => this.animate());
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    if (this.controls && typeof this.controls.update === "function") {
+      this.controls.update();
+    }
+    if (this.renderer && this.scene && this.camera) {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   /**
@@ -776,6 +798,9 @@ class ModelViewer {
   }
 }
 
+window.ModelViewer = ModelViewer;
+}
+
 /**
  * Auto-fit camera Three.js al modello con padding adattivo
  * Inquadra perfettamente l'oggetto sia in orizzontale che in verticale,
@@ -821,7 +846,7 @@ function fitCameraToObject(camera, object, controls, padding = 1.35) {
   }
 }
 
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && typeof window.fitCameraToObject === "undefined") {
   window.fitCameraToObject = fitCameraToObject;
 }
 

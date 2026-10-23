@@ -23,10 +23,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bebas+Neue&family=Bungee&family=Caveat:wght@700&family=Cinzel:wght@700;900&family=Dancing+Script:wght@700&family=Great+Vibes&family=Lobster&family=Montserrat:wght@800;900&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@700;900&family=Poppins:wght@700;900&family=Righteous&family=Roboto:wght@700;900&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
 
-  <!-- Three.js, OrbitControls e Viewer 3D -->
+  <!-- 1. CDN Three.js Core + OrbitControls + FontLoader / TextGeometry (con fallback) -->
   <script src="/static/js/libs/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
   <script src="/static/js/libs/OrbitControls.js"></script>
+  <script>
+    if (typeof THREE !== 'undefined' && !THREE.OrbitControls) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+
+  <!-- 2. Viewer 3D Scene Controller & Studio modules -->
   <script src="/static/js/viewer.js"></script>
+  <script src="/static/js/studio.js"></script>
+  <script src="/static/js/ui.js"></script>
 
   <style>
     /* Font-Face Fallback e Varianti Heavy/Bold per Stampa 3D FDM */
@@ -1224,9 +1240,7 @@
   </main>
 
   <!-- Script Logica Studio Reattiva -->
-  <script type="module">
-    // Helper studio
-    function updateLivePrice() {}
+  <script>
 
     // 1. STATO CONFIGURATORE STUDIO
     let availableFilaments = [];
@@ -1341,6 +1355,12 @@
       return t === 'pokemon' || t === 'pokémon';
     }
 
+    function isKpopBrandText(text) {
+      if (!text) return false;
+      const t = text.trim().toLowerCase().replace(/\s+/g, '');
+      return t === 'kpop' || t === 'demonhunters' || t === 'kpopdemonhunters';
+    }
+
     function isOnePieceBrandText(text) {
       if (!text) return false;
       const t = text.trim().toLowerCase().replace(/\s+/g, '');
@@ -1353,6 +1373,11 @@
       const isPoke = (currentConfig.iconId === 'pokeball');
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
+      const isKpopText = isKpopBrandText(currentConfig.textLine1);
+
+      if (isKpopText) {
+        return ['black', '#c4c7d9', '#44ade5'];
+      }
 
       if (isOPText) {
         return ['black', 'blue', 'white', 'yellow'];
@@ -1374,6 +1399,11 @@
     function enforceBrandConstraints() {
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
+      const isKpopText = isKpopBrandText(currentConfig.textLine1);
+
+      if (isKpopText) {
+        return ['black', '#c4c7d9', '#44ade5'];
+      }
       const fixedColors = getFixedBrandColors();
 
       if (isBrandIcon(currentConfig.iconId)) {
@@ -1463,6 +1493,11 @@
       const wrapTextColorControls = document.getElementById('wrapTextColorControls');
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
+      const isKpopText = isKpopBrandText(currentConfig.textLine1);
+
+      if (isKpopText) {
+        return ['black', '#c4c7d9', '#44ade5'];
+      }
 
       if (wrapTextColorControls) {
         if (isOPText) {
@@ -1510,7 +1545,16 @@
 
     // 2. INIZIALIZZAZIONE 3D THREE.JS
     function initViewer() {
-      viewer = new ModelViewer('webglContainer');
+      try {
+        if (typeof ModelViewer === 'function') {
+          viewer = new ModelViewer('webglContainer');
+        } else {
+          console.error("ModelViewer class non disponibile.");
+        }
+      } catch (err) {
+        console.error("Errore inizializzazione ModelViewer:", err);
+      }
+
       document.getElementById('btnResetView')?.addEventListener('click', () => {
         if (viewer) {
           if (currentConfig.productType === 'desk_sign') {
@@ -1520,20 +1564,27 @@
           }
         }
       });
-      document.getElementById('btnTopView')?.addEventListener('click', () => viewer.topView());
+      document.getElementById('btnTopView')?.addEventListener('click', () => {
+        if (viewer) viewer.topView();
+      });
     }
 
     // 3. RECUPERO RISORSE VIA API
     async function loadResources() {
-      // A) Filamenti disponibili
+      // A) Filamenti disponibili (con fallback endpoint multipli)
       try {
-        const resp = await fetch('/api/store/filaments');
+        let resp = await fetch('/api/store/filaments');
+        if (!resp.ok) {
+          resp = await fetch('/store/filaments');
+        }
         if (resp.ok) {
           const list = await resp.json();
-          availableFilaments = list.filter(f => f.is_available === true);
+          if (Array.isArray(list) && list.length > 0) {
+            availableFilaments = list.filter(f => f.is_available === true);
+          }
         }
       } catch (e) {
-        console.error("Errore filamenti:", e);
+        console.warn("Avviso filamenti:", e);
       }
 
       if (availableFilaments.length === 0) {
@@ -1542,7 +1593,8 @@
           { id: 'fil-02', sku: '34073', name: 'SnapSpeed PLA Cool White', group_name: 'SnapSpeed PLA', hex_color: '#D9DFE5', secondary_hex_color: null, is_available: true },
           { id: 'fil-04', sku: '34065', name: 'SnapSpeed PLA Red', group_name: 'SnapSpeed PLA', hex_color: '#E72F1D', secondary_hex_color: null, is_available: true },
           { id: 'fil-05', sku: '34064', name: 'SnapSpeed PLA Blue', group_name: 'SnapSpeed PLA', hex_color: '#003776', secondary_hex_color: null, is_available: true },
-          { id: 'fil-06', sku: '34112', name: 'SnapSpeed PLA Bright Yellow', group_name: 'SnapSpeed PLA', hex_color: '#F8F81C', secondary_hex_color: null, is_available: true }
+          { id: 'fil-06', sku: '34112', name: 'SnapSpeed PLA Bright Yellow', group_name: 'SnapSpeed PLA', hex_color: '#F8F81C', secondary_hex_color: null, is_available: true },
+          { id: 'fil-15', sku: '34207', name: 'Silk Ice Lake', group_name: 'Silk Dual-Color', hex_color: '#C4C7D9', secondary_hex_color: '#44ADE5', is_available: true }
         ];
       }
 
@@ -1646,6 +1698,11 @@
 
       const isPokeText = isPokemonBrandText(currentConfig.textLine1);
       const isOPText = isOnePieceBrandText(currentConfig.textLine1);
+      const isKpopText = isKpopBrandText(currentConfig.textLine1);
+
+      if (isKpopText) {
+        return ['black', '#c4c7d9', '#44ade5'];
+      }
       const fixedColors = getFixedBrandColors();
 
       const currentBaseFam = getColorFamily(currentConfig.baseColorHex, currentConfig.baseColorName);
@@ -1785,25 +1842,54 @@
       }).join('');
     }
 
-    // 7. CALCOLO PREZZO DINAMICO
+    // 7. CALCOLO PREZZO DINAMICO (SICURO E CON NULL-CHECK)
     function updateLivePrice() {
-      const price = determineItemPrice(currentConfig);
-      document.getElementById('livePriceTag').textContent = `${price.toFixed(2).replace('.', ',')} €`;
-      
-      let desc = 'Portachiavi Standard';
-      if (currentConfig.productType === 'desk_sign') {
-        const hasLine2 = Boolean(currentConfig.line2Enabled || (currentConfig.textLine2 && currentConfig.textLine2.trim()));
-        desc = hasLine2 ? 'Targhetta da Tavolo (2 Righe)' : 'Targhetta da Tavolo Professionale';
-      } else if (price > 4.90 || price >= 3.90) {
-        const reasons = [];
-        if (currentConfig.line2Enabled) reasons.push('2 righe');
-        if (currentConfig.hasCustomIconColor) reasons.push('3 Colori');
-        else if (currentConfig.iconId !== 'none') reasons.push('Simbolo 3D');
-        if (currentConfig.baseGroupName.includes('Silk') || currentConfig.textGroupName.includes('Silk')) reasons.push('Silk Seta');
-        desc = `Portachiavi Complesso (${reasons.join(', ') || 'personalizzato'})`;
+      const livePriceTag = document.getElementById('livePriceTag');
+      const priceTypeDesc = document.getElementById('priceTypeDesc');
+      if (!livePriceTag && !priceTypeDesc) return;
+
+      try {
+        let price = 2.90;
+        if (typeof determineItemPrice === 'function') {
+          price = determineItemPrice(currentConfig);
+        } else {
+          if (currentConfig.productType === 'desk_sign') {
+            price = 6.90;
+          } else {
+            price = 2.90;
+            if (currentConfig.line2Enabled) price += 1.00;
+            if (currentConfig.hasCustomIconColor) price += 1.00;
+            if ((currentConfig.baseGroupName || '').includes('Silk') || (currentConfig.textGroupName || '').includes('Silk')) price += 0.50;
+          }
+        }
+        if (livePriceTag) {
+          livePriceTag.textContent = `${price.toFixed(2).replace('.', ',')} €`;
+        }
+        if (priceTypeDesc) {
+          let desc = 'Portachiavi Standard';
+          if (currentConfig.productType === 'desk_sign') {
+            const hasLine2 = Boolean(currentConfig.line2Enabled || (currentConfig.textLine2 && currentConfig.textLine2.trim()));
+            desc = hasLine2 ? 'Targhetta da Tavolo (2 Righe)' : 'Targhetta da Tavolo Professionale';
+          } else if (price > 4.90 || price >= 3.90) {
+            const reasons = [];
+            if (currentConfig.line2Enabled) reasons.push('2 righe');
+            if (currentConfig.hasCustomIconColor) reasons.push('3 Colori');
+            else if (currentConfig.iconId !== 'none') reasons.push('Simbolo 3D');
+            if ((currentConfig.baseGroupName || '').includes('Silk') || (currentConfig.textGroupName || '').includes('Silk')) reasons.push('Silk Seta');
+            desc = `Portachiavi Complesso (${reasons.join(', ') || 'personalizzato'})`;
+          }
+          priceTypeDesc.textContent = desc;
+        }
+      } catch (err) {
+        console.warn("updateLivePrice safely handled:", err);
       }
-      document.getElementById('priceTypeDesc').textContent = desc;
     }
+
+    function renderColorPalette() {
+      renderSwatches();
+    }
+    window.renderColorPalette = renderColorPalette;
+    window.renderSwatches = renderSwatches;
 
     // 8. RICHIESTA ANTEPRIMA 3D TRAMITE API
     let previewDebounce = null;
@@ -2219,83 +2305,119 @@
     }
 
 
-        // 12. PWA SMART INSTALL BANNER (Android & iOS) & SERVICE WORKER
-    (function initPwaBanner() {
-      // Registra Service Worker se supportato
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js').catch(err => {
-          console.debug("Service worker non registrato:", err);
+        // 12. PWA SMART INSTALL BANNER (Android & iOS)
+    function initPwaBanner() {
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/static/sw.js').catch(err => {
+            console.debug("Service worker non registrato:", err);
+          });
+        }
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (isStandalone) return;
+
+        const dismissedUntil = localStorage.getItem('gadgetpoint_pwa_dismissed');
+        if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
+
+        let deferredPrompt = null;
+        const banner = document.getElementById('pwaInstallBanner');
+        const titleEl = document.getElementById('pwaBannerTitle');
+        const descEl = document.getElementById('pwaBannerDesc');
+        const btnInstall = document.getElementById('btnPwaInstall');
+        const btnClose = document.getElementById('btnPwaClose');
+
+        if (!banner) return;
+
+        btnClose?.addEventListener('click', () => {
+          if (banner) banner.style.display = 'none';
+          localStorage.setItem('gadgetpoint_pwa_dismissed', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
         });
-      }
 
-      // Non mostrare se l'app è già aperta in modalità standalone (app già installata)
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      if (isStandalone) return;
+        const ua = window.navigator.userAgent.toLowerCase();
+        const isIos = /iphone|ipad|ipod/.test(ua);
 
-      // Non mostrare se l'utente ha già chiuso il banner (salvato in localStorage per 7 giorni)
-      const dismissedUntil = localStorage.getItem('gadgetpoint_pwa_dismissed');
-      if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
-
-      let deferredPrompt = null;
-      const banner = document.getElementById('pwaInstallBanner');
-      const titleEl = document.getElementById('pwaBannerTitle');
-      const descEl = document.getElementById('pwaBannerDesc');
-      const btnInstall = document.getElementById('btnPwaInstall');
-      const btnClose = document.getElementById('btnPwaClose');
-
-      btnClose?.addEventListener('click', () => {
-        if (banner) banner.style.display = 'none';
-        localStorage.setItem('gadgetpoint_pwa_dismissed', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
-      });
-
-      // Rilevamento iOS
-      const ua = window.navigator.userAgent.toLowerCase();
-      const isIos = /iphone|ipad|ipod/.test(ua);
-
-      // Evento nativo di installazione per Android / Chromium
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (banner) {
-          titleEl.textContent = "📲 Installa GadgetPoint";
-          descEl.textContent = "Installa l'app sullo smartphone per un'esperienza a tutto schermo ad alta velocità.";
-          if (btnInstall) btnInstall.style.display = 'block';
-          banner.style.display = 'flex';
-        }
-      });
-
-      btnInstall?.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          if (outcome === 'accepted' && banner) {
-            banner.style.display = 'none';
-          }
-          deferredPrompt = null;
-        }
-      });
-
-      // Su iOS Safari: mostra il suggerimento guidato con i 2 passaggi
-      if (isIos) {
-        setTimeout(() => {
-          if (banner && banner.style.display === 'none') {
-            titleEl.innerHTML = "📲 Installa GadgetPoint su iPhone";
-            descEl.innerHTML = "Tocca il tasto <strong>Condividi</strong> (icona quadrata con freccia in basso) e seleziona <strong>'Aggiungi a schermata Home'</strong>.";
-            if (btnInstall) btnInstall.style.display = 'none';
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          if (banner) {
+            if (titleEl) titleEl.textContent = "📲 Installa GadgetPoint";
+            if (descEl) descEl.textContent = "Installa l'app sullo smartphone per un'esperienza a tutto schermo ad alta velocità.";
+            if (btnInstall) btnInstall.style.display = 'block';
             banner.style.display = 'flex';
           }
-        }, 2200);
-      }
-    })();
+        });
 
-    // AVVIO
-    window.addEventListener('DOMContentLoaded', async () => {
-      initViewer();
-      await loadResources();
-      setupEvents();
-      updateLivePrice();
-      request3DPreview();
-    });
+        btnInstall?.addEventListener('click', async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted' && banner) {
+              banner.style.display = 'none';
+            }
+            deferredPrompt = null;
+          }
+        });
+
+        if (isIos) {
+          setTimeout(() => {
+            if (banner && banner.style.display === 'none') {
+              if (titleEl) titleEl.innerHTML = "📲 Installa GadgetPoint su iPhone";
+              if (descEl) descEl.innerHTML = "Tocca il tasto <strong>Condividi</strong> (icona quadrata con freccia in basso) e seleziona <strong>'Aggiungi a schermata Home'</strong>.";
+              if (btnInstall) btnInstall.style.display = 'none';
+              banner.style.display = 'flex';
+            }
+          }, 2200);
+        }
+      } catch (e) {
+        console.debug("PWA banner exception ignored:", e);
+      }
+    }
+
+    // AVVIO ROBUSTO STUDIO PARAMETRICO (CON CONTROLLO READYSTATE PER ESECUZIONE GARANTITA)
+    async function startStudioApp() {
+      try {
+        initViewer();
+      } catch (err) {
+        console.error("initViewer fallito:", err);
+      }
+
+      try {
+        await loadResources();
+      } catch (err) {
+        console.error("loadResources fallito:", err);
+      }
+
+      try {
+        setupEvents();
+      } catch (err) {
+        console.error("setupEvents fallito:", err);
+      }
+
+      try {
+        renderColorPalette();
+      } catch (err) {}
+
+      try {
+        updateLivePrice();
+      } catch (err) {}
+
+      try {
+        request3DPreview();
+      } catch (err) {
+        console.error("request3DPreview fallito:", err);
+      }
+
+      try {
+        initPwaBanner();
+      } catch (err) {}
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', startStudioApp);
+    } else {
+      startStudioApp();
+    }
   </script>
 
   <!-- Smart PWA Install Banner (Android & iOS) -->

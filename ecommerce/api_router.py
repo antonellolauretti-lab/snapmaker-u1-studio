@@ -323,6 +323,8 @@ def _save_pricing_settings(settings: dict):
 # ==============================================================================
 
 @router.get("/store/filaments")
+@router.get("/api/store/filaments")
+@router.get("/api/filaments")
 def get_available_filaments():
     """Restituisce esclusivamente i filamenti contrassegnati come DISPONIBILI per lo Storefront."""
     return [fil for fil in _LOCAL_FILAMENTS_DB if fil.get("is_available") is True]

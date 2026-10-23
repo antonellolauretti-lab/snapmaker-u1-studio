@@ -1194,9 +1194,18 @@ class CustomIconDropdown {
 // 1. INIZIALIZZAZIONE APPLICAZIONE
 // ==============================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  ToastManager.init();
+  if (typeof ToastManager !== "undefined" && typeof ToastManager.init === "function") {
+    ToastManager.init();
+  }
 
-  const viewer = new ModelViewer("canvas-container");
+  const container = document.getElementById("canvas-container");
+  const hasLegacyGen = document.getElementById("btnGenerate");
+  if (!container && !hasLegacyGen) {
+    console.debug("ui.js: canvas-container / btnGenerate non presenti in pagina, inizializzazione ui.js non richiesta.");
+    return;
+  }
+
+  const viewer = typeof ModelViewer === "function" ? new ModelViewer("canvas-container") : null;
   let debounceTimer = null;
   let isRequestPending = false;
   let currentProduct = "keychain"; // "keychain" | "desk_sign"
@@ -1400,7 +1409,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!colorInput || !quickSelect) return;
     syncQuickSelectWithInput(colorInput, quickSelect, slotIndex);
 
-    quickSelect.addEventListener("change", () => {
+    quickSelect?.addEventListener("change", () => {
       const filament = findFilamentBySkuOrHex(quickSelect.value);
       if (filament) {
         colorInput.value = filament.hex;
@@ -1614,7 +1623,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inversione Colori Estrusore 1 ⇄ 2 (Base / Testo)
   if (btnSwapExtruders12) {
-    btnSwapExtruders12.addEventListener("click", () => {
+    btnSwapExtruders12?.addEventListener("click", () => {
       if (!colorT0 || !colorT1 || !quickColorT0 || !quickColorT1) return;
       const tempVal = quickColorT0.value;
       const tempHex = colorT0.value;
@@ -2753,12 +2762,12 @@ document.addEventListener("DOMContentLoaded", () => {
   safeAddListener(btnCancelSavePresetModal, "click", closeSavePresetModal);
   safeAddListener(btnConfirmSavePreset, "click", handleConfirmSavePreset);
   if (customPresetNameInput) {
-    customPresetNameInput.addEventListener("keydown", (e) => {
+    customPresetNameInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") handleConfirmSavePreset();
     });
   }
   if (savePresetModal) {
-    savePresetModal.addEventListener("click", (e) => {
+    savePresetModal?.addEventListener("click", (e) => {
       if (e.target === savePresetModal) closeSavePresetModal();
     });
   }
@@ -2867,7 +2876,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (printerConfigFileInput) {
-    printerConfigFileInput.addEventListener("change", (e) => {
+    printerConfigFileInput?.addEventListener("change", (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -2931,7 +2940,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (syncPrinterModal) {
-    syncPrinterModal.addEventListener("click", (e) => {
+    syncPrinterModal?.addEventListener("click", (e) => {
       if (e.target === syncPrinterModal) closeSyncModal();
     });
   }
@@ -3232,7 +3241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Seconda Riga Portachiavi
   if (kcLine2Toggle) {
-    kcLine2Toggle.addEventListener("change", () => {
+    kcLine2Toggle?.addEventListener("change", () => {
       if (kcLine2Wrap) {
         kcLine2Wrap.style.display = kcLine2Toggle.checked ? "flex" : "none";
       }
@@ -3567,7 +3576,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 8. DOWNLOAD 3MF NATIVO PER SNAPMAKER U1
   // ==========================================
   if (btnGenerate) {
-    btnGenerate.addEventListener("click", async () => {
+    btnGenerate?.addEventListener("click", async () => {
       // 1. Cattura sincrona e obbligatoria della miniatura 3D per Windows Explorer & OrcaSlicer
       let thumbnailDataUrl = null;
       try {
