@@ -503,14 +503,14 @@ class ModelViewer {
         pNameLower.includes("letters") ||
         pNameLower.includes("riga1") ||
         pNameLower.includes("riga2") ||
-        pNameLower.includes("kpop_text")
+        pNameLower.includes("kpop_text") || pNameLower.includes("text")
       ) {
         // Testo standard (lettere) o Testo KPOP:
         // Riceve ESCLUSIVAMENTE il colore del Testo (Slot 8)
         role = "text";
         const textColorDef = palette[this.extruderText] || palette[1] || "#D9DFE5";
         mat = this.createMaterial(textColorDef, this.wireframeMode);
-        if (pNameLower.includes("kpop_text")) {
+        if (pNameLower.includes("kpop_text") || pNameLower.includes("text")) {
           mat.roughness = 0.25;
           mat.metalness = 0.45;
         }
@@ -603,12 +603,12 @@ class ModelViewer {
         name.includes("letters") ||
         name.includes("riga1") ||
         name.includes("riga2") ||
-        name.includes("kpop_text")
+        name.includes("kpop_text") || name.includes("text")
       ) {
         if (textColorDef) {
           const oldMat = mesh.material;
           mesh.material = this.createMaterial(textColorDef, this.wireframeMode);
-          if (name.includes("kpop_text")) {
+          if (name.includes("kpop_text") || name.includes("text")) {
             mesh.material.roughness = 0.25;
             mesh.material.metalness = 0.45;
           }

@@ -584,6 +584,40 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Avviso generatore KPOP DEMON HUNTERS dedicato: {e}")
 
+    # Controllo speciale HUNTRIX / CUORE HUNTRIX: portachiavi a cuore con scritta centrale HUNTRIX
+    is_huntrix_model = (
+        clean_txt in ("HUNTRIX", "CUORE HUNTRIX", "HUNTRIX CUORE", "HEART HUNTRIX", "HUNTRIX HEART")
+        or (base_style in ("heart", "cuore") and "huntrix" in clean_txt.lower())
+        or params.get("preset") == "huntrix_heart"
+    )
+    if is_huntrix_model:
+        try:
+            from generator_u1.assets.heart_huntrix_geometry import get_heart_huntrix_geometries
+            target_w = float(params.get("heart_width", 52.0))
+            geoms = get_heart_huntrix_geometries(target_width=target_w, text="HUNTRIX")
+
+            # Quote Z: Base 3.00 mm, Rilievo testo +1.20 mm, compenetrazione Z: 0.40 mm (Z tot = 4.20 mm)
+            base_h = float(params.get("base_thickness", 3.00))
+            text_h = float(params.get("text_thickness", 1.20))
+            overlap_z = 0.40
+
+            m_base = _extrude_geometry(geoms["base"], height=base_h)
+            m_text = _extrude_geometry(geoms["text"], height=text_h + overlap_z)
+            m_text.apply_translation([0, 0, base_h - overlap_z])
+
+            base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#EE1515"
+            text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+            ext_base = int(params.get("extruder_base", 0))
+            ext_text = int(params.get("extruder_text", 1))
+
+            return [
+                PartItem(name="Base_Heart", mesh=m_base, extruder=ext_base, color=base_col),
+                PartItem(name="Mesh_Text", mesh=m_text, extruder=ext_text, color=text_col),
+            ]
+        except Exception as e:
+            print(f"Avviso generatore HUNTRIX CUORE dedicato: {e}")
+
+
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
     fp1 = get_font_properties(font_family, font_path)
     fp2 = get_font_properties(font_family_line2, font_path_line2)

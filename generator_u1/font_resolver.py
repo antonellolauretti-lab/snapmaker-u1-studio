@@ -29,6 +29,10 @@ FONT_ALIAS_MAP: Dict[str, str] = {
     "pacifico": "Pacifico.ttf",
     "lobster": "Lobster.ttf",
     # Display / Bold
+    "huntrix": "Huntrix.otf",
+    "hunters": "Huntrix.otf",
+    "hunters k-pop": "Huntrix.otf",
+    "hunterskpop": "Huntrix.otf",
     "impact": "Impact.ttf",
     "anton": "Anton.ttf",
     "bebas neue": "Bebas_Neue.ttf",
@@ -96,6 +100,10 @@ def resolve_font_path(font_name: Optional[str], explicit_path: Optional[str] = N
         f"{clean_name.replace(' ', '_')}.ttf",
         f"{clean_name.replace(' ', '-')}.ttf",
         f"{clean_name.replace(' ', '')}.ttf",
+        f"{clean_name}.otf",
+        f"{clean_name.replace(' ', '_')}.otf",
+        f"{clean_name.replace(' ', '-')}.otf",
+        f"{clean_name.replace(' ', '')}.otf",
     ]
     for folder in [ASSETS_FONTS_DIR, FONTS_DIR]:
         for fname in candidate_filenames:
@@ -134,6 +142,10 @@ def get_font_dilation_offset(font_name: Optional[str]) -> float:
     if not font_name:
         return 0.0
     fn = font_name.strip().lower()
+
+    # Huntrix (tecnologico/sci-fi K-Pop): 0.22 mm per spessore minimo >= 0.85 mm
+    if "huntrix" in fn or "hunter" in fn:
+        return 0.22
 
     # Orbitron (tecnologico/sci-fi): 0.25 mm per garantire pareti spesse >= 1.2 mm e massima adesione
     if "orbitron" in fn:

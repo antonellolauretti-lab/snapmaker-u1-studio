@@ -105,6 +105,14 @@ app.mount("/ecommerce", StaticFiles(directory=str(ECOMMERCE_DIR)), name="ecommer
 
 CURATED_FONTS = [
     {
+        "id": "Huntrix",
+        "name": "Huntrix",
+        "desc": "Geometrico Sci-Fi K-Pop Bold",
+        "category": "display",
+        "family": "'Huntrix', sans-serif",
+        "file": "Huntrix.otf",
+    },
+    {
         "id": "Anton",
         "name": "Anton",
         "desc": "Massiccio Display Bold",
@@ -770,6 +778,7 @@ def generate_3mf(params: Dict[str, Any]):
     fil_colors = params.get("filament_colors")
     has_onepiece = any("onepiece" in p.name.lower() for p in parts)
     has_kpop = any("kpop" in p.name.lower() for p in parts)
+    has_huntrix = any("heart" in p.name.lower() for p in parts) or any("huntrix" in p.name.lower() for p in parts)
     has_pikachu = any("pikachu" in p.name.lower() for p in parts)
     has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
     has_pokeball = any("pokeball" in p.name.lower() for p in parts)
@@ -782,6 +791,11 @@ def generate_3mf(params: Dict[str, Any]):
         b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
         t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
         fil_colors = [b_col, t_col, "#FFFFFF", "#FFCB05"]
+    elif has_huntrix:
+        # Preset Portachiavi a Cuore Huntrix: T0 Base_Heart, T1 Mesh_Text
+        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#EE1515"
+        t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+        fil_colors = [b_col, t_col, "#1A1A1A", "#FFCB05"]
     elif has_pikachu and has_pokemon_logo:
         b_col = params.get("base_color", "#080A0D")
         base_fam = _color_family(b_col)
