@@ -160,73 +160,106 @@ def get_authentic_huntrix_logo(
         return logo.buffer(buffer_fdm, resolution=16)
     return logo
 
-def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any]:
+def get_huntrix_preset_a_geometries(target_width: float = 58.0) -> Dict[str, Any]:
     """
-    Preset A: Replica 1:1 di huntrix-keychain_2.webp (Portachiavi Sagomato Ufficiale)
-    - Lettere H, U, N, TRX separate fisicamente da gap orizzontale >= 0.90 mm.
-    - Base_Contour:
-      * Bordo perimetrale rialzato esterno (border wall) con offset +1.90 mm a quota Z [0.0, 3.00] mm.
-      * Vaschetta/fondo ribassato a Z = 2.20 mm che penetra completamente nelle fessure verticali tra H-U, U-N e N-T.
-      * Pareti verticali a 90° delle lettere a quota Z = 3.10 mm (+0.90 mm dal fondo della vaschetta).
-      * Asola integrata sopra T/R (foro d=3.8 mm, parete >= 2.3 mm, spessore pieno 3.00 mm).
+    Preset A: Geometria nativa 3D ufficiale del file master CAD (Huntrix+Keychain+without+loop.3mf)
+    - Mesh 3D originali al 100%: Base_Contour e Mesh_Text native senza approssimazioni vettoriali
+    - Asola anello integrata con diametro 3.80 mm e parete >= 2.30 mm, spessore Z pieno pari alla base
+    - Scala contenuta entro 60.0 mm (target 58.0 mm)
+    - Compenetrazione Z di 0.40 mm per coesione termica FDM
+    - 100% manifold e watertight
     """
-    scale = target_width / 55.0
-    blocks = get_authentic_huntrix_blocks(target_width=target_width, letter_gap_mm=0.95)
-    poly_H = blocks['H']
-    poly_U = blocks['U']
-    poly_N = blocks['N']
-    poly_TRX = blocks['TRX']
-    logo = blocks['logo']
+    npz_path = Path(__file__).resolve().parent / "huntrix_cad_native.npz"
+    if npz_path.exists():
+        data = np.load(npz_path)
+        base_v = data["base_vertices"]
+        base_f = data["base_faces"]
+        text_v = data["text_vertices"]
+        text_f = data["text_faces"]
+        m_base = trimesh.Trimesh(vertices=base_v, faces=base_f, process=False)
+        m_text = trimesh.Trimesh(vertices=text_v, faces=text_f, process=False)
 
-    # Fessure verticali (canyon corridors) che assicurano che il fondo della vaschetta
-    # a Z = 2.20 mm separi completamente ogni singola lettera da cima a fondo:
-    slot_HU = sg.box(poly_H.bounds[2] - 0.05, -6.0 * scale, poly_U.bounds[0] + 0.05, 6.0 * scale)
-    slot_UN = sg.box(poly_U.bounds[2] - 0.05, -6.0 * scale, poly_N.bounds[0] + 0.05, 6.0 * scale)
-    slot_NTRX = sg.box(poly_N.bounds[2] - 0.05, -6.0 * scale, poly_TRX.bounds[0] + 0.05, 6.0 * scale)
-    under_U = sg.box(poly_U.bounds[0] - 0.05, -5.5 * scale, poly_U.bounds[2] + 0.05, poly_U.bounds[1])
+        # Riscalatura proporzionata X/Y se richiesta diversa da 58.0 mm
+        scale = target_width / 58.0
+        if abs(scale - 1.0) > 1e-4:
+            m_base = m_base.copy()
+            m_text = m_text.copy()
+            m_base.vertices[:, :2] *= scale
+            m_text.vertices[:, :2] *= scale
 
-    pocket_gap = 0.70 * scale
-    pocket_poly = unary_union([logo.buffer(pocket_gap, resolution=32), slot_HU, slot_UN, slot_NTRX, under_U])
+        return {
+            'base': m_base,
+            'text': m_text,
+            'base_mesh': m_base,
+            'text_mesh': m_text
+        }
 
-    base_contour = logo.buffer(1.90 * scale, resolution=32)
+    # Fallback su file master 3MF originale se NPZ non presente
+    orig_3mf = Path(__file__).resolve().parent.parent.parent / "PROGETTI DEFINITIVI" / "Portachiavi_Huntrix" / "Huntrix+Keychain+without+loop.3mf"
+    if orig_3mf.exists():
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from manifold3d import Manifold, Mesh
 
-    eyelet_center = sg.Point(1.0 * scale, 8.2 * scale)
-    r_inner = 1.9 * scale
-    r_outer = 4.2 * scale
-    eyelet_outer = eyelet_center.buffer(r_outer, resolution=32)
-    eyelet_inner = eyelet_center.buffer(r_inner, resolution=32)
-    base_poly = base_contour.union(eyelet_outer).difference(eyelet_inner)
+        zf = zipfile.ZipFile(orig_3mf)
+        xml_content = zf.read("3D/Objects/object_1.model")
+        root = ET.fromstring(xml_content)
+        NS = {"m": "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"}
 
-    rim_poly = base_poly.difference(pocket_poly)
-    if rim_poly.geom_type == 'MultiPolygon':
-        rim_poly = max(rim_poly.geoms, key=lambda g: g.area)
+        def extract_mesh(obj_id):
+            obj = root.find(f'.//m:object[@id="{obj_id}"]', NS)
+            mesh_el = obj.find("m:mesh", NS)
+            vertices = np.array([[float(v.get("x")), float(v.get("y")), float(v.get("z"))] for v in mesh_el.findall(".//m:vertex", NS)], dtype=np.float64)
+            triangles = np.array([[int(t.get("v1")), int(t.get("v2")), int(t.get("v3"))] for t in mesh_el.findall(".//m:triangle", NS)], dtype=np.int64)
+            return trimesh.Trimesh(vertices=vertices, faces=triangles, process=False)
 
-    # 1. Piano di fondo vaschetta Z in [0.0, 2.20] mm (Tool 0)
-    m_floor = _extrude_poly(base_poly, 2.20)
-    # 2. Bordo perimetrale rialzato (border wall) Z in [2.20, 3.00] mm (+0.80 mm dal fondo)
-    m_rim = _extrude_poly(rim_poly, 0.80)
-    m_rim.apply_translation([0, 0, 2.20])
+        m_base_raw = extract_mesh("1")
+        m_text_raw = extract_mesh("2")
+        m_base_raw.apply_translation([0, 0, -1])
+        m_text_raw.apply_translation([0, 0, 1])
 
-    try:
-        m_base = m_floor.union(m_rim)
-        if not m_base.is_watertight:
-            m_base = trimesh.util.concatenate([m_floor, m_rim])
-    except Exception:
-        m_base = trimesh.util.concatenate([m_floor, m_rim])
+        target_base_width = target_width
+        scale = target_base_width / (m_base_raw.bounds[1][0] - m_base_raw.bounds[0][0])
+        m_base = m_base_raw.copy()
+        m_text = m_text_raw.copy()
+        m_base.vertices[:, :2] *= scale
+        m_text.vertices[:, :2] *= scale
 
-    # 3. Testo HUNTRIX: prisma retto puro a facce piane, lettere separate a 360° da canyon
-    # Z in [1.80, 3.10] mm (spessore 1.30 mm, penetrazione 0.40 mm nel fondo a 2.20 mm, rilievo +0.90 mm)
-    m_text = _extrude_poly(logo, 1.30)
-    m_text.apply_translation([0, 0, 1.80])
+        center_x = (m_base.bounds[0][0] + m_base.bounds[1][0]) / 2.0
+        center_y = (m_base.bounds[0][1] + m_base.bounds[1][1]) / 2.0
+        m_base.apply_translation([-center_x, -center_y, 0])
+        m_text.apply_translation([-center_x, -center_y, 0])
 
-    return {
-        'base': base_poly,
-        'rim': rim_poly,
-        'pocket': pocket_poly,
-        'text': logo,
-        'base_mesh': m_base,
-        'text_mesh': m_text
-    }
+        target_base_h = 2.60
+        base_z_min = m_base.bounds[0][2]
+        base_curr_h = m_base.bounds[1][2] - base_z_min
+        m_base.vertices[:, 2] = (m_base.vertices[:, 2] - base_z_min) * (target_base_h / base_curr_h)
+
+        target_text_h = 1.40
+        text_z_min = m_text.bounds[0][2]
+        text_curr_h = m_text.bounds[1][2] - text_z_min
+        m_text.vertices[:, 2] = 2.20 + (m_text.vertices[:, 2] - text_z_min) * (target_text_h / text_curr_h)
+
+        c_outer = sg.Point(2.0, m_base.bounds[1][1] + 1.80).buffer(4.20, resolution=32)
+        c_inner = sg.Point(2.0, m_base.bounds[1][1] + 1.80).buffer(1.90, resolution=32)
+        poly_eyelet = c_outer.difference(c_inner)
+        m_eyelet = _extrude_poly(poly_eyelet, height=2.60)
+
+        verts_b = np.ascontiguousarray(m_base.vertices, dtype=np.float32)
+        faces_b = np.ascontiguousarray(m_base.faces, dtype=np.uint32)
+        verts_e = np.ascontiguousarray(m_eyelet.vertices, dtype=np.float32)
+        faces_e = np.ascontiguousarray(m_eyelet.faces, dtype=np.uint32)
+        m_base_loop = (Manifold(Mesh(vert_properties=verts_b, tri_verts=faces_b)) + Manifold(Mesh(vert_properties=verts_e, tri_verts=faces_e))).to_mesh()
+        m_base_with_loop = trimesh.Trimesh(vertices=m_base_loop.vert_properties[:, :3], faces=m_base_loop.tri_verts, process=False)
+
+        return {
+            'base': m_base_with_loop,
+            'text': m_text,
+            'base_mesh': m_base_with_loop,
+            'text_mesh': m_text
+        }
+
+    raise FileNotFoundError("Mesh master CAD Huntrix non trovata!")
 
 def get_huntrix_preset_b_geometries(heart_width: float = 50.0) -> Dict[str, Any]:
     """
