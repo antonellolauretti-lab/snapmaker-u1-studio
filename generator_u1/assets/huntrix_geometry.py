@@ -72,10 +72,10 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
     - Base_Contour (offset 2.0 mm con asola integrata sopra T/R)
     - Mesh_Text (logo autentico HUNTRIX estruso a prisma retto piatto)
     """
-    logo = get_authentic_huntrix_logo(target_width=target_width, buffer_fdm=0.12)
-    base_contour = logo.buffer(2.0, resolution=32)
-
     scale = target_width / 55.0
+    logo = get_authentic_huntrix_logo(target_width=target_width, buffer_fdm=0.12)
+    base_contour = logo.buffer(1.90 * scale, resolution=32)
+
     eyelet_center = sg.Point(1.0 * scale, 8.2 * scale)
     r_inner = 1.9 * scale
     r_outer = 4.2 * scale
@@ -84,14 +84,32 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
 
     base_poly = base_contour.union(eyelet_outer).difference(eyelet_inner)
 
-    # Base_Contour Z in [0.0, 3.00] mm (Tool 0)
-    m_base = _extrude_poly(base_poly, 3.00)
-    # Mesh_Text Z in [2.60, 4.20] mm (prisma retto piatto, rilievo +1.20 mm, overlap 0.40 mm, Tool 1)
-    m_text = _extrude_poly(logo, 1.60)
-    m_text.apply_translation([0, 0, 2.60])
+    # Canale d'ombra: gap di 0.70 mm attorno alle lettere per contrasto e stacco visivo
+    pocket_gap = 0.70 * scale
+    pocket_poly = logo.buffer(pocket_gap, resolution=32)
+    rim_poly = base_poly.difference(pocket_poly)
+
+    # 1. Piano di fondo vaschetta Z in [0.0, 2.20] mm (Tool 0)
+    m_floor = _extrude_poly(base_poly, 2.20)
+    # 2. Bordo perimetrale rialzato (border wall) Z in [2.20, 3.00] mm (+0.80 mm dal fondo)
+    m_rim = _extrude_poly(rim_poly, 0.80)
+    m_rim.apply_translation([0, 0, 2.20])
+
+    try:
+        m_base = m_floor.union(m_rim)
+        if not m_base.is_watertight:
+            m_base = trimesh.util.concatenate([m_floor, m_rim])
+    except Exception:
+        m_base = trimesh.util.concatenate([m_floor, m_rim])
+
+    # 3. Testo HUNTRIX: prisma retto puro con pareti verticali a 90° e faccia superiore piana
+    # Z in [1.80, 3.10] mm (spessore 1.30 mm, penetrazione 0.40 mm nel fondo a 2.20 mm, rilievo +0.90 mm)
+    m_text = _extrude_poly(logo, 1.30)
+    m_text.apply_translation([0, 0, 1.80])
 
     return {
         'base': base_poly,
+        'rim': rim_poly,
         'text': logo,
         'base_mesh': m_base,
         'text_mesh': m_text

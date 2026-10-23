@@ -462,13 +462,18 @@ class ModelViewer {
 
     const parts = previewData.parts || [];
     parts.forEach((p) => {
-      const geom = new THREE.BufferGeometry();
+      let geom = new THREE.BufferGeometry();
       geom.setAttribute("position", new THREE.Float32BufferAttribute(p.vertices, 3));
       geom.setIndex(p.faces);
-      geom.computeVertexNormals();
 
       const pName = p.name || "";
       const pNameLower = pName.toLowerCase();
+
+      // Per testo e loghi: estrusione a facce piane e spigoli a 90° (zero bombatura/riflessi dispersivi)
+      if (pNameLower.includes("text") || pNameLower.includes("huntrix") || pNameLower.includes("letters")) {
+        geom = geom.toNonIndexed();
+      }
+      geom.computeVertexNormals();
 
       // Check se esiste un override forzato per brand (Pokémon, Pokéball, Pikachu multi-color)
       const brandMat = this.getBrandHardcodedMaterial(pName, this.wireframeMode);
@@ -510,9 +515,13 @@ class ModelViewer {
         role = "text";
         const textColorDef = palette[this.extruderText] || palette[1] || "#D9DFE5";
         mat = this.createMaterial(textColorDef, this.wireframeMode);
-        if (pNameLower.includes("kpop_text") || pNameLower.includes("text")) {
+        if (pNameLower.includes("kpop_text")) {
           mat.roughness = 0.25;
           mat.metalness = 0.45;
+        } else {
+          // Finitura opaca PLA standard (Huntrix e testi): evita specularità estreme che sbiancano i tratti sottili
+          mat.roughness = 0.5;
+          mat.metalness = 0.05;
         }
       } else if (
         pNameLower.startsWith("icon_") ||
@@ -614,9 +623,13 @@ class ModelViewer {
         if (textColorDef) {
           const oldMat = mesh.material;
           mesh.material = this.createMaterial(textColorDef, this.wireframeMode);
-          if (name.includes("kpop_text") || name.includes("text")) {
+          if (name.includes("kpop_text")) {
             mesh.material.roughness = 0.25;
             mesh.material.metalness = 0.45;
+          } else {
+            // Finitura opaca PLA standard (Huntrix e testi): evita specularità estreme che sbiancano i tratti sottili
+            mesh.material.roughness = 0.5;
+            mesh.material.metalness = 0.05;
           }
           if (oldMat && oldMat !== mesh.material) oldMat.dispose();
         }
