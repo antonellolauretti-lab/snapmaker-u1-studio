@@ -9,9 +9,12 @@ Modulo geometrico per i preset ufficiali HUNTRIX (Snapmaker U1):
    - Trigger: testo HUNTRIX (o huntrix / HUNTIX) E simbolo Cuore.
    - Livello 1 (Base_Slab): piastra di fondo con offset +2.0 mm attorno al cuore e asola nel cleft.
      Spessore Z [0.0, 2.40] mm (Tool 0).
-   - Livello 2 (Heart_Body): profilo canonico del cuore con punta arrotondata (R >= 2.0 mm).
+   - Livello 2 (Heart_Body): profilo classico e armonioso del cuore bombato (full/plump)
+     con convergenza dolce e punta inferiore raccordata (R >= 3.0 mm, nessun cono appuntito).
      Spessore Z [2.00, 3.60] mm (Tool 1).
-   - Livello 3 (Mesh_Text): logo autentico HUNTRIX proporzionato e centrato nel cuore.
+   - Livello 3 (Mesh_Text): logo autentico HUNTRIX con distanziamento orizzontale pulito
+     (gap tra H-U >= 0.80 mm, U-N >= 0.80 mm, N-T >= 0.80 mm, con legature T-R e R-X preservate),
+     proporzionato e centrato con margine >= 3.0 mm attorno alla scritta.
      Spessore Z [3.20, 4.60] mm (Tool 2).
 """
 from typing import Dict, Any, Tuple
@@ -28,20 +31,76 @@ def _cubic_bezier(p0, p1, p2, p3, n=40):
     t = np.linspace(0, 1, n)[:, None]
     return (1 - t)**3 * p0 + 3*(1 - t)**2 * t * p1 + 3*(1 - t) * t**2 * p2 + t**3 * p3
 
-def get_authentic_huntrix_logo(target_width: float = 55.0, buffer_fdm: float = 0.15) -> sg.MultiPolygon:
+def get_authentic_huntrix_blocks() -> Tuple[sg.Polygon, sg.Polygon, sg.Polygon, sg.Polygon]:
     """
-    Carica il logo vettoriale autentico estratto da 111.jpg / 222.jpg,
-    lo centra sull'origine (0, 0), lo scala a target_width e applica
-    un buffer FDM per garantire larghezza dei tratti >= 0.85 mm.
+    Estrae i 4 blocchi funzionali dal logo autentico vettoriale:
+    1. Blocco H (incluso il notch superiore)
+    2. Blocco U
+    3. Blocco N
+    4. Blocco T-R-I-X (con legature autentiche T-R e R-X)
+    Tutti allineati con baseline Y=0.
     """
     raw_logo = wkt.loads(HUNTRIX_LOGO_WKT)
-    b = raw_logo.bounds
-    w_orig = b[2] - b[0]
-    scale = target_width / max(w_orig, 1e-6)
-    cx = (b[0] + b[2]) / 2.0
-    cy = (b[1] + b[3]) / 2.0
-    logo_scaled = affinity.scale(raw_logo, xfact=scale, yfact=scale, origin=(cx, cy))
-    logo_centered = affinity.translate(logo_scaled, xoff=-cx, yoff=-cy)
+    g1 = raw_logo.geoms[1]
+    g5 = raw_logo.geoms[5]
+
+    # Separazione netta dello slit tra H e U a X=120.0 (coordinate originali)
+    slit = sg.box(119.8, -50, 120.2, 250)
+    diff = g1.difference(slit)
+
+    raw_h = unary_union([p for p in diff.geoms if p.bounds[0] < 119.8] + [g5])
+    raw_u = unary_union([p for p in diff.geoms if p.bounds[0] >= 120.2])
+    raw_n = raw_logo.geoms[2]
+    raw_trix = unary_union([raw_logo.geoms[0], raw_logo.geoms[3], raw_logo.geoms[4], raw_logo.geoms[6]])
+
+    # Allineamento rigoroso su baseline Y=0
+    base_y = 16.67
+    h_0 = affinity.translate(raw_h, xoff=-raw_h.bounds[0], yoff=-base_y)
+    u_0 = affinity.translate(raw_u, xoff=-raw_u.bounds[0], yoff=-base_y)
+    n_0 = affinity.translate(raw_n, xoff=-raw_n.bounds[0], yoff=-base_y)
+    trix_0 = affinity.translate(raw_trix, xoff=-raw_trix.bounds[0], yoff=-base_y)
+
+    return h_0, u_0, n_0, trix_0
+
+def get_authentic_huntrix_logo(
+    target_width: float = 55.0,
+    buffer_fdm: float = 0.12,
+    gap: float = 0.85
+) -> sg.MultiPolygon:
+    """
+    Costruisce il logo vettoriale autentico HUNTRIX spaziato orizzontalmente
+    (gap H-U, U-N, N-T >= 0.80 mm) preservando le legature T-R e R-X,
+    centrato sull'origine (0, 0) con buffer FDM per ugello 0.4 mm.
+    """
+    h_0, u_0, n_0, trix_0 = get_authentic_huntrix_blocks()
+    w_glyphs_sum = h_0.bounds[2] + u_0.bounds[2] + n_0.bounds[2] + trix_0.bounds[2]
+
+    total_gaps = 3 * gap
+    scale = max((target_width - total_gaps) / w_glyphs_sum, 1e-6)
+
+    h_s = affinity.scale(h_0, xfact=scale, yfact=scale, origin=(0, 0))
+    u_s = affinity.scale(u_0, xfact=scale, yfact=scale, origin=(0, 0))
+    n_s = affinity.scale(n_0, xfact=scale, yfact=scale, origin=(0, 0))
+    trix_s = affinity.scale(trix_0, xfact=scale, yfact=scale, origin=(0, 0))
+
+    cur_x = 0.0
+    p_h = affinity.translate(h_s, xoff=cur_x)
+    cur_x = p_h.bounds[2] + gap
+
+    p_u = affinity.translate(u_s, xoff=cur_x)
+    cur_x = p_u.bounds[2] + gap
+
+    p_n = affinity.translate(n_s, xoff=cur_x)
+    cur_x = p_n.bounds[2] + gap
+
+    p_trix = affinity.translate(trix_s, xoff=cur_x)
+
+    full_logo = unary_union([p_h, p_u, p_n, p_trix])
+    tb = full_logo.bounds
+    cx = (tb[0] + tb[2]) / 2.0
+    cy = (tb[1] + tb[3]) / 2.0
+    logo_centered = affinity.translate(full_logo, xoff=-cx, yoff=-cy)
+
     if buffer_fdm > 0:
         return logo_centered.buffer(buffer_fdm, resolution=16)
     return logo_centered
@@ -56,9 +115,9 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
     """
     Preset A: Replica 1:1 di huntrix-keychain.webp
     - Base_Contour (offset 2.0 mm con asola integrata sopra T/R)
-    - Mesh_Text (logo autentico HUNTRIX)
+    - Mesh_Text (logo autentico HUNTRIX spaziato)
     """
-    logo = get_authentic_huntrix_logo(target_width=target_width, buffer_fdm=0.15)
+    logo = get_authentic_huntrix_logo(target_width=target_width, buffer_fdm=0.12, gap=0.85)
     base_contour = logo.buffer(2.0, resolution=32)
 
     scale = target_width / 55.0
@@ -85,49 +144,60 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
 
 def get_canon_heart_polygon(heart_width: float = 50.0) -> sg.Polygon:
     """
-    Costruisce il profilo canonico ed elegante del cuore con lobi morbidi
-    e slanciati, e raccordo circolare alla punta con R >= 2.0 mm (nessun fondo piatto).
+    Costruisce il profilo classico, bombato, armonioso e pieno (plump) del cuore:
+    - Lobi ampi e slanciati con rientranza centrale superiore
+    - Fianchi arrotondati con spalla inferiore piena
+    - Convergenza morbida verso la punta inferiore
+    - Raccordo circolare alla punta con R = 3.5 mm (>= 3.0 mm)
+    - Nessun fondo piatto né cuspidi allungate a cono
     """
-    p_cleft = np.array([0.0, 9.5])
+    p_cleft = np.array([0.0, 9.0])
     p_peak = np.array([13.5, 18.5])
-    c_inner = _cubic_bezier(p_cleft, np.array([2.5, 12.0]), np.array([7.5, 18.5]), p_peak, n=30)
+    c_inner = _cubic_bezier(p_cleft, np.array([2.5, 11.5]), np.array([7.5, 18.5]), p_peak, n=30)
     p_flank = np.array([24.0, 6.0])
     c_crest = _cubic_bezier(p_peak, np.array([18.5, 18.5]), np.array([24.0, 13.0]), p_flank, n=35)
-    p_tangent = np.array([1.53, -21.28])
-    c_v_line = _cubic_bezier(p_flank, np.array([24.0, -1.0]), np.array([14.0, -13.0]), p_tangent, n=40)
-    theta = np.linspace(-np.radians(40), -np.pi / 2.0, 20)
-    c_fillet = np.column_stack([2.0 * np.cos(theta), -20.0 + 2.0 * np.sin(theta)])
-    right_half = np.vstack([c_inner, c_crest[1:], c_v_line[1:], c_fillet[1:]])
+
+    r_fillet = 3.5
+    y_center = -13.0
+    theta_tan = np.radians(45)
+    p_tangent = np.array([r_fillet * np.cos(theta_tan), y_center - r_fillet * np.sin(theta_tan)])
+
+    c_belly = _cubic_bezier(p_flank, np.array([24.0, -1.0]), np.array([16.5, -9.5]), p_tangent, n=40)
+    theta_arc = np.linspace(-theta_tan, -np.pi / 2.0, 25)
+    c_fillet = np.column_stack([r_fillet * np.cos(theta_arc), y_center + r_fillet * np.sin(theta_arc)])
+
+    right_half = np.vstack([c_inner, c_crest[1:], c_belly[1:], c_fillet[1:]])
     left_half = np.column_stack([-right_half[::-1, 0], right_half[::-1, 1]])
     heart_raw = sg.Polygon(np.vstack([right_half, left_half[1:]]))
 
-    scale = heart_width / (heart_raw.bounds[2] - heart_raw.bounds[0])
+    scale = heart_width / 48.0
     return affinity.scale(heart_raw, xfact=scale, yfact=scale, origin=(0, 0))
 
 def get_huntrix_preset_b_geometries(heart_width: float = 50.0) -> Dict[str, Any]:
     """
     Preset B: Cuore a 3 Livelli e 3 Colori Indipendenti
     - Level 1: Base_Slab (offset +2.0 mm con occhiello centrale, Z [0.0, 2.40] mm, Tool 0)
-    - Level 2: Heart_Body (cuore canonico con punta tonda R=2.0 mm, Z [2.00, 3.60] mm, Tool 1)
-    - Level 3: Mesh_Text (logo autentico HUNTRIX centrato, Z [3.20, 4.60] mm, Tool 2)
+    - Level 2: Heart_Body (cuore armonioso bombato con punta raccordata R=3.5 mm, Z [2.00, 3.60] mm, Tool 1)
+    - Level 3: Mesh_Text (logo autentico HUNTRIX spaziato, centrato con margine >= 3.0 mm, Z [3.20, 4.60] mm, Tool 2)
     """
     scale = heart_width / 50.0
     heart = get_canon_heart_polygon(heart_width=heart_width)
     base_offset = heart.buffer(2.0 * scale, resolution=32)
 
-    eyelet_center = sg.Point(0.0, 18.5 * scale)
+    eyelet_center = sg.Point(0.0, 18.0 * scale)
     r_inner = 1.9 * scale
     r_outer = 4.2 * scale
     eyelet_outer = eyelet_center.buffer(r_outer, resolution=32)
-    neck_box = sg.box(-3.5 * scale, 11.0 * scale, 3.5 * scale, 18.5 * scale)
+    neck_box = sg.box(-3.5 * scale, 10.0 * scale, 3.5 * scale, 18.0 * scale)
     eyelet_tab = eyelet_outer.union(neck_box)
     eyelet_inner = eyelet_center.buffer(r_inner, resolution=32)
     base_slab = base_offset.union(eyelet_tab).difference(eyelet_inner)
 
-    # Logo autentico proporzionato per entrare armoniosamente nel cuore (larghezza ~34 mm)
-    target_w_text = 34.0 * scale
-    logo = get_authentic_huntrix_logo(target_width=target_w_text, buffer_fdm=0.15)
-    logo_placed = affinity.translate(logo, yoff=0.5 * scale)
+    # Logo autentico proporzionato e spaziato (larghezza 33.5 mm con gap 0.85 mm)
+    target_w_text = 33.5 * scale
+    logo_spaced = get_authentic_huntrix_logo(target_width=target_w_text, buffer_fdm=0.12, gap=0.85 * scale)
+    # Centrato nella porzione ampia del cuore attorno a Y = +1.0 mm
+    logo_placed = affinity.translate(logo_spaced, yoff=1.0 * scale)
 
     # Livello 1: Base_Slab Z in [0.0, 2.40] mm
     m_base = _extrude_poly(base_slab, 2.40)
