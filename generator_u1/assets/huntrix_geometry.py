@@ -51,29 +51,143 @@ def get_real_heart_polygon(heart_width: float = 50.0) -> sg.Polygon:
 def get_canon_heart_polygon(heart_width: float = 50.0) -> sg.Polygon:
     return get_real_heart_polygon(heart_width=heart_width)
 
-def get_authentic_huntrix_logo(
-    target_width: float = 55.0,
-    buffer_fdm: float = 0.12
-) -> sg.MultiPolygon:
+def get_authentic_huntrix_blocks(target_width: float = 55.0, letter_gap_mm: float = 0.95) -> Dict[str, Any]:
     """
-    Restituisce il logo vettoriale autentico HUNTRIX 1:1 estratto da 111_2.jpg / huntrix-keychain_2.webp
-    con spaziatura naturale e tratti caratteristici (tagli su H, freccia N, prolunga T, barra continua R-X).
+    Estrae e separa fisicamente i 4 blocchi autonomi del logo autentico HUNTRIX:
+    - Blocco 1: H (autonoma)
+    - Blocco 2: U (autonoma)
+    - Blocco 3: N (autonoma)
+    - Blocco 4: TRX (blocco unito con barra della T sopra la R e diagonale della R fusa nella X)
+    Imposta una fuga orizzontale netta (fuga/gap d'aria) di ~0.95 mm tra H-U, U-N e N-TRX.
     """
     raw_logo = wkt.loads(HUNTRIX_NORM_TEXT_WKT)
-    scale = target_width
-    scaled = affinity.scale(raw_logo, xfact=scale, yfact=scale, origin=(0, 0))
+    p0 = raw_logo.geoms[0]  # Asta verticale T
+    p1 = raw_logo.geoms[1]  # H e U (congiunte nel WKT grezzo)
+    p2 = raw_logo.geoms[2]  # N
+    p3 = raw_logo.geoms[3]  # Diagonale destra X
+    p4 = raw_logo.geoms[4]  # R e diagonale sinistra X
+    p5 = raw_logo.geoms[5]  # Cuspide/taglio superiore sinistro H
+    p6 = raw_logo.geoms[6]  # Barra superiore orizzontale T
+
+    s = 55.0
+    p0_s = affinity.scale(p0, xfact=s, yfact=s, origin=(0, 0))
+    p1_s = affinity.scale(p1, xfact=s, yfact=s, origin=(0, 0))
+    p2_s = affinity.scale(p2, xfact=s, yfact=s, origin=(0, 0))
+    p3_s = affinity.scale(p3, xfact=s, yfact=s, origin=(0, 0))
+    p4_s = affinity.scale(p4, xfact=s, yfact=s, origin=(0, 0))
+    p5_s = affinity.scale(p5, xfact=s, yfact=s, origin=(0, 0))
+    p6_s = affinity.scale(p6, xfact=s, yfact=s, origin=(0, 0))
+
+    # Taglio netto tra H e U: elimina i ponti orizzontali di fusione
+    box_cut = sg.box(-18.9, -10.0, -16.4, 10.0)
+    p1_clean = p1_s.difference(box_cut)
+    poly_H = unary_union([p1_clean.geoms[0], p5_s])
+    poly_U_orig = p1_clean.geoms[1]
+    poly_N_orig = p2_s
+    poly_TRX_orig = unary_union([p0_s, p6_s, p4_s, p3_s])
+
+    gap = letter_gap_mm * (target_width / 55.0)
+
+    # 1. Posizionamento U con gap da H
+    u_shift = (poly_H.bounds[2] + gap) - poly_U_orig.bounds[0]
+    poly_U = affinity.translate(poly_U_orig, xoff=u_shift)
+
+    # 2. Posizionamento N con gap da U
+    n_shift = (poly_U.bounds[2] + gap) - poly_N_orig.bounds[0]
+    poly_N = affinity.translate(poly_N_orig, xoff=n_shift)
+
+    # 3. Posizionamento TRX con gap da N
+    trx_shift = (poly_N.bounds[2] + gap) - poly_TRX_orig.bounds[0]
+    poly_TRX = affinity.translate(poly_TRX_orig, xoff=trx_shift)
+
+    flat_polys = []
+    for p in [poly_H, poly_U, poly_N, poly_TRX]:
+        if p.geom_type == 'Polygon':
+            flat_polys.append(p)
+        elif p.geom_type == 'MultiPolygon':
+            flat_polys.extend(list(p.geoms))
+    multi = sg.MultiPolygon(flat_polys)
+
+    # Riscalatura proporzionata e centratura a X=0
+    curr_w = multi.bounds[2] - multi.bounds[0]
+    scale_fac = target_width / max(curr_w, 1e-6)
+    poly_H = affinity.scale(poly_H, xfact=scale_fac, yfact=scale_fac, origin=(0, 0))
+    poly_U = affinity.scale(poly_U, xfact=scale_fac, yfact=scale_fac, origin=(0, 0))
+    poly_N = affinity.scale(poly_N, xfact=scale_fac, yfact=scale_fac, origin=(0, 0))
+    poly_TRX = affinity.scale(poly_TRX, xfact=scale_fac, yfact=scale_fac, origin=(0, 0))
+
+    flat_polys = []
+    for p in [poly_H, poly_U, poly_N, poly_TRX]:
+        if p.geom_type == 'Polygon':
+            flat_polys.append(p)
+        elif p.geom_type == 'MultiPolygon':
+            flat_polys.extend(list(p.geoms))
+    multi = sg.MultiPolygon(flat_polys)
+
+    center_x = (multi.bounds[0] + multi.bounds[2]) / 2.0
+    poly_H = affinity.translate(poly_H, xoff=-center_x)
+    poly_U = affinity.translate(poly_U, xoff=-center_x)
+    poly_N = affinity.translate(poly_N, xoff=-center_x)
+    poly_TRX = affinity.translate(poly_TRX, xoff=-center_x)
+
+    flat_polys = []
+    for p in [poly_H, poly_U, poly_N, poly_TRX]:
+        if p.geom_type == 'Polygon':
+            flat_polys.append(p)
+        elif p.geom_type == 'MultiPolygon':
+            flat_polys.extend(list(p.geoms))
+    multi = sg.MultiPolygon(flat_polys)
+
+    return {
+        'H': poly_H,
+        'U': poly_U,
+        'N': poly_N,
+        'TRX': poly_TRX,
+        'logo': multi
+    }
+
+def get_authentic_huntrix_logo(
+    target_width: float = 55.0,
+    buffer_fdm: float = 0.0
+) -> sg.MultiPolygon:
+    """
+    Restituisce il logo vettoriale autentico HUNTRIX con lettere H, U, N, TRX separate fisicamente
+    da una fuga netta (gap d'aria >= 0.90 mm).
+    """
+    blocks = get_authentic_huntrix_blocks(target_width=target_width, letter_gap_mm=0.95)
+    logo = blocks['logo']
     if buffer_fdm > 0:
-        return scaled.buffer(buffer_fdm, resolution=16)
-    return scaled
+        return logo.buffer(buffer_fdm, resolution=16)
+    return logo
 
 def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any]:
     """
-    Preset A: Replica 1:1 di huntrix-keychain_2.webp
-    - Base_Contour (offset 2.0 mm con asola integrata sopra T/R)
-    - Mesh_Text (logo autentico HUNTRIX estruso a prisma retto piatto)
+    Preset A: Replica 1:1 di huntrix-keychain_2.webp (Portachiavi Sagomato Ufficiale)
+    - Lettere H, U, N, TRX separate fisicamente da gap orizzontale >= 0.90 mm.
+    - Base_Contour:
+      * Bordo perimetrale rialzato esterno (border wall) con offset +1.90 mm a quota Z [0.0, 3.00] mm.
+      * Vaschetta/fondo ribassato a Z = 2.20 mm che penetra completamente nelle fessure verticali tra H-U, U-N e N-T.
+      * Pareti verticali a 90° delle lettere a quota Z = 3.10 mm (+0.90 mm dal fondo della vaschetta).
+      * Asola integrata sopra T/R (foro d=3.8 mm, parete >= 2.3 mm, spessore pieno 3.00 mm).
     """
     scale = target_width / 55.0
-    logo = get_authentic_huntrix_logo(target_width=target_width, buffer_fdm=0.12)
+    blocks = get_authentic_huntrix_blocks(target_width=target_width, letter_gap_mm=0.95)
+    poly_H = blocks['H']
+    poly_U = blocks['U']
+    poly_N = blocks['N']
+    poly_TRX = blocks['TRX']
+    logo = blocks['logo']
+
+    # Fessure verticali (canyon corridors) che assicurano che il fondo della vaschetta
+    # a Z = 2.20 mm separi completamente ogni singola lettera da cima a fondo:
+    slot_HU = sg.box(poly_H.bounds[2] - 0.05, -6.0 * scale, poly_U.bounds[0] + 0.05, 6.0 * scale)
+    slot_UN = sg.box(poly_U.bounds[2] - 0.05, -6.0 * scale, poly_N.bounds[0] + 0.05, 6.0 * scale)
+    slot_NTRX = sg.box(poly_N.bounds[2] - 0.05, -6.0 * scale, poly_TRX.bounds[0] + 0.05, 6.0 * scale)
+    under_U = sg.box(poly_U.bounds[0] - 0.05, -5.5 * scale, poly_U.bounds[2] + 0.05, poly_U.bounds[1])
+
+    pocket_gap = 0.70 * scale
+    pocket_poly = unary_union([logo.buffer(pocket_gap, resolution=32), slot_HU, slot_UN, slot_NTRX, under_U])
+
     base_contour = logo.buffer(1.90 * scale, resolution=32)
 
     eyelet_center = sg.Point(1.0 * scale, 8.2 * scale)
@@ -81,13 +195,11 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
     r_outer = 4.2 * scale
     eyelet_outer = eyelet_center.buffer(r_outer, resolution=32)
     eyelet_inner = eyelet_center.buffer(r_inner, resolution=32)
-
     base_poly = base_contour.union(eyelet_outer).difference(eyelet_inner)
 
-    # Canale d'ombra: gap di 0.70 mm attorno alle lettere per contrasto e stacco visivo
-    pocket_gap = 0.70 * scale
-    pocket_poly = logo.buffer(pocket_gap, resolution=32)
     rim_poly = base_poly.difference(pocket_poly)
+    if rim_poly.geom_type == 'MultiPolygon':
+        rim_poly = max(rim_poly.geoms, key=lambda g: g.area)
 
     # 1. Piano di fondo vaschetta Z in [0.0, 2.20] mm (Tool 0)
     m_floor = _extrude_poly(base_poly, 2.20)
@@ -102,7 +214,7 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
     except Exception:
         m_base = trimesh.util.concatenate([m_floor, m_rim])
 
-    # 3. Testo HUNTRIX: prisma retto puro con pareti verticali a 90° e faccia superiore piana
+    # 3. Testo HUNTRIX: prisma retto puro a facce piane, lettere separate a 360° da canyon
     # Z in [1.80, 3.10] mm (spessore 1.30 mm, penetrazione 0.40 mm nel fondo a 2.20 mm, rilievo +0.90 mm)
     m_text = _extrude_poly(logo, 1.30)
     m_text.apply_translation([0, 0, 1.80])
@@ -110,6 +222,7 @@ def get_huntrix_preset_a_geometries(target_width: float = 55.0) -> Dict[str, Any
     return {
         'base': base_poly,
         'rim': rim_poly,
+        'pocket': pocket_poly,
         'text': logo,
         'base_mesh': m_base,
         'text_mesh': m_text
