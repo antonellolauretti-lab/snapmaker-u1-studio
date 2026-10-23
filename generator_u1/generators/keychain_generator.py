@@ -596,29 +596,17 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             target_w = float(params.get("heart_width", 52.0))
             geoms = get_heart_huntrix_geometries(target_width=target_w, text="HUNTRIX")
 
-            # Architettura a 3 volumi e quote Z calibrate (Z totale = 4.60 mm):
-            # Base_Slab: Z 0.0 - 2.40 mm (spessore 2.40 mm)
-            # Heart_Body: Z 2.00 - 3.60 mm (spessore 1.60 mm, compenetrazione Z 0.40 mm nella base)
-            # Mesh_Text: Z 3.20 - 4.60 mm (spessore 1.40 mm, compenetrazione Z 0.40 mm nel cuore)
-            base_h = 2.40
-            heart_h = 1.60
-            text_h = 1.40
-            overlap_z = 0.40
+            # Geometria del cuore morbido, bombato (beveled) con asola ad arco integrata (Z 0.0 - 4.4 mm)
+            # Scritta 3D nitida centrata orizzontalmente e verticalmente (Z 4.0 - 5.6 mm)
+            m_heart = geoms["heart_mesh"]
+            m_text = geoms["text_mesh"]
 
-            m_base = _extrude_geometry(geoms["base"], height=base_h)
-            m_heart = _extrude_geometry(geoms["heart"], height=heart_h)
-            m_heart.apply_translation([0, 0, base_h - overlap_z])
-            m_text = _extrude_geometry(geoms["text"], height=text_h)
-            m_text.apply_translation([0, 0, (base_h - overlap_z) + (heart_h - overlap_z)])
-
-            base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
-            icon_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
+            heart_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or params.get("base_color") or "#EE1515"
             text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
 
             return [
-                PartItem(name="Base_Slab", mesh=m_base, extruder=0, color=base_col),
-                PartItem(name="Heart_Body", mesh=m_heart, extruder=1, color=icon_col),
-                PartItem(name="Mesh_Text", mesh=m_text, extruder=2, color=text_col),
+                PartItem(name="Heart_Body", mesh=m_heart, extruder=0, color=heart_col),
+                PartItem(name="Mesh_Text", mesh=m_text, extruder=1, color=text_col),
             ]
         except Exception as e:
             print(f"Avviso generatore HUNTRIX CUORE dedicato: {e}")

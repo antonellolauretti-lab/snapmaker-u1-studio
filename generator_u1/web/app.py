@@ -792,11 +792,10 @@ def generate_3mf(params: Dict[str, Any]):
         t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
         fil_colors = [b_col, t_col, "#FFFFFF", "#FFCB05"]
     elif has_huntrix:
-        # Preset Portachiavi a Cuore Huntrix a 3 colori: T0 Base_Slab, T1 Heart_Body, T2 Mesh_Text
-        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
-        i_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
+        # Preset Portachiavi a Cuore Huntrix: T0 Cuore Rosso, T1 Testo Bianco
+        h_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or params.get("base_color") or "#EE1515"
         t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
-        fil_colors = [b_col, i_col, t_col, "#FFCB05"]
+        fil_colors = [h_col, t_col, "#1A1A1A", "#FFCB05"]
     elif has_pikachu and has_pokemon_logo:
         b_col = params.get("base_color", "#080A0D")
         base_fam = _color_family(b_col)
