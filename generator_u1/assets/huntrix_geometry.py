@@ -1,11 +1,13 @@
 """
 Modulo geometrico per i preset ufficiali HUNTRIX (Snapmaker U1):
-1. PRESET A: Portachiavi Sagomato Ufficiale (huntrix-keychain_2.webp)
+1. PRESET A: Portachiavi Sagomato Ufficiale con Tasca Scavata / Canyon (huntrix-keychain_2.webp)
    - Trigger: testo HUNTRIX o huntrix e nessun simbolo (icon in ('none', '', None)).
-   - Base_Contour: offset +2.0 mm attorno al logo autentico HUNTRIX con asola centrata sopra T/R.
-     Spessore Z [0.0, 3.00] mm (Tool 0 - Colore Base).
-   - Mesh_Text: logo vettoriale autentico HUNTRIX 1:1 con prisma retto piatto in rilievo +1.20 mm
-     (Z [2.60, 4.20] mm con 0.40 mm di compenetrazione solida nella base, Tool 1 - Colore Testo).
+   - Base_Contour: geometria nativa master CAD con tasca interna ribassata (vaschetta / canyon a quota Z = 2.10 mm)
+     e bordo esterno perimetrale rialzato a spessore pieno Z = 3.00 mm con asola anello integrata (foro d=3.80 mm,
+     parete >= 2.30 mm). Tool 0 - Colore Base.
+   - Mesh_Text: lettere autentiche 3D del logo ufficiale HUNTRIX con compenetrazione di 0.40 mm nella vaschetta
+     (Z [1.70, 3.10] mm, con rilievo netto di +1.00 mm rispetto al canyon e dislivello d'ombra di contrasto,
+     Tool 1 - Colore Testo).
 2. PRESET B: Portachiavi a Cuore a 3 Livelli e 3 Colori Indipendenti
    - Trigger: testo HUNTRIX (o huntrix / HUNTIX) E simbolo Cuore.
    - Livello 1 (Base_Slab): piastra di fondo con offset +2.0 mm attorno alla sagoma del cuore reale
@@ -199,6 +201,7 @@ def get_huntrix_preset_a_geometries(target_width: float = 58.0) -> Dict[str, Any
     if orig_3mf.exists():
         import zipfile
         import xml.etree.ElementTree as ET
+        from shapely.ops import polygonize, unary_union
         from manifold3d import Manifold, Mesh
 
         zf = zipfile.ZipFile(orig_3mf)
@@ -215,11 +218,8 @@ def get_huntrix_preset_a_geometries(target_width: float = 58.0) -> Dict[str, Any
 
         m_base_raw = extract_mesh("1")
         m_text_raw = extract_mesh("2")
-        m_base_raw.apply_translation([0, 0, -1])
-        m_text_raw.apply_translation([0, 0, 1])
 
-        target_base_width = target_width
-        scale = target_base_width / (m_base_raw.bounds[1][0] - m_base_raw.bounds[0][0])
+        scale = target_width / (m_base_raw.bounds[1][0] - m_base_raw.bounds[0][0])
         m_base = m_base_raw.copy()
         m_text = m_text_raw.copy()
         m_base.vertices[:, :2] *= scale
@@ -230,32 +230,47 @@ def get_huntrix_preset_a_geometries(target_width: float = 58.0) -> Dict[str, Any
         m_base.apply_translation([-center_x, -center_y, 0])
         m_text.apply_translation([-center_x, -center_y, 0])
 
-        target_base_h = 2.60
-        base_z_min = m_base.bounds[0][2]
-        base_curr_h = m_base.bounds[1][2] - base_z_min
-        m_base.vertices[:, 2] = (m_base.vertices[:, 2] - base_z_min) * (target_base_h / base_curr_h)
+        # Sezione 2D testo per pocket/canyon
+        sec = m_text.section(plane_origin=[0, 0, 0], plane_normal=[0, 0, 1])
+        lines = [sg.LineString(loop[:, :2]) for loop in sec.discrete]
+        union_text_2d = unary_union(list(polygonize(lines)))
+        pkt = union_text_2d.buffer(0.75, resolution=32)
+        pkt_closed = pkt.buffer(0.10, resolution=16).buffer(-0.10, resolution=16)
+        pocket_2d = sg.Polygon(pkt_closed.exterior)
 
-        target_text_h = 1.40
-        text_z_min = m_text.bounds[0][2]
-        text_curr_h = m_text.bounds[1][2] - text_z_min
-        m_text.vertices[:, 2] = 2.20 + (m_text.vertices[:, 2] - text_z_min) * (target_text_h / text_curr_h)
+        # Sezione 2D base con anello
+        sec_b = m_base.section(plane_origin=[0, 0, 0], plane_normal=[0, 0, 1])
+        base_2d = unary_union(list(polygonize([sg.LineString(loop[:, :2]) for loop in sec_b.discrete])))
+        c_center = sg.Point(2.0, base_2d.bounds[3] + 1.80)
+        c_outer = c_center.buffer(4.20, resolution=32)
+        c_inner = c_center.buffer(1.90, resolution=32)
+        base_loop_2d = base_2d.union(c_outer).difference(c_inner)
 
-        c_outer = sg.Point(2.0, m_base.bounds[1][1] + 1.80).buffer(4.20, resolution=32)
-        c_inner = sg.Point(2.0, m_base.bounds[1][1] + 1.80).buffer(1.90, resolution=32)
-        poly_eyelet = c_outer.difference(c_inner)
-        m_eyelet = _extrude_poly(poly_eyelet, height=2.60)
+        def to_manifold(m):
+            vp = np.ascontiguousarray(m.vertices, dtype=np.float32)
+            tv = np.ascontiguousarray(m.faces, dtype=np.uint32)
+            return Manifold(Mesh(vert_properties=vp, tri_verts=tv))
 
-        verts_b = np.ascontiguousarray(m_base.vertices, dtype=np.float32)
-        faces_b = np.ascontiguousarray(m_base.faces, dtype=np.uint32)
-        verts_e = np.ascontiguousarray(m_eyelet.vertices, dtype=np.float32)
-        faces_e = np.ascontiguousarray(m_eyelet.faces, dtype=np.uint32)
-        m_base_loop = (Manifold(Mesh(vert_properties=verts_b, tri_verts=faces_b)) + Manifold(Mesh(vert_properties=verts_e, tri_verts=faces_e))).to_mesh()
-        m_base_with_loop = trimesh.Trimesh(vertices=m_base_loop.vert_properties[:, :3], faces=m_base_loop.tri_verts, process=False)
+        # Base piena Z [0.0, 3.00] mm
+        m_base_solid = trimesh.creation.extrude_polygon(base_loop_2d, height=3.00)
+        # Tasca scavata Z da 2.10 a 3.30 mm
+        m_pocket_solid = trimesh.creation.extrude_polygon(pocket_2d, height=1.20)
+        m_pocket_solid.apply_translation([0, 0, 2.10])
+
+        mani_base = to_manifold(m_base_solid)
+        mani_pocket = to_manifold(m_pocket_solid)
+        mani_canyon = (mani_base - mani_pocket).to_mesh()
+        m_base_canyon = trimesh.Trimesh(vertices=mani_canyon.vert_properties[:, :3], faces=mani_canyon.tri_verts, process=False)
+
+        # Mesh_Text Z [1.70, 3.10] mm
+        tz_min = m_text.bounds[0][2]
+        tz_h = m_text.bounds[1][2] - tz_min
+        m_text.vertices[:, 2] = 1.70 + (m_text.vertices[:, 2] - tz_min) * (1.40 / tz_h)
 
         return {
-            'base': m_base_with_loop,
+            'base': m_base_canyon,
             'text': m_text,
-            'base_mesh': m_base_with_loop,
+            'base_mesh': m_base_canyon,
             'text_mesh': m_text
         }
 
