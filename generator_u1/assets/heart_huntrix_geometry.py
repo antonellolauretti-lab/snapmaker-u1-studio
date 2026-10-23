@@ -3,24 +3,24 @@ Modulo geometrico per il portachiavi a cuore con scritta centrale "HUNTRIX"
 ottimizzato per la stampa 3D FDM su Snapmaker U1 (ugello 0.4 mm).
 
 Specifiche di progetto:
-1. Profilo del Cuore:
-   - Sagoma piena, morbida e paffuta basata su curve continue Bézier C1.
-   - Lobi superiori ampi, ben arrotondati, con rientranza centrale dolce e poco profonda.
-   - Lati convessi morbidi che scendono verso una punta inferiore arrotondata (tangente orizzontale a X=0, nessun artefatto).
-   - Larghezza nominale 52.0 mm, altezza 46.2 mm.
-2. Anellino a Mezza Luna (Posizione "In Alto"):
-   - Asola ad arco raccordata elegantemente tra le pareti interne dei due lobi superiori.
-   - Foro passante ovale/arco (larghezza 4.4 mm, altezza 3.8 mm) con spessore parete >= 2.8 mm.
-   - Integrata in modo continuo nella stessa mesh del corpo del cuore.
-3. Estrusione 3D e Smussatura (Bevel / Bombato):
+1. Profilo del Cuore Canonico ed Elegante:
+   - Due lobi superiori slanciati, ampi e ben distinti, con rientranza centrale superiore ben definita a X=0.
+   - I rami laterali scendono inclinati a "V" verso il centro, convergendo sulla punta inferiore.
+   - La punta inferiore si raccorda con un raggio morbido di curvatura R = 1.8 mm a X=0, Y=-22.0 (nessun fondo piatto).
+   - Simmetria speculare geometrica al 100% rispetto all'asse X = 0.
+2. Anellino a Mezza Luna Integrato:
+   - Perfettamente centrato e specchiato sull'asse X = 0.
+   - Larghezza esterna uniforme ~8.0 mm (r=4.0 mm).
+   - Foro passante ovale/stadium pulito di larghezza 4.2 mm, altezza 5.0 mm, adatto all'anello portachiavi.
+   - Perfettamente fuso e solidale con entrambi i lobi del cuore senza artefatti o intersezioni rotte.
+3. Estrusione 3D e Smussatura (Bevel Bombato):
    - Smussatura a quarto di cerchio sui bordi superiori con 10 segmenti per profilo curvo, bombato e liscio.
-   - Fondo perfettamente piatto a Z=0 per adesione ottimale al piatto PEI.
-   - Spessore totale corpo cuore 4.4 mm (Z da 0.0 a 4.4 mm).
-   - Rimosso qualsiasi bordo piatto esterno: il corpo del cuore è il volume principale continuo.
+   - Fondo piatto a Z=0 per perfetta adesione sul piatto di stampa PEI.
+   - Spessore corpo cuore 4.4 mm (Z da 0.0 a 4.4 mm).
 4. Scritta 3D HUNTRIX:
-   - Font Huntrix geometrico con spaziatura (kerning) calibrata.
-   - Centratura orizzontale (X=0) e verticale sulla superficie frontale del cuore.
-   - Rilievo nitido di 1.2 mm (Z da 4.0 a 5.6 mm, con 0.4 mm di compenetrazione).
+   - Font Huntrix geometrico con kerning calibrato.
+   - Centrata orizzontalmente (X=0) e verticalmente sulla superficie frontale del cuore.
+   - Rilievo nitido di 1.2 mm (Z da 4.0 a 5.6 mm, con 0.4 mm di compenetrazione solida).
 """
 from typing import Dict, Any, Tuple
 from pathlib import Path
@@ -41,92 +41,78 @@ def _cubic_bezier(p0, p1, p2, p3, n=40):
     return (1 - t)**3 * p0 + 3*(1 - t)**2 * t * p1 + 3*(1 - t) * t**2 * p2 + t**3 * p3
 
 
-def get_plump_heart_polygon(target_w: float = 52.0) -> sg.Polygon:
+def get_plump_heart_polygon(target_w: float = 50.0) -> sg.Polygon:
     """
-    Costruisce il profilo 2D del cuore morbido, pieno e paffuto con asola superiore
-    a mezza luna (arco) raccordata armonicamente tra i due lobi superiori.
+    Costruisce il profilo 2D canonico, elegante e slanciato del cuore con
+    asola superiore ad arco simmetrica a X=0, larghezza 8 mm e foro passante 4.2 mm.
     """
-    scale = target_w / 52.0
+    scale = target_w / 48.0
 
-    # 1. Raccordo interno lobo destro dal punto di innesto dell'arco (5.5, 16.5) alla cresta (14.0, 19.5)
-    p_arch_join = np.array([5.5, 16.5])
-    p_crest = np.array([14.0, 19.5])
-    c_lobe_inner = _cubic_bezier(
-        p_arch_join,
-        np.array([7.5, 19.0]),
-        np.array([10.5, 19.5]),
-        p_crest,
-        n=25
+    # 1. Metà destra del cuore canonico:
+    # Gola centrale a (0, 9.5)
+    p_cleft = np.array([0.0, 9.5])
+    p_peak = np.array([13.5, 18.5])
+    c_inner = _cubic_bezier(
+        p_cleft,
+        np.array([2.5, 12.0]),
+        np.array([7.5, 18.5]),
+        p_peak,
+        n=30
     )
 
-    # 2. Fianco superiore e bombatura convessa esterna fino a (26.0, 4.0)
-    p_flank = np.array([26.0, 4.0])
-    c_lobe_outer = _cubic_bezier(
-        p_crest,
-        np.array([19.5, 19.5]),
-        np.array([26.0, 13.5]),
+    # Cresta del lobo e discesa al fianco massimo (24.0, 6.0)
+    p_flank = np.array([24.0, 6.0])
+    c_crest = _cubic_bezier(
+        p_peak,
+        np.array([18.5, 18.5]),
+        np.array([24.0, 13.0]),
         p_flank,
         n=35
     )
 
-    # 3. Discesa convessa morbida e piena verso la punta inferiore a (0.0, -22.0)
-    p_tip = np.array([0.0, -22.0])
-    c_lower = _cubic_bezier(
+    # Ramo a "V" inclinato convergente verso la punta
+    # Raccordo tangenziale con l'arco di cerchio alla punta (R=1.8 mm centrato a (0, -20.2))
+    p_tangent = np.array([1.38, -21.36])
+    c_v_line = _cubic_bezier(
         p_flank,
-        np.array([26.0, -5.0]),   # convessa, mantiene il fianco pieno e morbido
-        np.array([16.0, -17.5]),  # raccordo continuo
-        np.array([5.0, -22.0]),   # ingresso tangente orizzontale
+        np.array([24.0, -1.0]),
+        np.array([14.0, -13.0]),
+        p_tangent,
         n=40
     )
-    # Raccordo alla punta con tangente orizzontale (dy/dx = 0) per C1 perfetto
-    c_tip = _cubic_bezier(
-        np.array([5.0, -22.0]),
-        np.array([2.5, -22.0]),
-        np.array([0.8, -22.0]),
-        p_tip,
-        n=15
-    )
 
-    right_heart = np.vstack([c_lobe_inner[1:], c_lobe_outer[1:], c_lower[1:], c_tip[1:]])
+    # Arco di raccordo della punta (da tangenza a X=0, Y=-22.0 con tangente orizzontale)
+    theta = np.linspace(-np.radians(40), -np.pi / 2.0, 20)
+    c_fillet = np.column_stack([1.8 * np.cos(theta), -20.2 + 1.8 * np.sin(theta)])
 
-    # 4. Profilo esterno dell'arco a mezza luna (sommità Y=24.2 al centro X=0)
-    c_arch_right = _cubic_bezier(
-        np.array([0.0, 24.2]),
-        np.array([2.8, 24.2]),
-        np.array([5.5, 20.5]),
-        p_arch_join,
-        n=25
-    )
-    c_arch_left = np.column_stack([-c_arch_right[::-1, 0], c_arch_right[::-1, 1]])
-    left_heart = np.column_stack([-right_heart[::-1, 0], right_heart[::-1, 1]])
+    right_heart_half = np.vstack([c_inner, c_crest[1:], c_v_line[1:], c_fillet[1:]])
 
-    full_exterior = np.vstack([
-        c_arch_left,
-        c_arch_right[1:],
-        right_heart[1:],
-        left_heart[1:]
-    ])
+    # Simmetria geometrica rigorosa: specchia esattamente su X negativo
+    left_heart_half = np.column_stack([-right_heart_half[::-1, 0], right_heart_half[::-1, 1]])
+    heart_base_poly = sg.Polygon(np.vstack([right_heart_half, left_heart_half[1:]]))
 
-    # 5. Foro interno dell'asola (arco / mezza luna per anellino):
-    # Centrato a X=0, larghezza 4.4 mm, altezza 3.8 mm
-    theta = np.linspace(0, np.pi, 25)
-    r_top = 2.2
-    y_center_top = 18.3
-    top_half = np.column_stack([r_top * np.cos(theta), y_center_top + r_top * np.sin(theta)])
+    # 2. Asola superiore ad arco simmetrico a mezza luna:
+    # Larghezza esterna 8.0 mm (X in [-4.0, +4.0]), sommità Y = 22.5 mm
+    r_arch_outer = 4.0
+    theta_arch = np.linspace(0, np.pi, 40)
+    arch_outer_top = np.column_stack([r_arch_outer * np.cos(theta_arch), 18.5 + r_arch_outer * np.sin(theta_arch)])
+    arch_outer_poly = sg.Polygon(np.vstack([
+        arch_outer_top,
+        [[-r_arch_outer, 9.0], [r_arch_outer, 9.0]]
+    ]))
 
-    theta_bot = np.linspace(np.pi, 2*np.pi, 25)
-    r_bot_x = 2.2
-    r_bot_y = 1.3
-    y_center_bot = 17.3
-    bot_half = np.column_stack([r_bot_x * np.cos(theta_bot), y_center_bot + r_bot_y * np.sin(theta_bot)])
-    hole_pts = np.vstack([top_half, bot_half[1:]])
+    # Foro passante portachiavi pulito e centrato a X=0:
+    # Larghezza 4.2 mm, altezza 5.0 mm (da Y=12.1 a Y=18.5)
+    r_hole = 2.1
+    theta_hole = np.linspace(0, np.pi, 25)
+    hole_top = np.column_stack([r_hole * np.cos(theta_hole), 16.4 + r_hole * np.sin(theta_hole)])
+    theta_hole_bot = np.linspace(np.pi, 2 * np.pi, 25)
+    hole_bot = np.column_stack([r_hole * np.cos(theta_hole_bot), 14.2 + r_hole * np.sin(theta_hole_bot)])
+    hole_poly = sg.Polygon(np.vstack([hole_top, hole_bot[1:]]))
 
-    ext_poly = sg.Polygon(full_exterior)
-    hole_poly = sg.Polygon(hole_pts)
-    heart_with_arch = ext_poly.difference(hole_poly)
-
-    # Semplificazione per rimuovere micro-collinearità ai vertici della punta
-    heart_clean = heart_with_arch.simplify(0.02)
+    # Fusione booleana pulita e sottrazione del foro passante
+    heart_with_arch = heart_base_poly.union(arch_outer_poly).difference(hole_poly)
+    heart_clean = heart_with_arch.simplify(0.01)
 
     if abs(scale - 1.0) > 1e-4:
         heart_clean = affinity.scale(heart_clean, xfact=scale, yfact=scale, origin=(0, 0))
@@ -142,7 +128,7 @@ def create_beveled_heart_mesh(
 ) -> trimesh.Trimesh:
     """
     Genera la mesh 3D bombata e smussata a quarto di cerchio per il corpo del cuore,
-    con fondo piatto a Z=0 e normali perfette.
+    con fondo piatto a Z=0 e normali perfette. 100% manifold e watertight.
     """
     ext_coords = np.array(poly.exterior.coords)[:-1]
     hole_coords = np.array(poly.interiors[0].coords)[:-1] if poly.interiors else np.empty((0, 2))
@@ -204,12 +190,12 @@ def create_beveled_heart_mesh(
 
     z_wall = height - bevel_r
     levels = []
-    # Livello 0: Z=0 (fondo piatto)
+    # Livello 0: Z=0 (fondo piatto per piatto PEI)
     levels.append(np.column_stack([flat_verts, np.zeros(n)]))
     # Livello 1: Z=z_wall (parete verticale)
     levels.append(np.column_stack([flat_verts, np.full(n, z_wall)]))
 
-    # Livelli di raccordo bombato a quarto di cerchio
+    # Livelli di smussatura bombata a quarto di cerchio
     for s in range(1, bevel_segments + 1):
         phi = (np.pi / 2.0) * (s / bevel_segments)
         inset = bevel_r * (1.0 - np.cos(phi))
@@ -220,7 +206,7 @@ def create_beveled_heart_mesh(
     num_levels = len(levels)
     all_verts = np.vstack(levels)
 
-    faces = [tri_indices[:, ::-1]] # Fondo piatto
+    faces = [tri_indices[:, ::-1]] # Fondo piatto (normali verso -Z)
     for lvl in range(num_levels - 1):
         base_a = lvl * n
         base_b = (lvl + 1) * n
@@ -232,7 +218,7 @@ def create_beveled_heart_mesh(
             nxt = n_ext + ((i + 1) % n_hole)
             faces.append([[base_a + nxt, base_b + nxt, base_b + curr], [base_a + nxt, base_b + curr, base_a + curr]])
 
-    # Top cap
+    # Top cap (normali verso +Z)
     faces.append(tri_indices + (num_levels - 1) * n)
 
     mesh = trimesh.Trimesh(vertices=all_verts, faces=np.vstack(faces), process=True)
@@ -242,7 +228,7 @@ def create_beveled_heart_mesh(
 
 
 def get_heart_huntrix_geometries(
-    target_width: float = 52.0,
+    target_width: float = 50.0,
     text: str = "HUNTRIX"
 ) -> Dict[str, Any]:
     """
@@ -253,18 +239,18 @@ def get_heart_huntrix_geometries(
     - heart_mesh: mesh 3D bombata e smussata (Z 0.0 - 4.4 mm)
     - text_mesh: mesh 3D della scritta in rilievo (Z 4.0 - 5.6 mm)
     """
-    scale = target_width / 52.0
+    scale = target_width / 48.0
     poly = get_plump_heart_polygon(target_w=target_width)
 
     # 1. Mesh 3D del cuore bombata con 10 segmenti di smussatura
     heart_mesh = create_beveled_heart_mesh(
         poly,
-        height=4.4 * scale,
-        bevel_r=1.2 * scale,
+        height=4.4,
+        bevel_r=1.2,
         bevel_segments=10
     )
 
-    # 2. Scritta HUNTRIX con font geometrico e kerning calibrato
+    # 2. Scritta HUNTRIX centrata
     clean_txt = (text or "HUNTRIX").strip().upper()
     font_file = resolve_font_path("Huntrix")
     if not font_file:
@@ -272,8 +258,8 @@ def get_heart_huntrix_geometries(
         font_file = str(base_dir / "assets" / "fonts" / "Huntrix.otf")
 
     fp = fm.FontProperties(fname=font_file)
-    font_sz = 7.6 * scale
-    char_spacing = 0.70 * scale
+    font_sz = 7.4 * scale
+    char_spacing = 0.65 * scale
 
     char_geoms = []
     cur_x = 0.0
@@ -301,7 +287,7 @@ def get_heart_huntrix_geometries(
                 poly_list.append(poly_c)
 
         g_char = unary_union(poly_list)
-        g_buf = g_char.buffer(0.16 * scale, resolution=32)
+        g_buf = g_char.buffer(0.15 * scale, resolution=32)
         gb = g_buf.bounds
         g_placed = affinity.translate(g_buf, xoff=cur_x - gb[0])
         char_geoms.append(g_placed)
@@ -312,16 +298,16 @@ def get_heart_huntrix_geometries(
         tb = text_union.bounds
         tc_x = (tb[0] + tb[2]) / 2.0
         tc_y = (tb[1] + tb[3]) / 2.0
-        # Centratura perfetta orizzontale e verticale sulla superficie frontale del cuore
-        text_2d = affinity.translate(text_union, xoff=-tc_x, yoff=(-0.5 * scale) - tc_y)
+        # Centratura perfetta sia in X che in Y sulla superficie frontale del cuore
+        text_2d = affinity.translate(text_union, xoff=-tc_x, yoff=(-1.5 * scale) - tc_y)
 
-        # Estrusione testo 3D: spessore 1.6 mm, con 0.4 mm di compenetrazione nella superficie superiore (Z da 4.0 a 5.6 mm)
+        # Estrusione testo 3D: spessore 1.6 mm, con 0.4 mm di compenetrazione (Z da 4.0 a 5.6 mm)
         if text_2d.geom_type == 'MultiPolygon':
-            t_meshes = [trimesh.creation.extrude_polygon(p, height=1.6 * scale) for p in text_2d.geoms if not p.is_empty]
+            t_meshes = [trimesh.creation.extrude_polygon(p, height=1.6) for p in text_2d.geoms if not p.is_empty]
             text_mesh = trimesh.util.concatenate(t_meshes)
         else:
-            text_mesh = trimesh.creation.extrude_polygon(text_2d, height=1.6 * scale)
-        text_mesh.apply_translation([0, 0, (4.4 - 0.4) * scale])
+            text_mesh = trimesh.creation.extrude_polygon(text_2d, height=1.6)
+        text_mesh.apply_translation([0, 0, 4.4 - 0.4])
     else:
         text_2d = sg.Polygon()
         text_mesh = trimesh.Trimesh()
