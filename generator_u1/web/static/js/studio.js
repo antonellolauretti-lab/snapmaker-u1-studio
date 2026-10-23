@@ -560,7 +560,7 @@ class ModelViewer {
     const textIdx = (this.extruderText !== undefined && this.extruderText !== null) ? this.extruderText : 1;
     const baseColorDef = palette[baseIdx] || palette[0];
     const textColorDef = palette[textIdx] || palette[1];
-    const iconColorDef = palette[2] || palette[textIdx] || palette[1];
+    const iconColorDef = palette[2] || "#EE1515";
 
     this.partMeshes.forEach((mesh) => {
       const name = (mesh.userData.partName || "").toLowerCase();

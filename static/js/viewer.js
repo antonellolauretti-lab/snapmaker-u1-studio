@@ -523,7 +523,7 @@ class ModelViewer {
       ) {
         // Icona / Simbolo monocromatico / Cuore Huntrix
         role = "icon";
-        const iconColorDef = palette[2] || palette[0] || p.color || "#E72F1D";
+        const iconColorDef = palette[2] || p.color || "#EE1515";
         mat = this.createMaterial(iconColorDef, this.wireframeMode);
         if (pNameLower.includes("heart") || pNameLower.includes("cuore")) {
           mat.roughness = 0.35;
@@ -566,7 +566,7 @@ class ModelViewer {
     const textIdx = (this.extruderText !== undefined && this.extruderText !== null) ? this.extruderText : 1;
     const baseColorDef = palette[baseIdx] || palette[0];
     const textColorDef = palette[textIdx] || palette[1];
-    const iconColorDef = palette[2] || palette[textIdx] || palette[1];
+    const iconColorDef = palette[2] || "#EE1515";
 
     this.partMeshes.forEach((mesh) => {
       const name = (mesh.userData.partName || "").toLowerCase();
@@ -632,7 +632,7 @@ class ModelViewer {
         name.includes("heart") ||
         name.includes("cuore")
       ) {
-        const heartColor = palette[2] || palette[0] || iconColorDef;
+        const heartColor = palette[2] || iconColorDef;
         if (heartColor) {
           const oldMat = mesh.material;
           mesh.material = this.createMaterial(heartColor, this.wireframeMode);

@@ -778,7 +778,8 @@ def generate_3mf(params: Dict[str, Any]):
     fil_colors = params.get("filament_colors")
     has_onepiece = any("onepiece" in p.name.lower() for p in parts)
     has_kpop = any("kpop" in p.name.lower() for p in parts)
-    has_huntrix = any("heart" in p.name.lower() for p in parts) or any("huntrix" in p.name.lower() for p in parts)
+    has_huntrix_heart = any("heart" in p.name.lower() for p in parts)
+    has_huntrix_keychain = (clean_txt in ("HUNTRIX", "HUNTIX")) and not has_huntrix_heart
     has_pikachu = any("pikachu" in p.name.lower() for p in parts)
     has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
     has_pokeball = any("pokeball" in p.name.lower() for p in parts)
@@ -791,11 +792,17 @@ def generate_3mf(params: Dict[str, Any]):
         b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
         t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#C4C7D9"
         fil_colors = [b_col, t_col, "#FFFFFF", "#FFCB05"]
-    elif has_huntrix:
-        # Preset Portachiavi a Cuore Huntrix: T0 Cuore Rosso, T1 Testo Bianco
-        h_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or params.get("base_color") or "#EE1515"
+    elif has_huntrix_heart:
+        # Preset B Portachiavi a Cuore Huntrix 3 Colori: T0 Base, T1 Cuore, T2 Testo
+        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+        h_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
         t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
-        fil_colors = [h_col, t_col, "#1A1A1A", "#FFCB05"]
+        fil_colors = [b_col, h_col, t_col, "#FFCB05"]
+    elif has_huntrix_keychain:
+        # Preset A Portachiavi Sagomato Ufficiale: T0 Base, T1 Testo
+        b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+        t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+        fil_colors = [b_col, t_col, "#1A1A1A", "#FFCB05"]
     elif has_pikachu and has_pokemon_logo:
         b_col = params.get("base_color", "#080A0D")
         base_fam = _color_family(b_col)

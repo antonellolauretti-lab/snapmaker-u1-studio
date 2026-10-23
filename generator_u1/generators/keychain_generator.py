@@ -584,32 +584,47 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         except Exception as e:
             print(f"Avviso generatore KPOP DEMON HUNTERS dedicato: {e}")
 
-    # Controllo speciale HUNTRIX CUORE: portachiavi a cuore con trigger combinato (Testo HUNTRIX/HUNTIX + Simbolo Cuore)
+    # Controllo speciale HUNTRIX:
+    # 1. Preset B: Testo HUNTRIX/HUNTIX + Simbolo Cuore -> Cuore a 3 Livelli e 3 Colori Indipendenti
+    # 2. Preset A: Testo HUNTRIX/HUNTIX + Nessun Simbolo -> Portachiavi Sagomato Ufficiale replica 1:1
     clean_icon_val = str(icon_name).lower().strip()
-    is_huntrix_model = (
-        (clean_txt in ("HUNTRIX", "HUNTIX"))
-        and (clean_icon_val in ("cuore", "heart") or params.get("preset") == "huntrix_heart")
-    )
-    if is_huntrix_model:
-        try:
-            from generator_u1.assets.heart_huntrix_geometry import get_heart_huntrix_geometries
-            target_w = float(params.get("heart_width", 52.0))
-            geoms = get_heart_huntrix_geometries(target_width=target_w, text="HUNTRIX")
+    if clean_txt in ("HUNTRIX", "HUNTIX"):
+        if clean_icon_val in ("cuore", "heart") or params.get("preset") == "huntrix_heart":
+            try:
+                from generator_u1.assets.huntrix_geometry import get_huntrix_preset_b_geometries
+                target_w = float(params.get("heart_width", 50.0))
+                geoms = get_huntrix_preset_b_geometries(heart_width=target_w)
 
-            # Geometria del cuore morbido, bombato (beveled) con asola ad arco integrata (Z 0.0 - 4.4 mm)
-            # Scritta 3D nitida centrata orizzontalmente e verticalmente (Z 4.0 - 5.6 mm)
-            m_heart = geoms["heart_mesh"]
-            m_text = geoms["text_mesh"]
+                base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+                icon_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
+                text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
 
-            heart_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or params.get("base_color") or "#EE1515"
-            text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+                return [
+                    PartItem(name="Base_Slab", mesh=geoms["base_mesh"], extruder=0, color=base_col),
+                    PartItem(name="Heart_Body", mesh=geoms["heart_mesh"], extruder=1, color=icon_col),
+                    PartItem(name="Mesh_Text", mesh=geoms["text_mesh"], extruder=2, color=text_col),
+                ]
+            except Exception as e:
+                print(f"Avviso generatore HUNTRIX CUORE (Preset B) dedicato: {e}")
 
-            return [
-                PartItem(name="Heart_Body", mesh=m_heart, extruder=0, color=heart_col),
-                PartItem(name="Mesh_Text", mesh=m_text, extruder=1, color=text_col),
-            ]
-        except Exception as e:
-            print(f"Avviso generatore HUNTRIX CUORE dedicato: {e}")
+        elif clean_icon_val in ("none", "", "nessuna", "null", "undefined") or icon_name is None:
+            try:
+                from generator_u1.assets.huntrix_geometry import get_huntrix_preset_a_geometries
+                target_w = float(params.get("keychain_width", 55.0))
+                geoms = get_huntrix_preset_a_geometries(target_width=target_w)
+
+                base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+                text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+
+                ext_base = int(params.get("extruder_base", 0))
+                ext_text = int(params.get("extruder_text", 1))
+
+                return [
+                    PartItem(name="Base_Contour", mesh=geoms["base_mesh"], extruder=ext_base, color=base_col),
+                    PartItem(name="Mesh_Text", mesh=geoms["text_mesh"], extruder=ext_text, color=text_col),
+                ]
+            except Exception as e:
+                print(f"Avviso generatore HUNTRIX SAGOMATO (Preset A) dedicato: {e}")
 
 
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)
