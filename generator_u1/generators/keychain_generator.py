@@ -416,6 +416,9 @@ def _generate_text_line_2d(
         char_polys = []
         cur_x = 0.0
         for char in text:
+            if char.isspace():
+                cur_x += (font_size * 0.45) + letter_spacing
+                continue
             char_tp = TextPath((cur_x, 0), char, size=font_size, prop=fp)
             if len(char_tp.to_polygons()) > 0:
                 cp = _extract_shapely_polygons_from_textpath(char_tp)
@@ -586,8 +589,13 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
 
     # Controllo speciale HUNTRIX:
     # 1. Preset B: Testo HUNTRIX/HUNTIX + Simbolo Cuore -> Cuore a 3 Livelli e 3 Colori Indipendenti
-    # 2. Preset A: Testo HUNTRIX/HUNTIX + Nessun Simbolo -> Portachiavi Sagomato Ufficiale replica 1:1
+    # 2. Font Parametrico HUNTRIX: qualsiasi testo personalizzato con font "huntrix" / "hunters"
+    # 3. Preset A: Testo HUNTRIX/HUNTIX senza simbolo -> Portachiavi Sagomato Ufficiale replica 1:1
     clean_icon_val = str(icon_name).lower().strip()
+    is_huntrix_font = (
+        str(font_family).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop") or
+        str(params.get("font_id", "")).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop")
+    )
     if clean_txt in ("HUNTRIX", "HUNTIX"):
         if clean_icon_val in ("cuore", "heart") or params.get("preset") == "huntrix_heart":
             try:
@@ -607,7 +615,7 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             except Exception as e:
                 print(f"Avviso generatore HUNTRIX CUORE (Preset B) dedicato: {e}")
 
-        else:
+        elif not is_huntrix_font and not params.get("line2_enabled"):
             try:
                 from generator_u1.assets.huntrix_geometry import get_huntrix_preset_a_geometries
                 target_w = float(params.get("keychain_width", 55.0))
@@ -625,6 +633,14 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
                 ]
             except Exception as e:
                 print(f"Avviso generatore HUNTRIX SAGOMATO (Preset A) dedicato: {e}")
+
+    # Generazione Parametrica con Font Ufficiale HUNTRIX (per qualsiasi testo personalizzato digitato dall'utente)
+    if is_huntrix_font:
+        try:
+            from generator_u1.assets.huntrix_geometry import generate_huntrix_parametric_parts
+            return generate_huntrix_parametric_parts(params)
+        except Exception as e:
+            print(f"Avviso generatore HUNTRIX PARAMETRICO dedicato: {e}")
 
 
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)

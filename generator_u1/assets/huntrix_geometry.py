@@ -321,3 +321,131 @@ def get_huntrix_preset_b_geometries(heart_width: float = 50.0) -> Dict[str, Any]
         'heart_mesh': m_heart,
         'text_mesh': m_text
     }
+
+
+def generate_huntrix_parametric_parts(params: Dict[str, Any]) -> Any:
+    """
+    Genera le mesh 3D del portachiavi personalizzato con font ufficiale Huntrix:
+    - Testo personalizzato digitato dall'utente (1 o 2 righe) con spessore Z [1.70, 3.10] mm (+1.00 mm rilievo)
+    - Base sagomata con scavo ribassato (canyon a Z = 2.10 mm) e bordo rialzato a Z = 3.00 mm
+    - Asola passante standard (d = 3.8 mm, parete >= 2.3 mm) centrata in alto sul testo
+    - Compenetrazione termica solida di 0.40 mm tra testo e fondo vaschetta
+    - 100% manifold e watertight via manifold3d
+    """
+    from generator_u1.packager.snapmaker_3mf import PartItem
+    from generator_u1.font_resolver import get_font_properties, get_font_dilation_offset
+    from generator_u1.generators.keychain_generator import _generate_text_line_2d, _extrude_geometry
+    from manifold3d import Manifold, Mesh
+
+    def to_manifold(m):
+        vp = np.ascontiguousarray(m.vertices, dtype=np.float32)
+        tv = np.ascontiguousarray(m.faces, dtype=np.uint32)
+        return Manifold(Mesh(vert_properties=vp, tri_verts=tv))
+
+    def to_trimesh(mani):
+        m = mani.to_mesh()
+        return trimesh.Trimesh(vertices=m.vert_properties[:, :3], faces=m.tri_verts, process=False)
+
+    text1 = (params.get("text_line1") or params.get("text") or "HUNTRIX").strip()
+    text2 = (params.get("text_line2") or "").strip() if params.get("line2_enabled") else ""
+
+    font_size = float(params.get("font_size", 14.0))
+    if font_size < 8.0:
+        font_size = 14.0
+
+    user_spacing = params.get("letter_spacing")
+    letter_spacing = float(user_spacing) if user_spacing is not None and float(user_spacing) > 0 else 0.65
+
+    fp = get_font_properties("huntrix")
+    offset = get_font_dilation_offset("huntrix")
+
+    # 1. Riga 1
+    t1_raw = _generate_text_line_2d(text1, fp, font_size, letter_spacing=letter_spacing, dilation_offset=offset)
+    minx1, miny1, maxx1, maxy1 = t1_raw.bounds
+    w1 = maxx1 - minx1
+    h1 = maxy1 - miny1
+    t1_norm = affinity.translate(t1_raw, xoff=-minx1, yoff=-miny1)
+
+    # 2. Riga 2 opzionale
+    if text2:
+        fs2 = float(params.get("font_size_line2", font_size * 0.75))
+        t2_raw = _generate_text_line_2d(text2, fp, fs2, letter_spacing=letter_spacing * 0.8, dilation_offset=offset)
+        minx2, miny2, maxx2, maxy2 = t2_raw.bounds
+        w2 = maxx2 - minx2
+        h2 = maxy2 - miny2
+        t2_norm = affinity.translate(t2_raw, xoff=-minx2, yoff=-miny2)
+
+        w_max = max(w1, w2)
+        x1 = (w_max - w1) / 2.0
+        x2 = (w_max - w2) / 2.0
+        line_gap = 2.0
+        y1 = h2 + line_gap
+        y2 = 0.0
+
+        text1_pos = affinity.translate(t1_norm, xoff=x1, yoff=y1)
+        text2_pos = affinity.translate(t2_norm, xoff=x2, yoff=y2)
+        text_2d = unary_union([text1_pos, text2_pos])
+    else:
+        text_2d = t1_norm
+
+    # 3. Auto-scaling su lunghezza massima
+    max_len = float(params.get("keychain_width", 75.0))
+    tx0, ty0, tx1, ty1 = text_2d.bounds
+    text_w = tx1 - tx0
+    target_text_w = max_len - 10.0
+    if text_w > target_text_w and target_text_w > 10.0:
+        scale_fac = target_text_w / text_w
+        text_2d = affinity.scale(text_2d, xfact=scale_fac, yfact=scale_fac, origin=(0, 0))
+
+    # Centratura in (0, 0)
+    tx0, ty0, tx1, ty1 = text_2d.bounds
+    cx = (tx0 + tx1) / 2.0
+    cy = (ty0 + ty1) / 2.0
+    text_2d = affinity.translate(text_2d, xoff=-cx, yoff=-cy)
+
+    # 4. Tasca Scavata 2D (offset +0.75 mm con chiusura micro-fessure)
+    pkt = text_2d.buffer(0.75, resolution=32)
+    pkt_closed = pkt.buffer(0.12, resolution=16).buffer(-0.12, resolution=16)
+    pocket_2d = sg.Polygon(pkt_closed.exterior) if pkt_closed.geom_type == 'Polygon' else pkt_closed
+
+    # 5. Base Sagomata Esterna 2D (+1.5 mm dal canyon / +2.25 mm dal testo)
+    base_outer = pocket_2d.buffer(1.50, resolution=32)
+    close_r = 3.0
+    base_outer_smooth = base_outer.buffer(close_r, resolution=16).buffer(-close_r, resolution=16)
+
+    # 6. Asola Passante Standard (foro d=3.8 mm, parete >= 2.3 mm -> r_inner=1.9, r_outer=4.2)
+    b_minx, b_miny, b_maxx, b_maxy = base_outer_smooth.bounds
+    eye_x = 0.0  # Centrata in alto sul testo
+    eye_y = b_maxy + 1.80
+    c_outer = sg.Point(eye_x, eye_y).buffer(4.20, resolution=32)
+    c_inner = sg.Point(eye_x, eye_y).buffer(1.90, resolution=32)
+
+    base_2d_full = base_outer_smooth.union(c_outer).difference(c_inner)
+
+    # 7. Estrusione 3D solida
+    # Base piena Z [0.0, 3.00] mm
+    m_base_solid = _extrude_geometry(base_2d_full, height=3.00)
+
+    # Tasca ribassata Z da 2.10 a 3.30 mm
+    m_pocket_solid = _extrude_geometry(pocket_2d, height=1.20)
+    m_pocket_solid.apply_translation([0, 0, 2.10])
+
+    # Booleana CSG con manifold3d
+    mani_base = to_manifold(m_base_solid)
+    mani_pocket = to_manifold(m_pocket_solid)
+    mani_canyon = mani_base - mani_pocket
+    m_base_canyon = to_trimesh(mani_canyon)
+
+    # Testo solido Z [1.70, 3.10] mm
+    m_text = _extrude_geometry(text_2d, height=1.40)
+    m_text.apply_translation([0, 0, 1.70])
+
+    base_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
+    text_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
+    ext_base = int(params.get("extruder_base", 0))
+    ext_text = int(params.get("extruder_text", 1))
+
+    return [
+        PartItem(name="Base_Contour", mesh=m_base_canyon, extruder=ext_base, color=base_col),
+        PartItem(name="Mesh_Text", mesh=m_text, extruder=ext_text, color=text_col),
+    ]

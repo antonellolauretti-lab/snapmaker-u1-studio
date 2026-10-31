@@ -106,7 +106,7 @@ app.mount("/ecommerce", StaticFiles(directory=str(ECOMMERCE_DIR)), name="ecommer
 
 CURATED_FONTS = [
     {
-        "id": "Huntrix",
+        "id": "huntrix",
         "name": "Huntrix",
         "desc": "Geometrico Sci-Fi K-Pop Bold",
         "category": "display",
@@ -784,7 +784,11 @@ def generate_3mf(params: Dict[str, Any]):
         has_onepiece = any("onepiece" in p.name.lower() for p in parts)
         has_kpop = any("kpop" in p.name.lower() for p in parts)
         has_huntrix_heart = any("heart" in p.name.lower() for p in parts)
-        has_huntrix_keychain = (clean_txt in ("HUNTRIX", "HUNTIX")) and not has_huntrix_heart
+        is_huntrix_font = (
+            str(params.get("font_id", "")).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop") or
+            str(params.get("font_family", "")).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop")
+        )
+        has_huntrix_keychain = (clean_txt in ("HUNTRIX", "HUNTIX") or is_huntrix_font) and not has_huntrix_heart
         has_pikachu = any("pikachu" in p.name.lower() for p in parts)
         has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
         has_pokeball = any("pokeball" in p.name.lower() for p in parts)
