@@ -53,6 +53,12 @@
       src: url('/fonts/Huntrix.otf') format('opentype'), url('/fonts/Huntrix.ttf') format('truetype');
     }
     @font-face {
+      font-family: 'Minecraft';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/fonts/Minecraft-Bold.otf') format('opentype'), url('/fonts/Minecraft.otf') format('opentype');
+    }
+    @font-face {
       font-family: 'Montserrat';
       font-style: normal;
       font-weight: 900;
@@ -343,6 +349,13 @@
     .font-card[data-font="Huntrix"] .font-card-preview {
       font-family: 'Huntrix', sans-serif !important;
       font-weight: 700 !important;
+      letter-spacing: 0.5px;
+    }
+    .font-card[data-font="minecraft"] .font-card-preview,
+    .font-card[data-font="Minecraft"] .font-card-preview {
+      font-family: 'Minecraft', monospace !important;
+      font-weight: 700 !important;
+      image-rendering: pixelated;
       letter-spacing: 0.5px;
     }
     .font-card[data-font="Montserrat"] .font-card-preview {
@@ -1697,6 +1710,7 @@
       if (!fontsCatalog || fontsCatalog.length === 0) {
         fontsCatalog = [
           { id: 'huntrix', name: 'Huntrix', family: "'Huntrix', sans-serif" },
+          { id: 'minecraft', name: 'Minecraft', family: "'Minecraft', monospace" },
           { id: 'Minimal Tech', name: 'Minimal Tech', family: "'Minimal Tech', 'Righteous', sans-serif" },
           { id: 'Montserrat', name: 'Montserrat Black', family: "'Montserrat', sans-serif" },
           { id: 'Bebas Neue', name: 'Bebas Neue', family: "'Bebas Neue', sans-serif" },

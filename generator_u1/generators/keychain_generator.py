@@ -596,6 +596,10 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
         str(font_family).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop") or
         str(params.get("font_id", "")).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop")
     )
+    is_minecraft_font = (
+        str(font_family).lower().strip() in ("minecraft", "minecrafter", "pixel", "8bit") or
+        str(params.get("font_id", "")).lower().strip() in ("minecraft", "minecrafter", "pixel", "8bit")
+    )
     if clean_txt in ("HUNTRIX", "HUNTIX"):
         if clean_icon_val in ("cuore", "heart") or params.get("preset") == "huntrix_heart":
             try:
@@ -641,6 +645,14 @@ def generate_keychain_parts(params: Dict[str, Any]) -> List[PartItem]:
             return generate_huntrix_parametric_parts(params)
         except Exception as e:
             print(f"Avviso generatore HUNTRIX PARAMETRICO dedicato: {e}")
+
+    # Generazione Parametrica con Font Ufficiale MINECRAFT
+    if is_minecraft_font:
+        try:
+            from generator_u1.assets.huntrix_geometry import generate_minecraft_parametric_parts
+            return generate_minecraft_parametric_parts(params)
+        except Exception as e:
+            print(f"Avviso generatore MINECRAFT PARAMETRICO dedicato: {e}")
 
 
     # 1. Risoluzione Font tramite font_resolver (supporta cloud e font incorporati)

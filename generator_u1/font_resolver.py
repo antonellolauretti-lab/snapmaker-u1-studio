@@ -29,6 +29,11 @@ FONT_ALIAS_MAP: Dict[str, str] = {
     "pacifico": "Pacifico.ttf",
     "lobster": "Lobster.ttf",
     # Display / Bold
+    "minecraft": "Minecraft-Bold.otf",
+    "minecraft bold": "Minecraft-Bold.otf",
+    "minecrafter": "Minecraft-Bold.otf",
+    "pixel": "Minecraft-Bold.otf",
+    "8bit": "Minecraft-Bold.otf",
     "huntrix": "Huntrix.otf",
     "hunters": "Huntrix.otf",
     "hunters k-pop": "Huntrix.otf",
@@ -146,6 +151,10 @@ def get_font_dilation_offset(font_name: Optional[str]) -> float:
     # Huntrix (tecnologico/sci-fi K-Pop): 0.22 mm per spessore minimo >= 0.85 mm
     if "huntrix" in fn or "hunter" in fn:
         return 0.22
+
+    # Minecraft / Pixel 8-Bit: 0.18 mm per griglia pixel e pareti solide con ugello 0.4 mm
+    if any(s in fn for s in ["minecraft", "pixel", "8bit"]):
+        return 0.18
 
     # Orbitron (tecnologico/sci-fi): 0.25 mm per garantire pareti spesse >= 1.2 mm e massima adesione
     if "orbitron" in fn:

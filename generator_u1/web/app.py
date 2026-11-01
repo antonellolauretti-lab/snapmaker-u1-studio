@@ -114,6 +114,14 @@ CURATED_FONTS = [
         "file": "Huntrix.otf",
     },
     {
+        "id": "minecraft",
+        "name": "Minecraft",
+        "desc": "Pixel Art 8-Bit Retro Gaming",
+        "category": "display",
+        "family": "'Minecraft', monospace",
+        "file": "Minecraft-Bold.otf",
+    },
+    {
         "id": "Anton",
         "name": "Anton",
         "desc": "Massiccio Display Bold",
@@ -788,7 +796,11 @@ def generate_3mf(params: Dict[str, Any]):
             str(params.get("font_id", "")).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop") or
             str(params.get("font_family", "")).lower().strip() in ("huntrix", "hunters", "hunters k-pop", "hunterskpop")
         )
-        has_huntrix_keychain = (clean_txt in ("HUNTRIX", "HUNTIX") or is_huntrix_font) and not has_huntrix_heart
+        is_minecraft_font = (
+            str(params.get("font_id", "")).lower().strip() in ("minecraft", "minecrafter", "pixel", "8bit") or
+            str(params.get("font_family", "")).lower().strip() in ("minecraft", "minecrafter", "pixel", "8bit")
+        )
+        has_canyon_keychain = (clean_txt in ("HUNTRIX", "HUNTIX") or is_huntrix_font or is_minecraft_font) and not has_huntrix_heart
         has_pikachu = any("pikachu" in p.name.lower() for p in parts)
         has_pokemon_logo = any("text_pokemon" in p.name.lower() for p in parts)
         has_pokeball = any("pokeball" in p.name.lower() for p in parts)
@@ -807,8 +819,8 @@ def generate_3mf(params: Dict[str, Any]):
             h_col = params.get("icon_color") or params.get("symbolColor") or params.get("symbol_color") or "#EE1515"
             t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
             fil_colors = [b_col, h_col, t_col, "#FFCB05"]
-        elif has_huntrix_keychain:
-            # Preset A Portachiavi Sagomato Ufficiale: T0 Base, T1 Testo
+        elif has_canyon_keychain:
+            # Preset Sagomato / Canyon (Huntrix & Minecraft): T0 Base, T1 Testo
             b_col = params.get("base_color") or params.get("baseColor") or params.get("baseColorHex") or "#1A1A1A"
             t_col = params.get("text_color") or params.get("textColor") or params.get("textColorHex") or "#FFFFFF"
             fil_colors = [b_col, t_col, "#1A1A1A", "#FFCB05"]

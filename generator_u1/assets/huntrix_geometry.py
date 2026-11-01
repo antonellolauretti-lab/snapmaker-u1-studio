@@ -353,11 +353,17 @@ def generate_huntrix_parametric_parts(params: Dict[str, Any]) -> Any:
     if font_size < 8.0:
         font_size = 14.0
 
-    user_spacing = params.get("letter_spacing")
-    letter_spacing = float(user_spacing) if user_spacing is not None and float(user_spacing) > 0 else 0.65
+    font_id = str(params.get("font_id") or params.get("font_family") or "huntrix").strip().lower()
+    target_font = "minecraft" if font_id in ("minecraft", "minecrafter", "pixel", "8bit") else "huntrix"
 
-    fp = get_font_properties("huntrix")
-    offset = get_font_dilation_offset("huntrix")
+    user_spacing = params.get("letter_spacing")
+    if user_spacing is not None and float(user_spacing) > 0:
+        letter_spacing = float(user_spacing)
+    else:
+        letter_spacing = 0.50 if target_font == "minecraft" else 0.65
+
+    fp = get_font_properties(target_font)
+    offset = get_font_dilation_offset(target_font)
 
     # 1. Riga 1
     t1_raw = _generate_text_line_2d(text1, fp, font_size, letter_spacing=letter_spacing, dilation_offset=offset)
@@ -449,3 +455,10 @@ def generate_huntrix_parametric_parts(params: Dict[str, Any]) -> Any:
         PartItem(name="Base_Contour", mesh=m_base_canyon, extruder=ext_base, color=base_col),
         PartItem(name="Mesh_Text", mesh=m_text, extruder=ext_text, color=text_col),
     ]
+
+
+def generate_minecraft_parametric_parts(params: Dict[str, Any]) -> Any:
+    """Genera le mesh 3D del portachiavi sagomato con font ufficiale Minecraft."""
+    p = dict(params)
+    p["font_id"] = "minecraft"
+    return generate_huntrix_parametric_parts(p)
